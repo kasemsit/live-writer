@@ -184,6 +184,74 @@ test.describe('Quarto', () => {
 		await page.locator('.cm-line.mlp-qc-label, .cm-line:has(.mlp-qc-label)').first().click({ position: { x: 4, y: 6 } });
 		await expect(page.locator('.cm-content')).toContainText('::: {.callout-tip}');
 	});
+
+	test('the words come from the project’s _quarto.yml', async ({ page }) => {
+		await postToWebview(page, {
+			type: 'plusQuartoProject',
+			project: { labels: { 'crossref-fig-title': 'รูปที่', 'callout-tip-title': 'เคล็ดลับ' }, citations: null },
+		});
+		await expect(page.locator('.mlp-qfig-caption').first()).toHaveText('รูปที่ 1: A caption');
+		await expect(page.locator('.mlp-xref').first()).toHaveText('รูปที่ 1');
+		await expect(page.locator('.cm-line.mlp-co-green .mlp-qc-label')).toHaveText('เคล็ดลับ');
+	});
+});
+
+test.describe('Quarto citations', () => {
+	const entry = (key: string, families: string[], year: string, title: string) => ({
+		key,
+		type: 'article',
+		authorShort: families.join(' and '),
+		families,
+		others: false,
+		authors: families.join('; '),
+		title,
+		year,
+		venue: '',
+	});
+	const BIB = { chen2015: entry('chen2015', ['Chen'], '2015', 'Online Retail'), lee2019: entry('lee2019', ['Lee', 'Park'], '2019', 'Two Authors') };
+	const project = (lang: string) => ({ type: 'plusQuartoProject', project: { labels: {}, citations: { style: 'apa', lang, bib: BIB } } });
+	const DOC = [
+		'# Title',
+		'',
+		'As shown [@chen2015; @lee2019, p. 2] and by @chen2015, not [@nosuch].',
+		'',
+		'| who | source |',
+		'|---|---|',
+		'| Chen | [@chen2015] |',
+		'',
+		'End.',
+	].join('\n');
+
+	test.beforeEach(async ({ page }) => {
+		await mountEditor(page, DOC);
+	});
+
+	test('the editor asks for its project; citations read as the book prints them', async ({ page }) => {
+		expect((await posted(page)).some((m) => m.type === 'plusQuartoWatch')).toBe(true);
+		await postToWebview(page, project('en'));
+		await expect(page.locator('.cm-line .mlp-qcite')).toHaveText(['(Chen, 2015; Lee & Park, 2019, p. 2)', 'Chen (2015)', '(nosuch?)']);
+		await expect(page.locator('.cm-line .mlp-qcite-missing')).toHaveText('nosuch?');
+		await expect(page.locator('.cm-line .mlp-qcite').first()).toHaveAttribute('title', /^chen2015: Chen\. Online Retail\. 2015\nlee2019:/);
+	});
+
+	test('a table drawn before the project arrives is redrawn with it', async ({ page }) => {
+		await expect(page.locator('.mlp-table-wrap .mlp-cite-group')).toHaveCount(1);
+		await postToWebview(page, project('th'));
+		await expect(page.locator('.mlp-table-wrap .mlp-qcite')).toHaveText('(Chen, 2015)');
+		await expect(page.locator('.mlp-table-wrap .mlp-cite-group')).toHaveCount(0);
+	});
+
+	test('the caret on a citation shows its source', async ({ page }) => {
+		await postToWebview(page, project('en'));
+		await page.locator('.cm-line .mlp-qcite').nth(1).click();
+		await expect(page.locator('.cm-content')).toContainText('and by @chen2015, not');
+	});
+
+	test('without a bibliography, [@key] still links to the @key note', async ({ page }) => {
+		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null } });
+		await expect(page.locator('.cm-line a.mlp-cite')).toHaveCount(3);
+		await expect(page.locator('.mlp-qcite')).toHaveCount(0);
+	});
 });
 
 test.describe('footnotes', () => {

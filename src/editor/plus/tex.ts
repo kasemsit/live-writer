@@ -3,9 +3,11 @@ import * as path from 'node:path';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../shared/messages';
-import { mergeAux, parseAux, parseBib, type AuxData, type BibEntry } from '../../shared/plusTexAux';
+import { mergeAux, parseAux, type AuxData } from '../../shared/plusTexAux';
+import { parseBib, type BibEntry } from '../../shared/plusBib';
 import { bibFilesOf, extractMacros, graphicsPathOf, inputsOf, magicRoot, scanTex } from '../../shared/plusTexScan';
 import { isPathInside } from '../../shared/pathContainment';
+import { exists, readText } from './files';
 
 /**
  * md-live-preview-plus: the host side of the LaTeX Live Preview.
@@ -25,31 +27,9 @@ import { isPathInside } from '../../shared/pathContainment';
 const VIEW_TYPE = 'mdLivePreview.editor';
 const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'];
 const GRAPHIC_EXTS = ['', '.pdf', '.png', '.jpg', '.jpeg', '.svg', '.eps', '.gif', '.webp'];
-const MAX_READ = 4 * 1024 * 1024;
 
 export function isTexDocument(document: vscode.TextDocument): boolean {
 	return document.languageId === 'latex' || document.languageId === 'tex' || /\.tex$/i.test(document.uri.path);
-}
-
-async function exists(uri: vscode.Uri): Promise<boolean> {
-	try {
-		await vscode.workspace.fs.stat(uri);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-async function readText(uri: vscode.Uri): Promise<string | null> {
-	const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
-	if (open) return open.getText();
-	try {
-		const stat = await vscode.workspace.fs.stat(uri);
-		if (stat.size > MAX_READ) return null;
-		return new TextDecoder('utf-8').decode(await vscode.workspace.fs.readFile(uri));
-	} catch {
-		return null;
-	}
 }
 
 const DOCUMENTCLASS = /^[^%\n]*\\documentclass/m;

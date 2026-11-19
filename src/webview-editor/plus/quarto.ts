@@ -7,11 +7,10 @@ import { blockReplacedLines, cellInlineHooks } from '../livePreviewPlugin';
 import { renderInlineInto } from '../tableCellInline';
 import { calloutIconSvg } from './callouts';
 import { jumpTo } from './footnotes';
-import { quartoLabels } from './hostRequests';
+import { quartoLabel as label, watchQuartoProject } from './quartoProject';
 import { inSourceContext } from './wikilinks';
 import {
 	LEADING_ATTRS,
-	QUARTO_LABELS,
 	TRAILING_ATTRS,
 	XREF,
 	calloutTitleLine,
@@ -39,6 +38,7 @@ import {
  *   `@sec-id` the heading's text; a press jumps there. An id with no target
  *   reads `?fig-id`, as Quarto prints it.
  * - `{#sec-id}` after a heading hides.
+ * - The words drawn come from the project's `_quarto.yml` (quartoProject.ts).
  * - A heading straight after a line of text, with no blank line between, is
  *   flagged: Pandoc reads it as part of that paragraph, not as a heading.
  *
@@ -65,27 +65,6 @@ const quartoScan = StateField.define<QuartoScan>({
 	create: scan,
 	update: (value, tr) => (tr.docChanged ? scan(tr.state) : value),
 });
-
-// ── Labels ───────────────────────────────────────────────────────────────────
-
-let labels: Record<string, string> = { ...QUARTO_LABELS };
-let labelsAsked = false;
-
-function label(key: string): string | undefined {
-	return labels[key];
-}
-
-/** Asks the host once for the project's `_quarto.yml` labels; redraws when they differ. */
-function askLabels(view: EditorView): void {
-	if (labelsAsked) return;
-	labelsAsked = true;
-	void quartoLabels().then((found) => {
-		if (!Object.keys(found).length) return;
-		labels = { ...QUARTO_LABELS, ...found };
-		// livePreviewPlugin draws the figures, and it rebuilds on this effect.
-		view.dispatch({ effects: blockRevealChanged.of(null) });
-	});
-}
 
 // ── Callouts and other fenced divs ───────────────────────────────────────────
 
@@ -411,7 +390,7 @@ const quartoDecorations = ViewPlugin.fromClass(
 		decorations: DecorationSet;
 		constructor(view: EditorView) {
 			this.decorations = build(view);
-			askLabels(view);
+			watchQuartoProject();
 		}
 		update(update: ViewUpdate) {
 			if (

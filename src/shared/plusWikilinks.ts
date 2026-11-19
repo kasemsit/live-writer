@@ -85,9 +85,12 @@ export interface CitationMatch {
 	groupTo: number;
 }
 
+/** A Pandoc citation key: starts and ends with a letter, digit or `_`; inside, also `:.#$%&+?<>~/-`. */
+export const CITE_KEY_PATTERN = String.raw`[A-Za-z0-9_](?:[\w:.#$%&+?<>~/-]*[A-Za-z0-9_])?`;
+
 // Not the inside of `[[...]]`, and not a `[text](url)` or `[text][ref]` link.
 const CITE_GROUP = /(?<!\[)\[([^[\]\n]*@[^[\]\n]*)\](?![\](])/g;
-const CITE_KEY = /(^|[\s;])(-?)@([A-Za-z0-9_](?:[\w:.#$%&+?<>~/-]*[A-Za-z0-9_])?)/g;
+const CITE_KEY = new RegExp(String.raw`(^|[\s;])(-?)@(${CITE_KEY_PATTERN})`, 'g');
 
 export function findCitations(text: string): CitationMatch[] {
 	if (!text.includes('@')) return [];

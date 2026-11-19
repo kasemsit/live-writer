@@ -5,7 +5,9 @@
 //
 //   npm run compile && node plus/render.js path/to/note.md [--shot out.png] [--css theme.css] [--lines]
 //
-// The viewport is very tall so CodeMirror renders the whole document.
+// The viewport is very tall so CodeMirror renders the whole document. A `.qmd`
+// also gets its Quarto project (the nearest _quarto.yml and its bibliography),
+// worked out by the same shared code the extension host uses.
 const { chromium } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -20,6 +22,41 @@ if (!file) {
 }
 const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
 const shot = option('--shot');
+
+/** What the host would send a `.qmd` (src/editor/plus/quartoProject.ts), read from disk. */
+function quartoProject(docPath) {
+	const { buildSync } = require('esbuild');
+	const out = buildSync({
+		stdin: {
+			contents: "export { labelsFromQuartoYaml, quartoCitationPlan } from './src/shared/plusQuarto'; export { parseBib } from './src/shared/plusBib';",
+			resolveDir: ROOT,
+			loader: 'ts',
+		},
+		bundle: true,
+		platform: 'node',
+		format: 'cjs',
+		write: false,
+	});
+	const mod = { exports: {} };
+	new Function('module', 'exports', 'require', out.outputFiles[0].text)(mod, mod.exports, require);
+	const { labelsFromQuartoYaml, quartoCitationPlan, parseBib } = mod.exports;
+	let dir = path.dirname(path.resolve(docPath));
+	let projectFile = null;
+	for (let i = 0; i < 10 && !projectFile; i++, dir = path.dirname(dir)) {
+		if (fs.existsSync(path.join(dir, '_quarto.yml'))) projectFile = path.join(dir, '_quarto.yml');
+	}
+	const yaml = projectFile ? fs.readFileSync(projectFile, 'utf8') : '';
+	const labels = labelsFromQuartoYaml(yaml);
+	const plan = /\.qmd$/i.test(docPath) ? quartoCitationPlan(yaml, fs.readFileSync(docPath, 'utf8')) : null;
+	if (!plan) return { labels, citations: null };
+	const base = plan.base === 'project' && projectFile ? path.dirname(projectFile) : path.dirname(path.resolve(docPath));
+	const bib = {};
+	for (const name of plan.files) {
+		const file = path.join(base, name);
+		if (fs.existsSync(file)) Object.assign(bib, parseBib(fs.readFileSync(file, 'utf8')));
+	}
+	return { labels, citations: { style: plan.style, lang: plan.lang, bib } };
+}
 const css = option('--css') ? fs.readFileSync(option('--css'), 'utf8') : '';
 
 (async () => {
@@ -43,6 +80,10 @@ window.mlpKatexChunkUri='https://render.invalid/katex-chunk.js';window.mlpKatexB
 		([text, theme]) => window.postMessage({ type: 'init', text, version: 1, css: theme, codeTheme: 'dark-plus', baseUri: 'https://example.invalid/' }, '*'),
 		[fs.readFileSync(file, 'utf8'), css],
 	);
+	if (/\.qmd$/i.test(file)) {
+		const project = quartoProject(file);
+		await page.evaluate((p) => window.postMessage({ type: 'plusQuartoProject', project: p }, '*'), project);
+	}
 	await page.waitForTimeout(1500);
 	if (shot) {
 		const height = await page.evaluate(() => Math.ceil(Math.max(...[...document.querySelectorAll('.cm-content > *')].map((e) => e.getBoundingClientRect().bottom)) + 24));
@@ -65,6 +106,8 @@ window.mlpKatexChunkUri='https://render.invalid/katex-chunk.js';window.mlpKatexB
 				// Lines still showing a "$" outside rendered math: money, or math the parser missed.
 				leftoverDollar: q('.cm-line').map((l) => { const c = l.cloneNode(true); c.querySelectorAll('.mlp-math').forEach((m) => m.remove()); return c.textContent; }).filter((t) => t.includes('$')).map((t) => t.slice(0, 110)),
 			},
+			citations: q('.mlp-qcite').map((c) => c.textContent).slice(0, 40),
+			missingCitations: q('.mlp-qcite-missing').map((c) => c.textContent),
 			leftoverBrackets: q('.cm-line').filter((l) => /\[\[|\]\]/.test(l.textContent)).map((l) => l.textContent.slice(0, 90)),
 			lines: withLines ? q('.cm-line').map((l) => `${l.className} | ${l.textContent.slice(0, 80)}`) : undefined,
 		};

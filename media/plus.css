@@ -571,6 +571,10 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 .mlp-xref { color: var(--vscode-textLink-foreground, #0969da); cursor: pointer; text-decoration: none; }
 .mlp-xref:hover { text-decoration: underline; }
 .mlp-xref.mlp-xref-missing { color: var(--vscode-errorForeground, #d1242f); font-weight: 600; }
+/* Citations in a .qmd, as the book prints them: "(Chen, 2015)" (plus/citations.ts). */
+.mlp-qcite { cursor: text; }
+.mlp-qcite-key { color: var(--vscode-textLink-foreground, #0969da); }
+.mlp-qcite-key.mlp-qcite-missing { color: var(--vscode-errorForeground, #d1242f); font-weight: 600; }
 /* Source the rendered view hides, while the caret shows it: `{#fig-id …}`, `@fig-id`. */
 .mlp-qattr { opacity: 0.5; }
 

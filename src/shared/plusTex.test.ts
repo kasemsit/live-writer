@@ -11,7 +11,9 @@ import {
 	scanTex,
 	texToPlain,
 } from './plusTexScan';
-import { citeLabel, cleanAuxNumber, familyName, formatCiteNumbers, parseAux, parseBib } from './plusTexAux';
+import { cleanAuxNumber, parseAux } from './plusTexAux';
+import { familyName, parseBib } from './plusBib';
+import { citeLabel, formatCiteNumbers } from './plusCitations';
 import { parseColSpec, parseTabular } from './plusTexTable';
 
 const DOC = String.raw`\documentclass{article}

@@ -1,7 +1,8 @@
 import { StateEffect, StateField } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import type { HostToEditorMessage, PlusEditorToHostMessage, PlusTexAsset, PlusTexContext } from '../../../shared/messages';
+import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../../shared/messages';
 import { scanTex, type TexScan } from '../../../shared/plusTexScan';
+import { request } from '../hostRequests';
 
 /**
  * md-live-preview-plus: what the LaTeX Live Preview knows beyond the file
@@ -30,14 +31,7 @@ export const texScanField = StateField.define<TexScan>({
 
 // ── Requests to the host ────────────────────────────────────────────────────
 
-let post: (message: PlusEditorToHostMessage) => void = () => undefined;
-let nextId = 1;
-const waiting = new Map<number, (asset: PlusTexAsset) => void>();
 const assets = new Map<string, Promise<PlusTexAsset>>();
-
-export function setTexPoster(poster: (message: PlusEditorToHostMessage) => void): void {
-	post = poster;
-}
 
 const MISSING = (path: string): PlusTexAsset => ({ status: 'missing', src: null, name: path });
 
@@ -49,32 +43,16 @@ const MISSING = (path: string): PlusTexAsset => ({ status: 'missing', src: null,
 export function resolveTexAsset(path: string): Promise<PlusTexAsset> {
 	let found = assets.get(path);
 	if (!found) {
-		const requestId = nextId++;
-		found = new Promise<PlusTexAsset>((resolve) => {
-			const timer = setTimeout(() => {
-				waiting.delete(requestId);
-				resolve(MISSING(path));
-			}, 20_000);
-			waiting.set(requestId, (asset) => {
-				clearTimeout(timer);
-				resolve(asset);
-			});
-			post({ type: 'plusTexAsset', requestId, path });
-		});
+		// A PDF figure is converted to PNG first, which can take a while.
+		found = request<PlusTexAsset>((requestId) => ({ type: 'plusTexAsset', requestId, path }), MISSING(path), 20_000);
 		assets.set(path, found);
 		void found.then((asset) => asset.status === 'missing' && assets.delete(path));
 	}
 	return found;
 }
 
-/** Handles the host's LaTeX messages. Returns true when the message was one. */
+/** Handles the host's LaTeX context. Returns true when the message was one. (Replies go through hostRequests.) */
 export function handleTexHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
-	if (message.type === 'plusTexAssetResult') {
-		const resolve = waiting.get(message.requestId);
-		waiting.delete(message.requestId);
-		resolve?.(message.asset);
-		return true;
-	}
 	if (message.type === 'plusTexContext') {
 		assets.clear();
 		view?.dispatch({ effects: setTexContext.of(message.context) });

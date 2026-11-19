@@ -7,6 +7,7 @@ import {
 	joinedHeadingLines,
 	labelsFromQuartoYaml,
 	parseAttrs,
+	quartoCitationPlan,
 	quartoOutline,
 	scanCrossRefs,
 } from './plusQuarto';
@@ -126,5 +127,25 @@ describe('outline of a Quarto document', () => {
 			[1, 'Chapter'],
 			[5, '1.1 Part'],
 		]);
+	});
+});
+
+describe('quartoCitationPlan', () => {
+	const PROJECT = 'project:\n  type: book\nlang: th\nbibliography: references.bib\ncsl: apa.csl\n';
+
+	it('takes the bibliography, style and language from _quarto.yml', () => {
+		expect(quartoCitationPlan(PROJECT, '# Chapter\n')).toEqual({ files: ['references.bib'], base: 'project', style: 'apa', lang: 'th' });
+	});
+
+	it('front matter overrides the project, and names files beside the document', () => {
+		const doc = '---\ntitle: x\nbibliography:\n  - a.bib\n  - b.bib\nlang: en\n---\n\nText';
+		expect(quartoCitationPlan(PROJECT, doc)).toEqual({ files: ['a.bib', 'b.bib'], base: 'document', style: 'apa', lang: 'en' });
+	});
+
+	it('Quarto’s default style is Chicago author-date; no .bib means no plan', () => {
+		expect(quartoCitationPlan('bibliography: refs.bib\n', '')?.style).toBe('chicago');
+		expect(quartoCitationPlan('title: x\n', 'text')).toBeNull();
+		expect(quartoCitationPlan('bibliography: refs.json\n', '')).toBeNull();
+		expect(quartoCitationPlan(': not yaml [', '')).toBeNull();
 	});
 });

@@ -4,7 +4,7 @@ import { hasSessionFor, listAnchors, listNotes, openWikilink, previewWikilink, r
 import { forgetSelectionOf, writeSelection } from './selectionFile';
 import { handlePlusDo } from './contextMenu';
 import { texSessionOf } from './tex';
-import { quartoLabels } from './quartoConfig';
+import { stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
 
 export { takePendingJump } from './wikiOpen';
 
@@ -13,6 +13,7 @@ export function trackSession(session: PlusSession): vscode.Disposable {
 	const tracked = trackWikiSession(session);
 	return new vscode.Disposable(() => {
 		tracked.dispose();
+		stopWatchingQuartoProject(session);
 		const document = session.getDocument();
 		if (!hasSessionFor(document.uri)) void forgetSelectionOf(document);
 	});
@@ -50,10 +51,8 @@ export function handlePlusMessage(
 				() => post({ type: 'plusEmbedResult', requestId: message.requestId, src: null }),
 			);
 			return true;
-		case 'plusQuartoLabels':
-			void quartoLabels(session.getDocument().uri).then((labels) =>
-				post({ type: 'plusQuartoLabelsResult', requestId: message.requestId, labels }),
-			);
+		case 'plusQuartoWatch':
+			watchQuartoProject(session, post);
 			return true;
 		case 'plusDo':
 			void handlePlusDo(session, message);

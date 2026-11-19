@@ -3,9 +3,13 @@
  * CommonMark does not know: attribute blocks `{#id .class key=value}`, fenced
  * divs `::: {.callout-note}` … `:::`, and cross-references `@fig-id`.
  *
- * Pure helpers, shared by the editor (plus/quarto.ts) and the host's outline.
- * Line numbers here are 0-based indexes into the `lines` array.
+ * Pure helpers, shared by the editor (plus/quarto.ts) and the host (the
+ * outline, editor/plus/quartoProject.ts). Line numbers here are 0-based
+ * indexes into the `lines` array.
  */
+
+import { parse as parseYaml } from 'yaml';
+import { citeStyleOf, type CiteStyle } from './plusCitations';
 
 export interface PandocAttrs {
 	id: string;
@@ -47,6 +51,60 @@ export function labelsFromQuartoYaml(yaml: string): Record<string, string> {
 		if (m[1] in QUARTO_LABELS && value) labels[m[1]] = value;
 	}
 	return labels;
+}
+
+/** What a `_quarto.yml` or a document's front matter says about citations. */
+export interface QuartoSettings {
+	/** Bibliography files as written, relative to the file that names them. */
+	bibliography: string[];
+	csl?: string;
+	lang?: string;
+}
+
+/** The citation settings in YAML text (`bibliography:` one file or a list, `csl:`, `lang:`). */
+export function quartoSettings(yaml: string): QuartoSettings {
+	let data: unknown;
+	try {
+		data = parseYaml(yaml);
+	} catch {
+		return { bibliography: [] };
+	}
+	if (!data || typeof data !== 'object' || Array.isArray(data)) return { bibliography: [] };
+	const d = data as Record<string, unknown>;
+	const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
+	const bib = d.bibliography;
+	const list = Array.isArray(bib) ? bib : [bib];
+	return { bibliography: list.map(text).filter((b): b is string => !!b), csl: text(d.csl), lang: text(d.lang) };
+}
+
+/** The YAML between a document's opening `---` and its closing `---` or `...`; null when there is none. */
+export function frontMatterOf(text: string): string | null {
+	const m = /^---[ \t]*\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/.exec(text);
+	return m ? m[1] : null;
+}
+
+/** What to read for a Quarto document's citations, before any file is opened. */
+export interface QuartoCitationPlan {
+	/** `.bib` files as written; `base` says which folder they are relative to. */
+	files: string[];
+	base: 'project' | 'document';
+	style: CiteStyle;
+	lang: string;
+}
+
+/**
+ * Where a `.qmd`'s citations come from: its own front matter over the
+ * project's `_quarto.yml` (`bibliography:`, `csl:`, `lang:`). Null when it
+ * names no `.bib` file. Shared by the host and plus/render.js.
+ */
+export function quartoCitationPlan(projectYaml: string, documentText: string): QuartoCitationPlan | null {
+	const project = quartoSettings(projectYaml);
+	const own = quartoSettings(frontMatterOf(documentText) ?? '');
+	// Front matter names files beside the document; _quarto.yml, beside itself.
+	const [names, base] = own.bibliography.length ? [own.bibliography, 'document' as const] : [project.bibliography, 'project' as const];
+	const files = names.filter((n) => /\.bib$/i.test(n));
+	if (!files.length) return null;
+	return { files, base, style: citeStyleOf(own.csl ?? project.csl), lang: own.lang ?? project.lang ?? 'en' };
 }
 
 /** An attribute block ending a line, e.g. after a heading: `{#sec-x}`. Offsets cover the leading space. */

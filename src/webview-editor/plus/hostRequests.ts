@@ -1,8 +1,9 @@
 import type { HostToEditorMessage, PlusAnchor, PlusEditorToHostMessage, PlusNote, PlusPreview } from '../../shared/messages';
 
 /**
- * Request/reply over the webview message channel, for the lists completion
- * needs from the host (the webview cannot read the workspace itself).
+ * The plus modules' channel to the host: request/reply for what only the host
+ * can find (notes, anchors, embeds, LaTeX figures — the webview cannot read the
+ * workspace), and plain messages.
  */
 
 type Poster = (message: PlusEditorToHostMessage) => void;
@@ -15,8 +16,13 @@ export function setPlusPoster(poster: Poster): void {
 	post = poster;
 }
 
+/** Sends a message that wants no reply. */
+export function postPlus(message: PlusEditorToHostMessage): void {
+	post(message);
+}
+
 /** Resolves with the host's reply, or with `fallback` if none comes within `timeoutMs`. */
-function request<T>(build: (requestId: number) => PlusEditorToHostMessage, fallback: T, timeoutMs = 4000): Promise<T> {
+export function request<T>(build: (requestId: number) => PlusEditorToHostMessage, fallback: T, timeoutMs = 4000): Promise<T> {
 	const requestId = nextId++;
 	return new Promise<T>((resolve) => {
 		const timer = setTimeout(() => {
@@ -73,34 +79,30 @@ export function previewLink(target: string): Promise<PlusPreview | null> {
 	return request<PlusPreview | null>((requestId) => ({ type: 'plusPreview', requestId, target }), null);
 }
 
-/** The labels this document's Quarto project sets in `_quarto.yml`. */
-export function quartoLabels(): Promise<Record<string, string>> {
-	return request<Record<string, string>>((requestId) => ({ type: 'plusQuartoLabels', requestId }), {});
+/** The request a reply answers, and the value it carries; null for any other message. */
+function replyOf(message: HostToEditorMessage): { requestId: number; value: unknown } | null {
+	switch (message.type) {
+		case 'plusNotes':
+			return { requestId: message.requestId, value: message.notes };
+		case 'plusAnchors':
+			return { requestId: message.requestId, value: message.anchors };
+		case 'plusPreviewResult':
+			return { requestId: message.requestId, value: message.preview };
+		case 'plusEmbedResult':
+			return { requestId: message.requestId, value: message.src };
+		case 'plusTexAssetResult':
+			return { requestId: message.requestId, value: message.asset };
+		default:
+			return null;
+	}
 }
 
 /** Routes a host reply to its request. Returns true when the message was one. */
 export function handlePlusReply(message: HostToEditorMessage): boolean {
-	if (
-		message.type === 'plusNotes' ||
-		message.type === 'plusAnchors' ||
-		message.type === 'plusPreviewResult' ||
-		message.type === 'plusEmbedResult' ||
-		message.type === 'plusQuartoLabelsResult'
-	) {
-		const resolve = waiting.get(message.requestId);
-		waiting.delete(message.requestId);
-		resolve?.(
-			message.type === 'plusNotes'
-				? message.notes
-				: message.type === 'plusAnchors'
-					? message.anchors
-					: message.type === 'plusPreviewResult'
-						? message.preview
-						: message.type === 'plusQuartoLabelsResult'
-							? message.labels
-							: message.src,
-		);
-		return true;
-	}
-	return false;
+	const reply = replyOf(message);
+	if (!reply) return false;
+	const resolve = waiting.get(reply.requestId);
+	waiting.delete(reply.requestId);
+	resolve?.(reply.value);
+	return true;
 }

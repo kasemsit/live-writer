@@ -4,6 +4,7 @@ import type { EditorToHostMessage, HostToEditorMessage } from '../../shared/mess
 import { wikilinkExtension } from './wikilinks';
 import { calloutPlugin } from './callouts';
 import { quartoExtension } from './quarto';
+import { handleQuartoHostMessage } from './quartoProject';
 import { footnotePlugin, insertFootnote } from './footnotes';
 import { blockIdPlugin } from './blockIds';
 import { commentPlugin } from './comments';
@@ -49,6 +50,7 @@ export function plusExtensions(post: (message: EditorToHostMessage) => void): Ex
 /** Handles a plus message from the host. Returns true when it was one. */
 export function handlePlusHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
 	if (handlePlusReply(message)) return true;
+	if (handleQuartoHostMessage(view, message)) return true;
 	if (message.type === 'plusTrackNext') {
 		trackNextUpdate();
 		return true;

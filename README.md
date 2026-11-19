@@ -48,6 +48,7 @@ This fork adds:
   - `::: {.callout-note}` … `:::` is a callout box, titled by its first heading, `title="…"` or its type. `icon=false` and `appearance="simple"`/`"minimal"` are followed.
   - `![caption](img.png){#fig-id width=80%}` is a figure, sized and captioned, numbered per file as Quarto numbers a chapter.
   - `@fig-id` reads *Figure 2* and `@sec-id` the heading's text; a click jumps there. The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …).
+  - `[@chen2015]` reads *(Chen, 2015)* and `@chen2015` *Chen (2015)*, from the `.bib` that `bibliography:` names, in the `csl:` style (APA or Chicago author-date) and the `lang:` of the project. Hover for the entry.
   - `{#sec-id}` after a heading is hidden, and callout titles stay out of the Outline.
   - A heading or image that Pandoc joins to the line above or below it is flagged. Quarto would print the heading as `## …` and leave the figure unnumbered.
 - **Claude Code sees your selection**: the exact Markdown source, its line numbers and the file path. A webview's selection is otherwise invisible to VS Code and to Claude.

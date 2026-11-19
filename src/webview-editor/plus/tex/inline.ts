@@ -1,5 +1,6 @@
 import type { PlusTexContext } from '../../../shared/messages';
-import { citeLabel, describeBib } from '../../../shared/plusTexAux';
+import { describeBib } from '../../../shared/plusBib';
+import { citeLabel } from '../../../shared/plusCitations';
 import { CONTROL_SYMBOLS, TEXT_SYMBOLS, isLetter, lineEnd, matchBrace, readAccent, readArgs, textLigature, texToPlain } from '../../../shared/plusTexScan';
 import { renderMathInto } from '../math';
 import { resolveTexAsset } from './context';

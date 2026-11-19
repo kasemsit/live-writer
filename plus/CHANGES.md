@@ -8,10 +8,12 @@ Each `## <version>` section is used as the GitHub release notes by `plus/release
   - Callouts (`::: {.callout-note}` … `:::`) are coloured boxes with their fences hidden, titled by their first heading, `title="…"` or their type. `icon=false` and `appearance="simple"`/`"minimal"` are followed.
   - `![caption](img.png){#fig-id width=80%}` is a sized, captioned figure, numbered per file as Quarto numbers a book chapter's figures.
   - `@fig-id` reads *Figure 2* and `@sec-id` the heading's text; a click jumps to it. An id with nothing to point at reads `?fig-id` in red, as Quarto prints it.
-  - The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …).
+  - **Citations read as the book prints them.** `[@chen2015]` reads *(Chen, 2015)*, `[see @a, p. 3; @b]` and `[-@a]` too, and an in-text `@chen2015` reads *Chen (2015)*. Entries come from the `.bib` files named by `bibliography:` in `_quarto.yml` or the file's front matter; the style follows `csl:` (APA, or Quarto's default Chicago author-date), and `lang: th` gives *และคณะ* and *ม.ป.ป.* as Quarto does. Hover a citation to read its entry; a key the bibliography lacks reads `key?` in red. Checked against a real Thai book: every citation matches its rendered HTML.
+  - The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …), and follow it when it changes; so do the bibliography files.
   - `{#sec-id}` after a heading is hidden; callout titles are not listed in the Outline.
   - **Flags what Quarto reads differently from how it looks.** A heading straight after a line of text, with no blank line between, is part of that paragraph in Pandoc: Quarto prints it as `## …`, and an image in that paragraph is not numbered.
 - The source of each of these shows again while the caret is on its line.
+- In a `.md` note, `[@key]` still links to the vault's `@key` note, as before.
 
 ## 0.4.12
 

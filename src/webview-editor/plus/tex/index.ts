@@ -7,7 +7,7 @@ import { trackChangesExtension } from '../trackChanges';
 import { contextMenuExtension } from '../contextMenu';
 import { texBlockField } from './blocks';
 import { texCompletion, texKeymap } from './commands';
-import { setTexPoster, texContextField, texScanField } from './context';
+import { texContextField, texScanField } from './context';
 import { texRenderPlugin } from './render';
 
 export { handleTexHostMessage } from './context';
@@ -20,7 +20,6 @@ export { handleTexHostMessage } from './context';
  */
 export function texExtensions(post: (message: EditorToHostMessage) => void): Extension[] {
 	setPlusPoster(post);
-	setTexPoster(post);
 	return [
 		texScanField,
 		texContextField,
