@@ -292,3 +292,179 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 	color: var(--vscode-editorSuggestWidget-highlightForeground, #2aaaff);
 }
 .cm-completionDetail { margin-left: 0.8em; font-style: normal; opacity: 0.6; }
+
+/* ── LaTeX Live Preview (.tex), rendered by plus/tex/ — Overleaf's Visual Editor, this editor's way ── */
+.mlp-tex .cm-content { --mlp-tex-accent: var(--vscode-textLink-foreground, #2f6feb); }
+/* Source that is shown: commands, environment names, math being edited. */
+.mlp-tex-cmd { color: color-mix(in srgb, var(--mlp-tex-accent) 80%, currentColor); }
+.mlp-tex-env-src { color: color-mix(in srgb, var(--mlp-tex-accent) 65%, currentColor); opacity: 0.85; }
+.mlp-tex-math-src { color: color-mix(in srgb, rgb(22, 163, 74) 70%, currentColor); }
+.mlp-tex-key { color: color-mix(in srgb, rgb(202, 138, 4) 75%, currentColor); }
+.mlp-tex-verb { font-family: var(--vscode-editor-font-family, monospace); font-size: 0.92em; }
+.mlp-tex-layout {
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 0.82em;
+	opacity: 0.5;
+}
+.mlp-tex-linebreak { opacity: 0.45; }
+/* % comments: notes to the writer, tinted like HTML comments in Markdown notes. */
+.mlp-tex-comment { color: color-mix(in srgb, currentColor 60%, rgb(161, 98, 7)); font-style: italic; }
+.cm-line.mlp-tex-comment-line {
+	background: rgba(234, 179, 8, 0.10);
+	border-left: 3px solid rgba(202, 138, 4, 0.55);
+	padding-left: 0.8em !important;
+	font-size: 0.88em;
+}
+/* The preamble, shown when the caret is in it: plain source. */
+.cm-line.mlp-tex-preamble { font-family: var(--vscode-editor-font-family, monospace); font-size: 0.88em; }
+.mlp-tex-fold {
+	display: inline-block;
+	margin: 0.2em 0 0.6em;
+	padding: 0.15em 0.7em;
+	border: 1px solid rgba(127, 127, 127, 0.35);
+	border-radius: 999px;
+	font-size: 0.85em;
+	opacity: 0.75;
+	cursor: pointer;
+	user-select: none;
+}
+.mlp-tex-fold::before { content: '▸ '; }
+.mlp-tex-fold:hover { opacity: 1; border-color: var(--vscode-focusBorder, #007fd4); }
+
+/* Text styles without a Markdown counterpart. */
+.mlp-tex-tt { font-family: var(--vscode-editor-font-family, monospace); font-size: 0.92em; }
+.mlp-tex-sc { font-variant: small-caps; }
+.mlp-tex-sf { font-family: system-ui, sans-serif; }
+.mlp-tex-sup { vertical-align: super; font-size: 0.72em; line-height: 0; }
+.mlp-tex-sub { vertical-align: sub; font-size: 0.72em; line-height: 0; }
+.mlp-tex-upper { text-transform: uppercase; }
+.mlp-tex-lower { text-transform: lowercase; }
+.mlp-tex-hl { background: rgba(250, 204, 21, 0.35); border-radius: 2px; }
+.mlp-tex-colorbox { border-radius: 2px; padding: 0 0.15em; }
+.mlp-tex-logo { font-variant: small-caps; letter-spacing: 0.02em; }
+.mlp-tex-nbsp { white-space: pre; }
+.mlp-tex-space { white-space: pre; }
+.mlp-tex-url { word-break: break-all; }
+.mlp-tex-todo { color: rgb(220, 38, 38); }
+.mlp-tex-todo-label { color: rgb(220, 38, 38); font-weight: 700; font-size: 0.85em; }
+.mlp-tex-footnote { font-size: 0.86em; opacity: 0.75; }
+.mlp-tex-footnote-mark { color: var(--mlp-tex-accent); opacity: 1; margin-right: 0.2em; }
+.mlp-tex-meta { font-size: 0.86em; opacity: 0.8; }
+.mlp-tex-author { font-weight: 600; }
+.mlp-tex-caption { font-size: 0.92em; }
+.mlp-tex-caption-label { font-weight: 700; font-size: 0.92em; }
+
+/* Citations, references, labels and files: chips. */
+.mlp-tex-chip {
+	display: inline-block;
+	padding: 0 0.25em;
+	border-radius: 4px;
+	font-size: 0.9em;
+	line-height: 1.35;
+	background: color-mix(in srgb, var(--mlp-tex-accent) 13%, transparent);
+	color: color-mix(in srgb, var(--mlp-tex-accent) 85%, currentColor);
+	cursor: pointer;
+	white-space: nowrap;
+}
+.mlp-tex-chip:hover { background: color-mix(in srgb, var(--mlp-tex-accent) 24%, transparent); }
+.mlp-tex-label {
+	background: transparent;
+	border: 1px dashed rgba(127, 127, 127, 0.45);
+	color: inherit;
+	opacity: 0.55;
+	font-size: 0.78em;
+	font-family: var(--vscode-editor-font-family, monospace);
+}
+.mlp-tex-label::before { content: '#'; opacity: 0.6; margin-right: 0.1em; }
+.mlp-tex-file { text-decoration: none; }
+.mlp-tex-file::before { content: '↗ '; opacity: 0.7; }
+.mlp-tex-chip-missing {
+	background: rgba(220, 38, 38, 0.12);
+	color: color-mix(in srgb, rgb(220, 38, 38) 85%, currentColor);
+}
+.mlp-tex-chip-faint { opacity: 0.55; }
+
+/* Environments. A collapsed \begin / \end line keeps a sliver of height, so the caret can still reach it. */
+.cm-line.mlp-tex-collapsed { font-size: 0.45em; line-height: 0.9; opacity: 0.4; }
+.mlp-tex-env-label {
+	font-size: 0.78em;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	opacity: 0.6;
+}
+.mlp-tex-env-heading { font-size: 0.95em; letter-spacing: 0.04em; opacity: 0.85; }
+.cm-line.mlp-tex-abstract { font-size: 0.95em; padding-left: 1.2em !important; padding-right: 1.2em !important; }
+.cm-line.mlp-tex-float {
+	background: rgba(127, 127, 127, 0.05);
+	border-left: 1px solid rgba(127, 127, 127, 0.3);
+	border-right: 1px solid rgba(127, 127, 127, 0.3);
+	padding-left: 0.8em !important;
+	padding-right: 0.8em !important;
+}
+/* A table or equation drawn inside a float continues its frame. */
+.mlp-tex-in-float {
+	background: rgba(127, 127, 127, 0.05);
+	border-left: 1px solid rgba(127, 127, 127, 0.3);
+	border-right: 1px solid rgba(127, 127, 127, 0.3);
+}
+.cm-line.mlp-tex-float-first { border-top: 1px solid rgba(127, 127, 127, 0.3); border-radius: 6px 6px 0 0; padding-top: 0.25em !important; }
+.cm-line.mlp-tex-float-last { border-bottom: 1px solid rgba(127, 127, 127, 0.3); border-radius: 0 0 6px 6px; padding-bottom: 0.25em !important; }
+.cm-line.mlp-tex-center { text-align: center; }
+.cm-line.mlp-tex-right { text-align: right; }
+.cm-line.mlp-tex-quote { padding-left: 2em !important; font-style: italic; }
+.cm-line.mlp-tex-theorem-italic { font-style: italic; }
+.mlp-tex-theorem-label { font-weight: 700; font-style: normal; }
+.mlp-tex-qed { float: right; }
+.cm-line.mlp-tex-code {
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 0.86em;
+	background: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.09));
+}
+
+/* Lists: each level indents; the marker hangs in the indent. */
+.cm-line.mlp-tex-list-1 { padding-left: 1.8em !important; }
+.cm-line.mlp-tex-list-2 { padding-left: 3.4em !important; }
+.cm-line.mlp-tex-list-3 { padding-left: 5em !important; }
+.cm-line.mlp-tex-list-4 { padding-left: 6.6em !important; }
+.mlp-tex-item {
+	display: inline-block;
+	min-width: 1.6em;
+	margin-left: -1.6em;
+	padding-right: 0.3em;
+	text-align: right;
+	box-sizing: border-box;
+	opacity: 0.8;
+}
+.mlp-tex-item-label { min-width: 0; margin-left: 0; font-weight: 700; opacity: 1; padding-right: 0.4em; }
+
+/* Display math on its own lines, numbered from the last build. */
+.mlp-tex-equation { display: flex; align-items: center; gap: 0.5em; }
+.mlp-tex-equation-body { flex: 1; text-align: center; overflow-x: auto; overflow-y: hidden; }
+.mlp-tex-eqno { flex: none; opacity: 0.8; }
+
+/* \includegraphics */
+.mlp-tex-graphic { display: inline-block; max-width: 100%; vertical-align: middle; cursor: pointer; }
+.mlp-tex-graphic img { max-width: 100%; height: auto; border-radius: 3px; vertical-align: middle; }
+.mlp-tex-graphic img[style*='height'] { width: auto; }
+.mlp-tex-graphic-loading { min-width: 6em; min-height: 3em; background: rgba(127, 127, 127, 0.08); border-radius: 4px; }
+.mlp-tex-graphic-missing {
+	padding: 0.4em 0.8em;
+	border: 1px dashed rgba(127, 127, 127, 0.5);
+	border-radius: 4px;
+	font-size: 0.85em;
+	opacity: 0.75;
+}
+
+/* tabular */
+.mlp-tex-table-wrap { overflow-x: auto; padding: 0.4em 0; cursor: text; }
+.mlp-tex-table { border-collapse: collapse; margin: 0 auto; font-size: 0.92em; }
+.mlp-tex-table td { padding: 0.15em 0.6em; vertical-align: top; border: 0; }
+.mlp-tex-table td:hover { background: rgba(127, 127, 127, 0.08); }
+.mlp-tex-td-l { text-align: left; }
+.mlp-tex-td-c { text-align: center; }
+.mlp-tex-td-r { text-align: right; }
+.mlp-tex-table td.mlp-tex-rule-thin { border-top: 1px solid rgba(127, 127, 127, 0.6); }
+.mlp-tex-table td.mlp-tex-rule-thick { border-top: 2px solid rgba(127, 127, 127, 0.85); }
+.mlp-tex-table td.mlp-tex-rule-below-thin { border-bottom: 1px solid rgba(127, 127, 127, 0.6); }
+.mlp-tex-table td.mlp-tex-rule-below-thick { border-bottom: 2px solid rgba(127, 127, 127, 0.85); }

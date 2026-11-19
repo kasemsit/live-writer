@@ -4,6 +4,8 @@ import { extractHeadings } from '../shared/headings';
 import type { HeadingItem } from '../shared/headings';
 import { escapeAttribute } from '../shared/i18n';
 import type { PlusHostToEditorMessage } from '../shared/messages';
+import { extractTexHeadings } from '../shared/plusTexScan';
+import { isTexDocument } from './plus/tex';
 
 export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvider {
 	static readonly viewType = 'mdLivePreview.editor';
@@ -41,17 +43,24 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 				// anywhere in the workspace (Obsidian keeps them in an attachments
 				// folder), so the workspace itself must be loadable.
 				...(vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri),
+				// md-live-preview-plus: PDF figures of LaTeX documents, converted to PNG.
+				this.figureCache(),
 			],
 		};
 		webviewPanel.webview.html = this.buildHtml(webviewPanel.webview);
 
-		const session = new DocumentSyncSession(document, webviewPanel, this.getCss);
+		const session = new DocumentSyncSession(document, webviewPanel, this.getCss, this.figureCache());
 		this.sessions.add(session);
 
 		webviewPanel.onDidDispose(() => {
 			session.dispose();
 			this.sessions.delete(session);
 		});
+	}
+
+	/** md-live-preview-plus: where the LaTeX preview keeps PNGs of PDF figures. */
+	private figureCache(): vscode.Uri {
+		return vscode.Uri.joinPath(this.context.globalStorageUri, 'tex-figures');
 	}
 
 	/** Called when the enabled CSS snippet set changes, to hot-reload every open panel. */
@@ -82,7 +91,10 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 	/** Headings of the currently active Markdown Live Preview document, or `undefined` if none is active. */
 	getActiveHeadings(): HeadingItem[] | undefined {
 		const session = this.findActiveSession();
-		return session ? extractHeadings(session.getDocument().getText()) : undefined;
+		if (!session) return undefined;
+		const document = session.getDocument();
+		// md-live-preview-plus: a LaTeX document's outline is its sectioning commands.
+		return isTexDocument(document) ? extractTexHeadings(document.getText()) : extractHeadings(document.getText());
 	}
 
 	/** md-live-preview-plus: the document of the active Live Preview panel, if any. */

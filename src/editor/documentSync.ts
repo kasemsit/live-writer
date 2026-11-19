@@ -8,6 +8,7 @@ import { handlePlusMessage, trackSession, takePendingJump } from './plus';
 import { textScale } from './plus/textScale';
 import { isTrackedChange } from './plus/trackChanges';
 import { changesForEditor, eolMap, tokensForEditor } from './plus/eol';
+import { isTexDocument, registerTexSession, TexSession } from './plus/tex';
 
 /**
  * Largest `.drawio` file that will be read and parsed.
@@ -55,12 +56,21 @@ export class DocumentSyncSession {
 	// edit has actually bumped document.version, defeating the staleness guard.
 	private editQueue: Promise<void> = Promise.resolve();
 
+	// md-live-preview-plus: set for a .tex file, which gets the LaTeX Live Preview.
+	private readonly tex: TexSession | undefined;
+
 	constructor(
 		private readonly document: vscode.TextDocument,
 		private readonly webviewPanel: vscode.WebviewPanel,
 		private readonly getCss: () => string,
+		// md-live-preview-plus: where PDF figures of a LaTeX document are converted to PNG.
+		figureCache?: vscode.Uri,
 	) {
 		this.lastAppliedVersion = document.version;
+		if (isTexDocument(document) && figureCache) {
+			this.tex = new TexSession(document, (m) => this.post(m), (uri) => this.asWebviewUri(uri), figureCache);
+			this.disposables.push(registerTexSession(this, this.tex));
+		}
 
 		this.disposables.push(
 			webviewPanel.webview.onDidReceiveMessage((message: EditorToHostMessage) => this.handleMessage(message)),
@@ -262,7 +272,10 @@ export class DocumentSyncSession {
 			css: this.getCss(),
 			codeTheme: pickCodeTheme(),
 			baseUri: `${this.webviewPanel.webview.asWebviewUri(docDir).toString()}/`,
+			lang: this.tex ? 'latex' : 'markdown',
 		});
+		// md-live-preview-plus: labels, citations and macros for a LaTeX document.
+		void this.tex?.sendContext();
 		this.lastAppliedVersion = this.document.version;
 		// md-live-preview-plus: the reader's remembered text size.
 		this.post({ type: 'plusTextScale', scale: textScale() });
@@ -331,6 +344,8 @@ export class DocumentSyncSession {
 	}
 
 	private scheduleRehighlight(immediate = false) {
+		// plus: a LaTeX document has no Markdown code fences to highlight.
+		if (this.tex) return;
 		if (this.rehighlightTimer) {
 			clearTimeout(this.rehighlightTimer);
 			this.rehighlightTimer = undefined;

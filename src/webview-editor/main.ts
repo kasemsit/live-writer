@@ -29,14 +29,17 @@ import {
 } from './searchReveal';
 import { t } from '../shared/i18n';
 import { adaptMarkdownCss } from '../shared/cssAdapter';
-import type { TextChange } from '../shared/messages';
+import type { EditorLang, TextChange } from '../shared/messages';
 import { plusExtensions, handlePlusHostMessage } from './plus';
+// md-live-preview-plus: the LaTeX Live Preview, built instead of the Markdown editor for a .tex file.
+import { texExtensions, texInitialAnchor, handleTexHostMessage } from './plus/tex';
 
 const remoteChange = Annotation.define<boolean>();
 const FLUSH_DEBOUNCE_MS = 250;
 
 let view: EditorView | undefined;
 let baseVersion = 0;
+let lang: EditorLang = 'markdown';
 let pending: ChangeSet | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -77,7 +80,7 @@ function applyUserCss(css: string) {
 	styleEl.textContent = adaptMarkdownCss(css);
 }
 
-function createExtensions(): Extension[] {
+function markdownExtensions(): Extension[] {
 	const markdownSupport = markdown({ extensions: GFM });
 	return [
 		markdownSupport,
@@ -95,10 +98,16 @@ function createExtensions(): Extension[] {
 		...plusExtensions(postToHost),
 		blockDecorationsField,
 		codeHighlightExtension,
-		createLinkClickHandler((href) => postToHost({ type: 'openLink', href })),
 		createImagePasteHandler((atPos, mimeType, dataBase64, needsOwnParagraph) =>
 			postToHost({ type: 'pasteImage', atPos, mimeType, dataBase64, needsOwnParagraph }),
 		),
+	];
+}
+
+function createExtensions(): Extension[] {
+	return [
+		...(lang === 'latex' ? [...texExtensions(postToHost), closeBrackets()] : markdownExtensions()),
+		createLinkClickHandler((href) => postToHost({ type: 'openLink', href })),
 		// Without this a state keeps only one selection range, so Mod-d's
 		// multi-cursor search silently collapses to a single cursor — and the
 		// multiple-cursor behaviour Ctrl+B/Ctrl+I already document never had a way
@@ -188,6 +197,8 @@ function createExtensions(): Extension[] {
 // further, past its line break, to actually land outside the block.
 function initialStateFor(text: string): EditorState {
 	const state = EditorState.create({ doc: text, extensions: createExtensions() });
+	// md-live-preview-plus: a LaTeX file opens with the caret at its end, so nothing at the top shows as source.
+	if (lang === 'latex') return state.update({ selection: { anchor: texInitialAnchor(state) } }).state;
 	const fm = detectFrontmatter(state);
 	if (!fm) return state;
 	const anchor = Math.min(fm.to + 1, state.doc.length);
@@ -224,10 +235,12 @@ onHostMessage((message) => {
 	// `drawioFile` replies are routed to whichever widget requested them, not
 	// handled by the switch below.
 	if (handleDrawioFileMessage(message)) return;
+	if (handleTexHostMessage(view, message)) return;
 	if (handlePlusHostMessage(view, message)) return;
 	switch (message.type) {
 		case 'init':
 			baseVersion = message.version;
+			lang = message.lang ?? 'markdown';
 			setImageBaseUri(message.baseUri);
 			applyUserCss(message.css);
 			// A re-init means a different document (or the same one reloaded), so

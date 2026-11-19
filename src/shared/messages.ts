@@ -1,4 +1,8 @@
 import type { HeadingItem } from './headings';
+import type { BibEntry } from './plusTexAux';
+
+/** md-live-preview-plus: which editor the webview builds for a document. */
+export type EditorLang = 'markdown' | 'latex';
 
 export interface TextChange {
 	from: number;
@@ -22,7 +26,8 @@ export type HostToEditorMessage =
 	// `baseUri` is the webview-loadable URI (with a trailing slash) of the
 	// folder containing the document, used to resolve relative image paths
 	// (e.g. `assets/foo.png`) to something the webview is actually allowed to load.
-	| { type: 'init'; text: string; version: number; css: string; codeTheme: string; baseUri: string }
+	// plus: `lang` picks the editor — Markdown (the default) or the LaTeX Live Preview.
+	| { type: 'init'; text: string; version: number; css: string; codeTheme: string; baseUri: string; lang?: EditorLang }
 	| { type: 'externalUpdate'; changes: TextChange[]; version: number }
 	| { type: 'ackEdit'; version: number }
 	| { type: 'codeTokens'; blocks: CodeBlockTokens[] }
@@ -112,7 +117,33 @@ export type PlusHostToEditorMessage =
 	| { type: 'plusInsertFootnote' }
 	// `range` (document offsets) overrides the selection — used by tests and by
 	// callers that already know what to act on.
-	| { type: 'plusRun'; command: PlusCommand; range?: { from: number; to: number } };
+	| { type: 'plusRun'; command: PlusCommand; range?: { from: number; to: number } }
+	// LaTeX: what the last build and the bibliography say (see PlusTexContext).
+	| { type: 'plusTexContext'; context: PlusTexContext }
+	| { type: 'plusTexAssetResult'; requestId: number; asset: PlusTexAsset };
+
+/**
+ * md-live-preview-plus: what the LaTeX Live Preview needs beyond the file:
+ * the numbers the last build gave labels and citations (from the root's
+ * `.aux`), the bibliography entries, and the root preamble's macros.
+ */
+export interface PlusTexContext {
+	labels: Record<string, string>;
+	cites: Record<string, string>;
+	bib: Record<string, BibEntry>;
+	/** KaTeX macros: `\name` → body with `#1`… */
+	macros: Record<string, string>;
+	/** The root file, workspace-relative ('' when the document is its own root). */
+	root: string;
+}
+
+/** An `\includegraphics` target: a URI the webview may load, or why there is none. */
+export interface PlusTexAsset {
+	status: 'image' | 'missing' | 'unsupported';
+	src: string | null;
+	/** The file as found (or the path as written, when missing). */
+	name: string;
+}
 
 export type PlusEditorToHostMessage =
 	// The editor selection, as exact Markdown source with its line numbers;
@@ -133,7 +164,9 @@ export type PlusEditorToHostMessage =
 	| { type: 'plusDo'; action: 'openAsText'; line: number }
 	| { type: 'plusDo'; action: 'openBeside'; href: string }
 	| { type: 'plusDo'; action: 'openUrl'; url: string }
-	| { type: 'plusDo'; action: 'notify'; message: string; error?: boolean };
+	| { type: 'plusDo'; action: 'notify'; message: string; error?: boolean }
+	// LaTeX: find the file an `\includegraphics{path}` means.
+	| { type: 'plusTexAsset'; requestId: number; path: string };
 
 export interface StyleEntry {
 	id: string;

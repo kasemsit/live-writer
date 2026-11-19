@@ -2,6 +2,16 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## Unreleased
+
+- **LaTeX Live Preview.** A `.tex` file opens in the Live Preview (*Open With → Live Preview*, or the preview icon in the title bar) and is drawn the way Overleaf's Visual Editor draws it. As with Markdown, the source comes back wherever the caret is.
+  - **Drawn:** section headings, `\textbf` / `\emph` and the other text styles, math with KaTeX (with the document's `\newcommand` macros), lists with their markers, `abstract`, figures and tables in a frame, captions, `tabular` with booktabs rules and `\multicolumn`, `\includegraphics` images, footnotes, links, `~ -- --- `` ''` and accents. Comments are tinted as notes. The preamble folds into one line.
+  - **Real numbers from your last build:** `\ref`, `\eqref`, `\cite`, captions and equations show the numbers in the root's `.aux` (`[3]`, `Fig. 2`, `(4)`), and update when you rebuild. A reference the build does not know is marked red. Hovering a citation shows its `.bib` entry.
+  - **Multi-file projects:** the root is found by `% !TEX root`, by `\documentclass`, or by the nearby file that `\input`s this one. `\input{…}` is a link that opens the file in the Live Preview (right-click → *Open Link to the Side*).
+  - **PDF figures** are shown as their first page when `pdftoppm` (poppler) is installed.
+  - **Editing:** Ctrl/Cmd+B and +I wrap in `\textbf{}` / `\textit{}`, Ctrl/Cmd+/ comments lines out, Enter after an `\item` starts the next one. Completion offers labels after `\ref{`, citation keys after `\cite{`, environments after `\begin{` (with the `\end`), and commands.
+  - Nothing is compiled: the preview reads what LaTeX Workshop, latexmk or Overleaf last wrote. Claude still gets the exact selected source with its line numbers.
+
 ## 0.4.11
 
 **Fixes a bug that put edits in the wrong place in files with Windows line endings (CRLF).** Please update.

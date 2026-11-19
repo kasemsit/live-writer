@@ -40,7 +40,7 @@ const ROOT = join(__dirname, '..', '..');
  * dark set is supplied so colors resolve to something assertable rather than to
  * the fallbacks.
  */
-export async function mountEditor(page: Page, text: string, locale = 'en'): Promise<void> {
+export async function mountEditor(page: Page, text: string, locale = 'en', lang: 'markdown' | 'latex' = 'markdown'): Promise<void> {
 	const script = readFileSync(join(ROOT, 'dist', 'webview-editor.js'), 'utf8');
 	const style = readFileSync(join(ROOT, 'media', 'webview-editor-theme.css'), 'utf8');
 	const uiStyle = readFileSync(join(ROOT, 'media', 'webview-ui.css'), 'utf8');
@@ -110,20 +110,24 @@ window.mlpLocale = ${JSON.stringify(locale)};</script>
 </body>
 </html>`);
 
-	await page.evaluate((docText) => {
-		window.dispatchEvent(
-			new MessageEvent('message', {
-				data: {
-					type: 'init',
-					text: docText,
-					version: 0,
-					baseUri: 'https://example.invalid/',
-					css: '',
-					codeTheme: 'dark-plus',
-				},
-			}),
-		);
-	}, text);
+	await page.evaluate(
+		({ docText, docLang }) => {
+			window.dispatchEvent(
+				new MessageEvent('message', {
+					data: {
+						type: 'init',
+						text: docText,
+						version: 0,
+						baseUri: 'https://example.invalid/',
+						css: '',
+						codeTheme: 'dark-plus',
+						lang: docLang,
+					},
+				}),
+			);
+		},
+		{ docText: text, docLang: lang },
+	);
 
 	await page.waitForSelector('.cm-content');
 }

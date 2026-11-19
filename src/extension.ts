@@ -11,8 +11,10 @@ import { registerContextMenu } from './editor/plus/contextMenu';
 import { registerTextScale } from './editor/plus/textScale';
 
 function getActiveMarkdownUri(): vscode.Uri | undefined {
-	if (vscode.window.activeTextEditor?.document.languageId === 'markdown') {
-		return vscode.window.activeTextEditor.document.uri;
+	// plus: a LaTeX file opens in the LaTeX Live Preview.
+	const languageId = vscode.window.activeTextEditor?.document.languageId;
+	if (languageId === 'markdown' || languageId === 'latex' || languageId === 'tex') {
+		return vscode.window.activeTextEditor!.document.uri;
 	}
 	const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
 	if (input instanceof vscode.TabInputText) {

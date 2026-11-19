@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import type { PlusCommand, PlusEditorToHostMessage, PlusHostToEditorMessage } from '../../shared/messages';
 import { linkTexts } from '../../shared/plusLinks';
 import { listNotes, openWikilink, type PlusSession } from './wikiOpen';
+import { texSessionOf } from './tex';
 
 /**
  * The right-click menu of the Live Preview (`webview/context` in package.json).
@@ -113,6 +114,7 @@ export async function handlePlusDo(session: PlusSession, message: Extract<PlusEd
 		}
 		case 'openBeside':
 			if (message.href.startsWith('wiki:')) await openWikilink(session, message.href.slice('wiki:'.length), true);
+			else if (message.href.startsWith('tex:')) await texSessionOf(session)?.open(message.href, true);
 			else await vscode.env.openExternal(vscode.Uri.parse(message.href));
 			return;
 		case 'openUrl':

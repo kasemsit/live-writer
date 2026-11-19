@@ -39,6 +39,13 @@ describe('editor wiring', () => {
 		expect(MAIN).toMatch(/\bsearch\(\{/);
 	});
 
+	it('builds the LaTeX Live Preview for a document the host marks as LaTeX', () => {
+		// md-live-preview-plus: without these the .tex editor is the Markdown one.
+		expect(MAIN).toContain("lang = message.lang ?? 'markdown'");
+		expect(MAIN).toContain("lang === 'latex' ? [...texExtensions(postToHost)");
+		expect(MAIN).toContain('handleTexHostMessage(view, message)');
+	});
+
 	it('binds the search keys a user expects', () => {
 		for (const key of ['Mod-f', 'F3', 'Mod-d', 'Escape']) {
 			expect(MAIN).toContain(`'${key}'`);

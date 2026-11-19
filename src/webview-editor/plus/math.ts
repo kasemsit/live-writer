@@ -63,13 +63,22 @@ export function loadKatex(): Promise<KatexApi> {
 
 const cache = new Map<string, string>();
 const MATH_CONTEXT = JSON.stringify({ mlpMath: true });
+// A LaTeX document's own macros (\newcommand…), by identity: the cache key names the set used.
+const macroIds = new WeakMap<Record<string, string>, number>();
+let nextMacroId = 1;
 
-function toHtml(katex: KatexApi, tex: string, display: boolean): string {
-	const key = `${display ? 'D' : 'I'}${tex}`;
+function toHtml(katex: KatexApi, tex: string, display: boolean, macros?: Record<string, string>): string {
+	let macroId = 0;
+	if (macros) {
+		macroId = macroIds.get(macros) ?? nextMacroId++;
+		macroIds.set(macros, macroId);
+	}
+	const key = `${display ? 'D' : 'I'}${macroId}:${tex}`;
 	let html = cache.get(key);
 	if (html === undefined) {
 		try {
-			html = katex.renderToString(tex, { displayMode: display, throwOnError: false, strict: 'ignore', trust: false, output: 'htmlAndMathml' });
+			// KaTeX adds to `macros` when a formula defines one (\gdef), so it gets a copy.
+			html = katex.renderToString(tex, { displayMode: display, throwOnError: false, strict: 'ignore', trust: false, output: 'htmlAndMathml', ...(macros ? { macros: { ...macros } } : {}) });
 		} catch {
 			html = '';
 		}
@@ -83,12 +92,12 @@ function toHtml(katex: KatexApi, tex: string, display: boolean): string {
  * Renders `tex` into `el`. When KaTeX is not loaded yet the source is shown
  * and replaced once it is; `onLate` runs then (the widget's height changed).
  */
-export function renderMathInto(el: HTMLElement, tex: string, display: boolean, onLate?: () => void): void {
+export function renderMathInto(el: HTMLElement, tex: string, display: boolean, onLate?: () => void, macros?: Record<string, string>): void {
 	// The TeX, for "Copy TeX" and rich-text copy; `mlpMath` shows the math items of the right-click menu.
 	el.dataset.mlpTex = tex;
 	el.dataset.vscodeContext = MATH_CONTEXT;
 	const draw = (katex: KatexApi) => {
-		const html = toHtml(katex, tex, display);
+		const html = toHtml(katex, tex, display, macros);
 		if (html) el.innerHTML = html;
 		else el.textContent = tex;
 	};

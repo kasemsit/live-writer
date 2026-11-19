@@ -37,6 +37,12 @@ This fork adds:
 - **Image embeds** `![[name.png]]` (and `|300` for width): the file is found by name anywhere in the workspace.
 - **Underline** with Ctrl/Cmd+U, written as `<u>…</u>`.
 - **Math**: `$…$` and `$$…$$` render with KaTeX, in the text, in tables and in previews. Click a formula to edit its TeX.
+- **LaTeX Live Preview**: a `.tex` file opens in the same editor and is drawn as Overleaf's Visual Editor draws it, with the source back wherever the caret is.
+  - Headings, text styles, KaTeX math (with the document's macros), lists, `abstract`, figures, captions, `tabular` (booktabs rules, `\multicolumn`), images, footnotes, links and LaTeX typography (`~`, `--`, ``` `` ```…`''`) are drawn. The preamble folds into one line.
+  - `\ref`, `\eqref`, `\cite`, captions and equation numbers show **the numbers of your last build**, read from the root's `.aux`, and follow every rebuild. Hover a citation to read its `.bib` entry.
+  - The root is found by `% !TEX root`, `\documentclass`, or the file that `\input`s this one; `\input{…}` opens the file in the Live Preview. PDF figures show their first page when `pdftoppm` is installed.
+  - Ctrl/Cmd+B / +I wrap in `\textbf` / `\textit`, Ctrl/Cmd+/ comments lines, Enter continues an `\item`; completion after `\ref{`, `\cite{` and `\begin{`.
+  - Nothing is compiled. Keep building with LaTeX Workshop (or latexmk) for the PDF.
 - **Claude Code sees your selection**: the exact Markdown source, its line numbers and the file path. A webview's selection is otherwise invisible to VS Code and to Claude.
   - The file is saved when you select, so the line numbers match the file on disk.
   - Text selected inside a rendered table is sent as the cells' Markdown source.
@@ -68,7 +74,7 @@ The installer does three things:
 Next:
 1. Reload VS Code (*Developer: Reload Window*).
 2. Start a new Claude Code session.
-3. Open a `.md` file with *Open With → Markdown Live Preview*.
+3. Open a `.md` or `.tex` file with *Open With → Live Preview (Markdown, LaTeX)*.
 
 To check that the bridge works, select some text and ask Claude what you selected.
 
@@ -128,9 +134,10 @@ and reports what the added features produced.
 The changes are kept apart so that upstream releases merge cleanly:
 
 - **New files:**
-  - `src/webview-editor/plus/` holds the editor side.
+  - `src/webview-editor/plus/` holds the editor side; `src/webview-editor/plus/tex/` is the LaTeX Live Preview.
+  - `src/editor/plus/tex.ts` is its host side (root file, `.aux`, `.bib`, images).
   - `src/editor/plus/` holds the extension host side.
-  - `src/shared/plus*.ts` holds pure helpers shared by both.
+  - `src/shared/plus*.ts` holds pure helpers shared by both (`plusTex*.ts`: the LaTeX scanner and the `.aux`, `.bib` and `tabular` readers).
   - `media/plus.css`, `plus/` (theme, fonts, hooks, installers, tools) and `test/e2e/plus.spec.ts`.
 - **Upstream files** carry only small hooks, each marked `plus:` or `md-live-preview-plus`.
   - `src/webview-editor/plus/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.

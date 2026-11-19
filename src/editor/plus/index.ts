@@ -3,6 +3,7 @@ import type { EditorToHostMessage, HostToEditorMessage } from '../../shared/mess
 import { hasSessionFor, listAnchors, listNotes, openWikilink, previewWikilink, resolveWikiTarget, trackSession as trackWikiSession, type PlusSession } from './wikiOpen';
 import { forgetSelectionOf, writeSelection } from './selectionFile';
 import { handlePlusDo } from './contextMenu';
+import { texSessionOf } from './tex';
 
 export { takePendingJump } from './wikiOpen';
 
@@ -51,7 +52,20 @@ export function handlePlusMessage(
 		case 'plusDo':
 			void handlePlusDo(session, message);
 			return true;
+		case 'plusTexAsset': {
+			const tex = texSessionOf(session);
+			const missing = { status: 'missing' as const, src: null, name: message.path };
+			void (tex ? tex.resolveAsset(message.path) : Promise.resolve(missing)).then(
+				(asset) => post({ type: 'plusTexAssetResult', requestId: message.requestId, asset }),
+				() => post({ type: 'plusTexAssetResult', requestId: message.requestId, asset: missing }),
+			);
+			return true;
+		}
 		case 'openLink':
+			if (message.href.startsWith('tex:')) {
+				void texSessionOf(session)?.open(message.href);
+				return true;
+			}
 			if (!message.href.startsWith('wiki:')) return false;
 			void openWikilink(session, message.href.slice('wiki:'.length));
 			return true;

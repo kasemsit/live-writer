@@ -8,6 +8,7 @@ import { insertRow, insertColumn, deleteRow, deleteColumn, renderTableMarkdown, 
 import { renderInlineInto } from '../tableCellInline';
 import { scanFootnotes } from './footnotes';
 import { markdownToHtml, htmlToText } from './richText';
+import { texToPlain } from '../../shared/plusTexScan';
 
 /**
  * The editor side of the right-click menu (the menu itself is VS Code's, see
@@ -23,6 +24,8 @@ import { markdownToHtml, htmlToText } from './richText';
 
 let post: (message: PlusEditorToHostMessage) => void = () => undefined;
 let last: { target: HTMLElement | null; pos: number; at: number } | null = null;
+// The LaTeX Live Preview shares this menu; a few commands act on LaTeX there.
+let texMode = false;
 const FRESH_MS = 20_000;
 
 const notify = (message: string, error = false) => post({ type: 'plusDo', action: 'notify', message, error });
@@ -114,6 +117,17 @@ function copyBlockLink(view: EditorView): void {
 function addReviewComment(view: EditorView): void {
 	const { state } = view;
 	const pos = contextPos(view);
+	if (texMode) {
+		// LaTeX: a `% REVIEW` line after the right-clicked line.
+		const end = state.doc.lineAt(pos);
+		const sel = state.selection.main;
+		const quoted = sel.empty ? '' : ` "${state.sliceDoc(sel.from, sel.to).replace(/\s+/g, ' ').trim().slice(0, 80)}"`;
+		const indent = /^[ \t]*/.exec(end.text)![0];
+		const head = `\n${indent}% REVIEW${quoted}: `;
+		view.dispatch({ changes: { from: end.to, insert: head }, selection: { anchor: end.to + head.length }, scrollIntoView: true });
+		view.focus();
+		return;
+	}
 	const block = blockAt(state, pos);
 	const end = block ? state.doc.lineAt(block.node.to) : state.doc.lineAt(pos);
 	const sel = state.selection.main;
@@ -320,7 +334,8 @@ function searchWeb(view: EditorView, base: string): void {
 	const { state } = view;
 	const sel = state.selection.main;
 	if (sel.empty) return notify('Select the text to search for.', true);
-	const query = htmlToText(markdownToHtml(state.sliceDoc(sel.from, sel.to)))
+	const selected = state.sliceDoc(sel.from, sel.to);
+	const query = (texMode ? texToPlain(selected) : htmlToText(markdownToHtml(selected)))
 		.replace(/[&#]/g, ' ')
 		.replace(/\s+/g, ' ')
 		.trim()
@@ -332,6 +347,9 @@ function searchWeb(view: EditorView, base: string): void {
 // ── Dispatch ──
 
 export function runPlusCommand(view: EditorView, command: PlusCommand, range?: { from: number; to: number }): void {
+	if (texMode && (command === 'copyBlockLink' || command === 'copyRichText' || command === 'renumberFootnotes' || command.startsWith('table.'))) {
+		return notify('This command is for Markdown notes.', true);
+	}
 	switch (command) {
 		case 'copyBlockLink':
 			return copyBlockLink(view);
@@ -361,9 +379,13 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
 	}
 }
 
-/** Keeps the editor root's menu context current and remembers where the menu was opened. */
-export function contextMenuExtension(poster: (message: PlusEditorToHostMessage) => void) {
+/**
+ * Keeps the editor root's menu context current and remembers where the menu was opened.
+ * `tex`: the LaTeX Live Preview, whose menu leaves out the Markdown-only items (`mlpTex`).
+ */
+export function contextMenuExtension(poster: (message: PlusEditorToHostMessage) => void, tex = false) {
 	post = poster;
+	texMode = tex;
 	return ViewPlugin.fromClass(
 		class {
 			private key = '';
@@ -390,7 +412,8 @@ export function contextMenuExtension(poster: (message: PlusEditorToHostMessage) 
 				const context = JSON.stringify({
 					mlpEditor: true,
 					mlpHasSelection: !state.selection.main.empty,
-					mlpHasFootnotes: scanFootnotes(state.doc).defs.size > 0,
+					mlpHasFootnotes: !tex && scanFootnotes(state.doc).defs.size > 0,
+					...(tex ? { mlpTex: true } : {}),
 				});
 				if (context !== this.key) {
 					this.key = context;
