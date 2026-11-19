@@ -8,7 +8,7 @@ import { texToPlain } from './plusTexScan';
 
 /**
  * The text of a `{…}` group starting at `open`, and where it ends; null when
- * unbalanced. Unlike plusTexScan's matchBrace, `%` is text: `.bib` and `.aux`
+ * unbalanced. Unlike plusTexScanner's matchBrace, `%` is text: `.bib` and `.aux`
  * files have no comments inside values, and URLs carry `%20`.
  */
 export function braceGroup(text: string, open: number): { body: string; end: number } | null {
