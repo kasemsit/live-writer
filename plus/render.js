@@ -3,9 +3,10 @@
 // Chromium and prints what the plus features produced — a quick check against a
 // real document, beside the e2e suite's small fixtures.
 //
-//   npm run compile && node plus/render.js path/to/note.md [--shot out.png] [--css theme.css] [--lines]
+//   npm run compile && node plus/render.js path/to/note.md [--shot out.png] [--css theme.css] [--lines] [--height px]
 //
-// The viewport is very tall so CodeMirror renders the whole document. A `.qmd`
+// The viewport is very tall (30000px; raise it with --height for a long file) so
+// CodeMirror renders the whole document. A `.qmd`
 // also gets its Quarto project (the nearest _quarto.yml and its bibliography),
 // worked out by the same shared code the extension host uses.
 const { chromium } = require('@playwright/test');
@@ -14,10 +15,10 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
-const valued = new Set(['--shot', '--css']);
+const valued = new Set(['--shot', '--css', '--height']);
 const file = args.find((a, i) => !a.startsWith('--') && !valued.has(args[i - 1]));
 if (!file) {
-	console.error('usage: node plus/render.js <note.md> [--shot out.png] [--css theme.css] [--lines]');
+	console.error('usage: node plus/render.js <note.md> [--shot out.png] [--css theme.css] [--lines] [--height px]');
 	process.exit(2);
 }
 const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
@@ -61,7 +62,7 @@ const css = option('--css') ? fs.readFileSync(option('--css'), 'utf8') : '';
 
 (async () => {
 	const browser = await chromium.launch();
-	const page = await browser.newPage({ viewport: { width: 900, height: 30000 } });
+	const page = await browser.newPage({ viewport: { width: 900, height: Number(option('--height') ?? 30000) } });
 	page.on('pageerror', (e) => console.log('PAGEERROR', e.message));
 	const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 	// KaTeX is fetched on demand; serve it, its stylesheet and fonts from dist/.
@@ -105,6 +106,13 @@ window.mlpKatexChunkUri='https://render.invalid/katex-chunk.js';window.mlpKatexB
 				errors: q('.mlp-math .katex-error').map((e) => e.getAttribute('title')?.slice(0, 120)),
 				// Lines still showing a "$" outside rendered math: money, or math the parser missed.
 				leftoverDollar: q('.cm-line').map((l) => { const c = l.cloneNode(true); c.querySelectorAll('.mlp-math').forEach((m) => m.remove()); return c.textContent; }).filter((t) => t.includes('$')).map((t) => t.slice(0, 110)),
+			},
+			quarto: {
+				callouts: q('.cm-line.mlp-qc-first').length,
+				figures: q('.mlp-qfig-number').length,
+				xrefs: q('.mlp-xref').map((x) => x.textContent),
+				missingXrefs: q('.mlp-xref-missing').map((x) => `${x.textContent} — ${x.title}`),
+				warnings: q('.mlp-q-warning').map((w) => w.textContent),
 			},
 			citations: q('.mlp-qcite').map((c) => c.textContent).slice(0, 40),
 			missingCitations: q('.mlp-qcite-missing').map((c) => c.textContent),
