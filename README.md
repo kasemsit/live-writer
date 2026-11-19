@@ -135,24 +135,30 @@ npx vsce package         # → markdown-live-preview-editor-claude-<version>.vsi
 
 `plus/release.sh` builds, tests, tags and publishes a GitHub release with the `.vsix` and
 the installer zip. `node plus/render.js note.md` renders one of your own notes headlessly
-and reports what the added features produced.
+and reports what the added features produced. A `.qmd` gets its Quarto project (the
+nearest `_quarto.yml` and its bibliography); add `--height 150000` for a long file, or its
+end is never drawn.
 
 ## Where the code is
 
 The changes are kept apart so that upstream releases merge cleanly:
 
 - **New files:**
-  - `src/webview-editor/plus/` holds the editor side; `src/webview-editor/plus/tex/` is the LaTeX Live Preview.
-  - `src/editor/plus/tex.ts` is its host side (root file, `.aux`, `.bib`, images).
-  - `src/editor/plus/` holds the extension host side.
-  - `src/shared/plus*.ts` holds pure helpers shared by both (`plusTex*.ts`: the LaTeX scanner and the `.aux`, `.bib` and `tabular` readers).
-  - `media/plus.css`, `plus/` (theme, fonts, hooks, installers, tools) and `test/e2e/plus.spec.ts`.
+  - `src/webview-editor/plus/` holds the editor side: one module per feature, `cm.ts` for the helpers they share, and `hostRequests.ts`, the one channel to the extension host.
+    - `tex/` is the LaTeX Live Preview; `quarto.ts` and `quartoProject.ts` are Quarto; `citations.ts` draws `[@key]` for both notes and Quarto.
+  - `src/editor/plus/` holds the extension host side: `tex.ts` (root file, `.aux`, `.bib`, images), `quartoProject.ts` (`_quarto.yml`, bibliography), `files.ts`.
+  - `src/shared/plus*.ts` holds pure helpers shared by both, with their tests:
+    - `plusBib.ts` reads `.bib` files; `plusCitations.ts` says how a citation reads (LaTeX's numbers, citeproc's author–date, checked against `quarto pandoc --citeproc` output in `fixtures/citeproc.json`).
+    - `plusQuarto.ts` and `plusCodeFences.ts`: Pandoc's divs, attributes and cross-references.
+    - `plusTex*.ts`: the LaTeX scanner, headings, text, macros and project files, and the `.aux` and `tabular` readers.
+    - `plusMessages.ts`: every message the fork adds; upstream's `messages.ts` only re-exports it.
+  - `media/plus.css`, `plus/` (theme, fonts, hooks, installers, tools), `test/e2e/plus.spec.ts` and `test/e2e/tex.spec.ts`.
 - **Upstream files** carry only small hooks, each marked `plus:` or `md-live-preview-plus`.
   - `src/webview-editor/plus/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.
 
-To take a new upstream release:
+To take a new upstream release (upstream's branch is `master`):
 ```
-git fetch upstream && git merge upstream/main
+git fetch upstream && git merge upstream/master
 ```
 
 ## Licence

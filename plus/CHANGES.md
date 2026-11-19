@@ -2,18 +2,32 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
-## Unreleased
+## 0.4.13
+
+**Quarto books in Live Preview**, with citations and cross-references as Quarto prints them, and fixes.
 
 - **Quarto `.qmd` files** open in Live Preview and look like the rendered book.
   - Callouts (`::: {.callout-note}` … `:::`) are coloured boxes with their fences hidden, titled by their first heading, `title="…"` or their type. `icon=false` and `appearance="simple"`/`"minimal"` are followed.
   - `![caption](img.png){#fig-id width=80%}` is a sized, captioned figure, numbered per file as Quarto numbers a book chapter's figures.
   - `@fig-id` reads *Figure 2* and `@sec-id` the heading's text; a click jumps to it. An id with nothing to point at reads `?fig-id` in red, as Quarto prints it.
-  - **Citations read as the book prints them.** `[@chen2015]` reads *(Chen, 2015)*, `[see @a, p. 3; @b]` and `[-@a]` too, and an in-text `@chen2015` reads *Chen (2015)*. Entries come from the `.bib` files named by `bibliography:` in `_quarto.yml` or the file's front matter; the style follows `csl:` (APA, or Quarto's default Chicago author-date), and `lang: th` gives *และคณะ* and *ม.ป.ป.* as Quarto does. Hover a citation to read its entry; a key the bibliography lacks reads `key?` in red. Checked against a real Thai book: every citation matches its rendered HTML.
+  - **Citations read as the book prints them.** `[@chen2015]` reads *(Chen, 2015)*, `[see @a, p. 3; @b]` and `[-@a]` too, and an in-text `@chen2015` reads *Chen (2015)*. Entries come from the `.bib` files named by `bibliography:` in `_quarto.yml` or the file's front matter; the style follows `csl:` (APA, or Quarto's default Chicago author-date), and `lang: th` gives *และคณะ* and *ม.ป.ป.* as Quarto does. Hover a citation to read its entry; a key the bibliography lacks reads `key?` in red.
+    - Locators, several works and in-text `@key [p. 33]` follow citeproc too: *(Chen, 2015, p. 33)*, *(Chen, 2015; Lee & Park, 2019)*, *(Smith, 2019, 2020)*, *Chen (2015, p. 33)*.
+    - Checked against Quarto's own citeproc on 176 cases in APA and Chicago, English and Thai: all match but one kind, the *2015a*/*2015b* that tells apart two works by one author in one year.
+    - Checked against a real Thai book: every citation (13) and cross-reference (128) matches its rendered HTML.
   - The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …), and follow it when it changes; so do the bibliography files.
   - `{#sec-id}` after a heading is hidden; callout titles are not listed in the Outline.
-  - **Flags what Quarto reads differently from how it looks.** A heading straight after a line of text, with no blank line between, is part of that paragraph in Pandoc: Quarto prints it as `## …`, and an image in that paragraph is not numbered.
+  - **Flags what Quarto reads differently from how it looks.** A heading straight after a line of text, with no blank line between, is part of that paragraph in Pandoc: Quarto prints it as `## …`, and an image in that paragraph is not numbered. Only a `.qmd` is flagged: a Markdown note follows CommonMark, where such a heading is a heading.
 - The source of each of these shows again while the caret is on its line.
 - In a `.md` note, `[@key]` still links to the vault's `@key` note, as before.
+
+**Fixes**
+
+- A `[^1]: …` line inside a fenced code block was drawn as a footnote, and could take the place of the real definition; Renumber Footnotes could renumber labels only the code defined.
+- Footnote references and block ids now redraw when a table switches between drawn and code mode.
+- LaTeX: a rebuild that writes the `.aux` to LaTeX Workshop's `outDir` outside the root's folder is now noticed, and an older read of the build can no longer replace a newer one.
+- LaTeX: labels are completed after every reference command the preview draws (`\Vref` and `\subref` were missing), and labels that are commented out or inside verbatim are no longer offered.
+
+The fork's own code was reorganised on the way, with no change in behaviour: helpers shared instead of copied, one channel to the extension host, the LaTeX scanner split by job.
 
 ## 0.4.12
 
