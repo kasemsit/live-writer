@@ -1,7 +1,7 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import type { Range } from '@codemirror/state';
-import { cursorTouchesRange, blockRevealChanged } from '../cmUtils';
-import { inSourceContext } from './cm';
+import { cursorTouchesRange } from '../cmUtils';
+import { inSourceContext, revealChanged } from './cm';
 import { resolveEmbed } from './hostRequests';
 
 /**
@@ -98,7 +98,7 @@ export const embedPlugin = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				update.selectionSet ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged)))
+				revealChanged(update)
 			) {
 				this.decorations = build(update.view);
 			}

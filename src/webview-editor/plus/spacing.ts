@@ -2,7 +2,7 @@ import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewU
 import { Prec, type EditorState, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import type { SyntaxNode } from '@lezer/common';
-import { blockRevealChanged } from '../cmUtils';
+import { revealChanged } from './cm';
 
 /**
  * Blank lines next to a table, a display formula or a code block collapse in
@@ -71,7 +71,7 @@ const spacingDecorations = ViewPlugin.fromClass(
 				update.viewportChanged ||
 				update.selectionSet ||
 				syntaxTree(update.startState) !== syntaxTree(update.state) ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged)))
+				revealChanged(update)
 			) {
 				this.decorations = build(update.view);
 			}

@@ -1,11 +1,11 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import type { EditorState, Range } from '@codemirror/state';
-import { cursorTouchesRange, inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
+import { cursorTouchesRange, inlineCursorTouchesRange } from '../cmUtils';
 import { describeBib } from '../../shared/plusBib';
 import { findCiteGroups, findNarrativeCitations, formatCiteGroup, formatNarrative, type CiteFormat, type CitePart } from '../../shared/plusCitations';
 import { findCitations } from '../../shared/plusWikilinks';
 import { linkClass, LINK_CONTEXT, noteIndexChanged } from './wikilinks';
-import { inSourceContext } from './cm';
+import { inSourceContext, revealChanged } from './cm';
 import { registerInlinePass } from './inlineExtras';
 import { citationFormat, onQuartoProject } from './quartoProject';
 
@@ -176,7 +176,7 @@ export const citationPlugin = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				update.selectionSet ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged) || e.is(noteIndexChanged)))
+				revealChanged(update, noteIndexChanged)
 			) {
 				this.decorations = build(update.view);
 			}

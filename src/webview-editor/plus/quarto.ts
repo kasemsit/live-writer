@@ -2,12 +2,12 @@ import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewU
 import { StateField, type EditorState, type Extension, type Line, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import type { SyntaxNode } from '@lezer/common';
-import { cursorTouchesRange, inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
+import { cursorTouchesRange, inlineCursorTouchesRange } from '../cmUtils';
 import { blockReplacedLines, cellInlineHooks } from '../livePreviewPlugin';
 import { renderInlineInto } from '../tableCellInline';
 import { calloutIcon } from './callouts';
 import { quartoLabel as label, watchQuartoProject } from './quartoProject';
-import { inSourceContext, jumpTo } from './cm';
+import { inSourceContext, jumpTo, revealChanged } from './cm';
 import {
 	LEADING_ATTRS,
 	TRAILING_ATTRS,
@@ -389,7 +389,7 @@ const quartoDecorations = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				update.selectionSet ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged)))
+				revealChanged(update)
 			) {
 				this.decorations = build(update.view);
 			}

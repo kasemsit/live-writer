@@ -1,7 +1,8 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import type { EditorState, Extension, Range } from '@codemirror/state';
 import { syntaxTree, codeFolding, foldEffect, unfoldEffect, foldedRanges } from '@codemirror/language';
-import { cursorTouchesRange, blockRevealChanged } from '../cmUtils';
+import { cursorTouchesRange } from '../cmUtils';
+import { revealChanged } from './cm';
 import { blockReplacedLines } from '../livePreviewPlugin';
 
 /**
@@ -237,9 +238,7 @@ const calloutDecorations = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				update.selectionSet ||
-				update.transactions.some((tr) =>
-					tr.effects.some((e) => e.is(blockRevealChanged) || e.is(foldEffect) || e.is(unfoldEffect)),
-				)
+				revealChanged(update, foldEffect, unfoldEffect)
 			) {
 				this.decorations = this.rebuild();
 			}

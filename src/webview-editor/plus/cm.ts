@@ -1,5 +1,5 @@
 import { EditorView, type ViewUpdate } from '@codemirror/view';
-import type { EditorState } from '@codemirror/state';
+import type { EditorState, StateEffectType } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import type { SyntaxNode } from '@lezer/common';
 import { blockRevealChanged, isBlockRevealed } from '../cmUtils';
@@ -24,9 +24,12 @@ export function inSourceContext(state: EditorState, pos: number): boolean {
 	return false;
 }
 
-/** True when a table or block switched between drawn and source in this update. */
-export function revealChanged(update: ViewUpdate): boolean {
-	return update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged)));
+/**
+ * True when a table or block switched between drawn and source in this update
+ * (which also signals a new Quarto project), or it carries one of `also`.
+ */
+export function revealChanged(update: ViewUpdate, ...also: StateEffectType<unknown>[]): boolean {
+	return update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged) || also.some((t) => e.is(t))));
 }
 
 /** True inside a table switched to code mode (shown as source). */

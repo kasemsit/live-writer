@@ -1,9 +1,9 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { StateEffect, type Extension, type Range } from '@codemirror/state';
-import { cursorTouchesRange, blockRevealChanged } from '../cmUtils';
+import { cursorTouchesRange } from '../cmUtils';
 import { findWikilinks } from '../../shared/plusWikilinks';
 import { registerInlinePass } from './inlineExtras';
-import { inSourceContext } from './cm';
+import { inSourceContext, revealChanged } from './cm';
 import { IMAGE_FILE } from './embeds';
 import { isUnresolved, onNoteIndexChange, refreshNoteIndex } from './noteIndex';
 
@@ -77,7 +77,7 @@ const wikilinkDecorations = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				update.selectionSet ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged) || e.is(noteIndexChanged)))
+				revealChanged(update, noteIndexChanged)
 			) {
 				this.decorations = build(update.view);
 			}

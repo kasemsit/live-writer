@@ -1,9 +1,9 @@
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { StateField, type EditorState, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import { cursorTouchesRange, inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
+import { cursorTouchesRange, inlineCursorTouchesRange } from '../cmUtils';
 import { isMultilineMath, mathBlockReplaced, mathTex } from './mathSyntax';
-import { inRevealedTable } from './cm';
+import { inRevealedTable, revealChanged } from './cm';
 
 /**
  * Renders the math nodes plus/mathSyntax.ts adds to the tree, with KaTeX.
@@ -190,7 +190,7 @@ const inlineMath = ViewPlugin.fromClass(
 				update.viewportChanged ||
 				update.selectionSet ||
 				syntaxTree(update.startState) !== syntaxTree(update.state) ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged)))
+				revealChanged(update)
 			) {
 				this.decorations = buildInline(update.view);
 			}

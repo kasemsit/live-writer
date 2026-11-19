@@ -1,8 +1,8 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, keymap, type Command } from '@codemirror/view';
 import { EditorSelection, Prec, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import { inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
-import { inSourceContext } from './cm';
+import { inlineCursorTouchesRange } from '../cmUtils';
+import { inSourceContext, revealChanged } from './cm';
 import { registerInlinePass } from './inlineExtras';
 
 /**
@@ -97,7 +97,7 @@ const underlinePlugin = ViewPlugin.fromClass(
 				update.docChanged ||
 				update.viewportChanged ||
 				update.selectionSet ||
-				update.transactions.some((tr) => tr.effects.some((e) => e.is(blockRevealChanged)))
+				revealChanged(update)
 			) {
 				this.decorations = build(update.view);
 			}
