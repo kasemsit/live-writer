@@ -1,9 +1,11 @@
 import type { PlusTexContext } from '../../../shared/messages';
 import { describeBib } from '../../../shared/plusBib';
 import { citeLabel } from '../../../shared/plusCitations';
-import { CONTROL_SYMBOLS, TEXT_SYMBOLS, isLetter, lineEnd, matchBrace, readAccent, readArgs, textLigature, texToPlain } from '../../../shared/plusTexScan';
+import { isLetter, lineEnd, matchBrace, readArgs } from '../../../shared/plusTexScanner';
+import { CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent, textLigature, texToPlain } from '../../../shared/plusTexText';
 import { renderMathInto } from '../math';
 import { resolveTexAsset } from './context';
+import { CITE_COMMANDS, REF_COMMANDS, STYLE_CLASS } from './vocabulary';
 
 /**
  * md-live-preview-plus: a LaTeX fragment drawn as DOM — for the cells of a
@@ -16,40 +18,6 @@ export interface InlineEnv {
 	ctx: PlusTexContext;
 	macros: Record<string, string>;
 }
-
-/** Command → class of the element its argument is drawn in. */
-export const STYLE_CLASS: Record<string, string> = {
-	textbf: 'mlp-strong',
-	textit: 'mlp-em',
-	emph: 'mlp-em',
-	textsl: 'mlp-em',
-	texttt: 'mlp-tex-tt',
-	underline: 'mlp-underline',
-	uline: 'mlp-underline',
-	textsc: 'mlp-tex-sc',
-	textsf: 'mlp-tex-sf',
-	textsuperscript: 'mlp-tex-sup',
-	textsubscript: 'mlp-tex-sub',
-	uppercase: 'mlp-tex-upper',
-	MakeUppercase: 'mlp-tex-upper',
-	MakeTextUppercase: 'mlp-tex-upper',
-	MakeLowercase: 'mlp-tex-lower',
-	sout: 'mlp-strikethrough',
-	st: 'mlp-strikethrough',
-	xout: 'mlp-strikethrough',
-	hl: 'mlp-tex-hl',
-	textrm: '',
-	textnormal: '',
-	textup: '',
-	textmd: '',
-	mbox: '',
-	makebox: '',
-	text: '',
-	hbox: '',
-	makecell: '',
-	shortstack: '',
-	thead: 'mlp-strong',
-};
 
 /** Declarations that style the rest of their group (`{\bfseries x}`). */
 const DECLARATIONS: Record<string, string> = {
@@ -84,8 +52,6 @@ const DECLARATIONS: Record<string, string> = {
 	color: '',
 };
 
-export const REF_COMMANDS = /^(ref|eqref|autoref|cref|Cref|pageref|nameref|vref|Vref|subref|labelcref)$/;
-export const CITE_COMMANDS = /^(cite|citep|citet|citealp|citealt|citeauthor|citeyear|citeyearpar|citenum|parencite|textcite|autocite|footcite|supercite|smartcite|Cite|Citep|Citet|Textcite|Parencite|Autocite)$/;
 const TEXTUAL_CITES = /^(citet|Citet|textcite|Textcite)$/;
 
 /** The text a `\ref`-family command shows: the number from the last build, with the prefix the command adds. */
@@ -383,17 +349,30 @@ function emit(parent: HTMLElement, src: string, from: number, to: number, env: I
 /** Width the inline renderer sizes `\linewidth`-relative figures against (a table cell has no line of its own). */
 const NOMINAL_LINE_WIDTH = 700;
 
-/** An `\includegraphics` inside a widget (a table cell): the image once the host has found it. */
-function graphicElement(path: string, options: string): HTMLElement {
+type GraphicSize = ReturnType<typeof graphicSize>;
+
+/**
+ * An `\includegraphics` as an element: the image once the host has found it,
+ * sized by its options against `lineWidth` (`\linewidth`), or why it cannot
+ * be shown. A table cell uses it as it is; TexImageWidget passes `shown`,
+ * called as the result goes in, with the image (still loading) or null.
+ */
+export function graphicElement(
+	path: string,
+	options: string,
+	lineWidth = NOMINAL_LINE_WIDTH,
+	shown?: (img: HTMLImageElement | null, size: GraphicSize) => void,
+): HTMLElement {
 	const wrap = document.createElement('span');
 	wrap.className = 'mlp-tex-graphic mlp-tex-graphic-loading';
 	wrap.title = path;
-	const size = graphicSize(options, NOMINAL_LINE_WIDTH);
+	const size = graphicSize(options, lineWidth);
 	void resolveTexAsset(path).then((asset) => {
 		wrap.classList.remove('mlp-tex-graphic-loading');
 		if (asset.status !== 'image' || !asset.src) {
 			wrap.classList.add('mlp-tex-graphic-missing');
 			wrap.textContent = asset.status === 'unsupported' ? `${asset.name} (cannot be shown)` : `${path} (not found)`;
+			shown?.(null, size);
 			return;
 		}
 		const img = document.createElement('img');
@@ -401,6 +380,7 @@ function graphicElement(path: string, options: string): HTMLElement {
 		img.alt = path;
 		if (size.width) img.style.width = `${Math.round(size.width)}px`;
 		if (size.height) img.style.height = `${Math.round(size.height)}px`;
+		shown?.(img, size);
 		wrap.appendChild(img);
 	});
 	return wrap;

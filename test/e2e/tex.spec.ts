@@ -172,6 +172,20 @@ test.describe('LaTeX Live Preview', () => {
 		await expect(page.locator('.cm-line.mlp-tex-code')).toHaveCount(3);
 	});
 
+	for (const command of ['Vref', 'subref']) {
+		test(`\\${command} completes labels, as \\ref does`, async ({ page }) => {
+			await mountTex(page, '\\label{fig:own}\nSee ');
+			await page.locator('.cm-line').last().click();
+			await page.keyboard.press('End');
+			await page.keyboard.type(`\\${command}{fig`);
+			// The last build's labels and this file's own.
+			const items = page.locator('.cm-tooltip-autocomplete li');
+			await expect(items).toHaveCount(2);
+			await expect(items.filter({ hasText: 'fig:a' })).toContainText('→ 3');
+			await expect(items.filter({ hasText: 'fig:own' })).toContainText('not yet built');
+		});
+	}
+
 	test('\\input is a link to the file', async ({ page }) => {
 		await mountTex(page, '\\input{sections/intro}\n\nText');
 		const chip = page.locator('.mlp-tex-file');

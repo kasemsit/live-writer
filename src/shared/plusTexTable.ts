@@ -1,4 +1,4 @@
-import { matchBrace, readArgs } from './plusTexScan';
+import { matchBrace, readArgs } from './plusTexScanner';
 
 /**
  * md-live-preview-plus: a `tabular` body read into rows and cells, for the

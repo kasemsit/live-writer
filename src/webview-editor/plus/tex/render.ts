@@ -1,26 +1,34 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, type WidgetType } from '@codemirror/view';
 import type { EditorState, Range } from '@codemirror/state';
 import type { PlusTexContext } from '../../../shared/messages';
-import {
-	ACCENTS,
-	CONTROL_SYMBOLS,
-	SECTION_LEVELS,
-	TEXT_SYMBOLS,
-	type TexCommand,
-	type TexEnv,
-	type TexScan,
-	envAt,
-	isLetter,
-	rangeAt,
-	readAccent,
-	readArgs,
-} from '../../../shared/plusTexScan';
+import { SECTION_LEVELS } from '../../../shared/plusTexHeadings';
+import { type TexCommand, type TexEnv, type TexScan, envAt, isLetter, rangeAt, readArgs } from '../../../shared/plusTexScanner';
+import { ACCENTS, CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent } from '../../../shared/plusTexText';
 import { cursorTouchesRange, inlineCursorTouchesRange } from '../../cmUtils';
-import { TABLE_ENVS, replacedTexBlocks, texBlockCandidates, displayTex, type TexBlock } from './blocks';
-import { setTexContext, texContextField, texScanField } from './context';
-import { CITE_COMMANDS, REF_COMMANDS, STYLE_CLASS, citeText, cssColor, refText, splitKeys } from './inline';
+import { replacedTexBlocks, texBlockCandidates, displayTex, type TexBlock } from './blocks';
+import { fileLabels, setTexContext, texContextField, texScanField } from './context';
+import { citeText, cssColor, refText, splitKeys } from './inline';
 import { texMacros } from './macros';
 import { LINK_CONTEXT } from '../wikilinks';
+import {
+	BEGIN_SPECS,
+	CITE_COMMANDS,
+	CODE_ENVS,
+	COLLAPSED,
+	FLOAT_ENVS,
+	FOOTNOTES,
+	HEADING_CLASS,
+	ITALIC_THEOREMS,
+	LABELLED,
+	LAYOUT,
+	LIST_ENVS,
+	META,
+	NOTES,
+	REF_COMMANDS,
+	STYLE_CLASS,
+	TABLE_ENVS,
+	THEOREMS,
+} from './vocabulary';
 import { TexChipWidget, TexImageWidget, TexMathWidget, TexTextWidget } from './widgets';
 
 /**
@@ -33,204 +41,6 @@ import { TexChipWidget, TexImageWidget, TexMathWidget, TexTextWidget } from './w
  * rather than hidden, because they change the output; anything unknown is
  * left as coloured source. The preamble is never drawn, only coloured.
  */
-
-export const LIST_ENVS = new Set([
-	'itemize',
-	'enumerate',
-	'description',
-	'compactitem',
-	'compactenum',
-	'asparaitem',
-	'asparaenum',
-	'inparaenum',
-	'IEEEitemize',
-	'IEEEenumerate',
-	'IEEEdescription',
-]);
-
-const FLOAT_ENVS: Record<string, string> = {
-	figure: 'Figure',
-	'figure*': 'Figure',
-	table: 'Table',
-	'table*': 'Table',
-	algorithm: 'Algorithm',
-	'algorithm*': 'Algorithm',
-	wrapfigure: 'Figure',
-	wraptable: 'Table',
-	sidewaysfigure: 'Figure',
-	sidewaystable: 'Table',
-	listing: 'Listing',
-	subfigure: 'Subfigure',
-	subtable: 'Subtable',
-};
-
-const THEOREMS: Record<string, string> = {
-	theorem: 'Theorem',
-	lemma: 'Lemma',
-	corollary: 'Corollary',
-	proposition: 'Proposition',
-	definition: 'Definition',
-	remark: 'Remark',
-	example: 'Example',
-	conjecture: 'Conjecture',
-	claim: 'Claim',
-	assumption: 'Assumption',
-	problem: 'Problem',
-	exercise: 'Exercise',
-	observation: 'Observation',
-	hypothesis: 'Hypothesis',
-	proof: 'Proof',
-};
-const ITALIC_THEOREMS = new Set(['theorem', 'lemma', 'corollary', 'proposition', 'conjecture', 'claim', 'hypothesis']);
-
-/** Environments whose body is code-like (drawing commands): shown in a monospace block. */
-const CODE_ENVS = new Set(['tikzpicture', 'tikzcd', 'axis', 'semilogxaxis', 'semilogyaxis', 'loglogaxis', 'groupplot', 'pgfpicture', 'scope', 'circuitikz', 'forest', 'algorithmic', 'tabular', 'tabular*', 'tabularx', 'tabulary', 'longtable', 'array']);
-
-/** Start-of-environment labels for `abstract` and IEEE's keywords. */
-const LABELLED: Record<string, string> = { abstract: 'Abstract', keywords: 'Index Terms', IEEEkeywords: 'Index Terms' };
-
-/** Environments whose `\begin` / `\end` lines are collapsed when the caret is elsewhere. */
-const COLLAPSED = new Set(['document', 'center', 'flushleft', 'flushright', 'quote', 'quotation', 'verse', 'minipage', 'multicols', 'multicols*', 'small', 'footnotesize', 'scriptsize']);
-
-/** Argument specs after `\begin{name}` (default: any `[…]` / `{…}` on the line). */
-const BEGIN_SPECS: Record<string, string> = {
-	minipage: 'ooom',
-	subfigure: 'om',
-	subtable: 'om',
-	wrapfigure: 'omom',
-	wraptable: 'omom',
-	multicols: 'm',
-	'multicols*': 'm',
-	tabular: 'om',
-	'tabular*': 'mom',
-	tabularx: 'mom',
-};
-
-const HEADING_CLASS: Record<string, string> = {
-	title: 'mlp-line-h1',
-	part: 'mlp-line-h1',
-	chapter: 'mlp-line-h1',
-	section: 'mlp-line-h2',
-	subsection: 'mlp-line-h3',
-	subsubsection: 'mlp-line-h4',
-};
-
-const FOOTNOTES: Record<string, string> = { footnote: 'om', tfootnote: 'm', thanks: 'm', footnotetext: 'om', marginpar: 'om', tablefootnote: 'm' };
-
-/** Commands dimmed (with their arguments) rather than drawn: they change the layout, not the text. */
-const LAYOUT: Record<string, string> = {
-	centering: '',
-	raggedright: '',
-	raggedleft: '',
-	noindent: '',
-	indent: '',
-	tiny: '',
-	scriptsize: '',
-	footnotesize: '',
-	small: '',
-	normalsize: '',
-	large: '',
-	Large: '',
-	LARGE: '',
-	huge: '',
-	Huge: '',
-	bfseries: '',
-	itshape: '',
-	ttfamily: '',
-	rmfamily: '',
-	sffamily: '',
-	mdseries: '',
-	upshape: '',
-	scshape: '',
-	normalfont: '',
-	clearpage: '',
-	cleardoublepage: '',
-	newpage: '',
-	pagebreak: 'o',
-	nopagebreak: 'o',
-	linebreak: 'o',
-	nolinebreak: 'o',
-	newline: '',
-	par: '',
-	smallskip: '',
-	medskip: '',
-	bigskip: '',
-	vfill: '',
-	hfill: '',
-	hfil: '',
-	vfil: '',
-	null: '',
-	protect: '',
-	relax: '',
-	maketitle: '',
-	tableofcontents: '',
-	listoffigures: '',
-	listoftables: '',
-	appendix: '',
-	printbibliography: 'o',
-	frontmatter: '',
-	mainmatter: '',
-	backmatter: '',
-	IEEEpeerreviewmaketitle: '',
-	EOD: '',
-	headeretal: '',
-	endgraf: '',
-	vspace: 'sm',
-	hspace: 'sm',
-	vskip: '',
-	hskip: '',
-	setlength: 'mm',
-	addtolength: 'mm',
-	setcounter: 'mm',
-	addtocounter: 'mm',
-	pagestyle: 'm',
-	thispagestyle: 'm',
-	pagenumbering: 'm',
-	markboth: 'mm',
-	markright: 'm',
-	bibliographystyle: 'm',
-	color: 'om',
-	arrayrulecolor: 'om',
-	rowcolors: 'omm',
-	captionsetup: 'om',
-	resizebox: 'smm',
-	scalebox: 'mo',
-	rotatebox: 'om',
-	adjustbox: 'm',
-	titlepgskip: '',
-	tabcolsep: '',
-	arraystretch: '',
-	linewidth: '',
-	columnwidth: '',
-	textwidth: '',
-	usetikzlibrary: 'm',
-	pgfplotsset: 'm',
-	graphicspath: 'm',
-	FloatBarrier: '',
-	makeatletter: '',
-	makeatother: '',
-	and: '',
-	AND: '',
-	IEEEauthorrefmark: '',
-};
-
-/** IEEE front matter and similar: markup hidden, argument shown small. */
-const META: Record<string, string> = {
-	history: 'm',
-	doi: 'm',
-	corresp: 'm',
-	date: 'm',
-	email: 'm',
-	affil: 'om',
-	affiliation: 'm',
-	institute: 'm',
-	IEEEauthorblockN: 'm',
-	IEEEauthorblockA: 'm',
-	IEEEcompsocitemizethanks: 'm',
-};
-
-/** `\todo`-style notes to the writer. */
-const NOTES = new Set(['todo', 'TODO', 'fixme', 'FIXME', 'note', 'comment', 'hl']);
 
 // ── Per-scan facts, computed once ───────────────────────────────────────────
 
@@ -547,24 +357,6 @@ function cite(b: Builder, c: TexCommand): void {
 	chipFor(b, c, args.end, new TexChipWidget(shown.text, `mlp-tex-cite${shown.missing ? ' mlp-tex-chip-missing' : ''}${c.name === 'nocite' ? ' mlp-tex-chip-faint' : ''}`, shown.title, keysArg.from));
 }
 
-/** Labels defined in this file, for telling "not built yet" from "undefined". */
-const ownLabels = new WeakMap<TexScan, Set<string>>();
-
-function labelsOf(b: Builder): Set<string> {
-	let set = ownLabels.get(b.scan);
-	if (!set) {
-		set = new Set();
-		for (const cmd of b.scan.commands) {
-			if (cmd.name !== 'label') continue;
-			const arg = readArgs(b.text, cmd.to, 'm')?.args[0];
-			if (arg) set.add(b.text.slice(arg.from, arg.to).trim());
-		}
-		for (const m of b.scan.maths) for (const l of b.text.slice(m.innerFrom, m.innerTo).matchAll(/\\label\s*\{([^{}]*)\}/g)) set.add(l[1].trim());
-		ownLabels.set(b.scan, set);
-	}
-	return set;
-}
-
 function ref(b: Builder, c: TexCommand): void {
 	const args = readArgs(b.text, c.to, 'sm');
 	const arg = args?.args[0];
@@ -577,7 +369,7 @@ function ref(b: Builder, c: TexCommand): void {
 	}
 	const keys = splitKeys(b.text.slice(arg.from, arg.to));
 	const shown = refText(c.name, keys, b.ctx.labels);
-	const pending = shown.missing && keys.every((k) => k in b.ctx.labels || labelsOf(b).has(k));
+	const pending = shown.missing && keys.every((k) => k in b.ctx.labels || fileLabels(b.state).has(k));
 	const title = `\\${c.name}{${keys.join(',')}}${shown.missing ? (pending ? ' — defined, not yet in the last build' : ' — undefined in the last build') : ''}`;
 	chipFor(b, c, args.end, new TexChipWidget(pending ? shown.text.replace(/\?\?/g, '?') : shown.text, `mlp-tex-ref${shown.missing && !pending ? ' mlp-tex-chip-missing' : ''}`, title, arg.from));
 }

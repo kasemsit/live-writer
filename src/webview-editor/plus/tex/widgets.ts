@@ -3,8 +3,7 @@ import type { PlusTexContext } from '../../../shared/messages';
 import type { TexTable } from '../../../shared/plusTexTable';
 import { renderMathInto } from '../math';
 import { LINK_CONTEXT } from '../wikilinks';
-import { resolveTexAsset } from './context';
-import { graphicSize, renderTexInline } from './inline';
+import { graphicElement, renderTexInline } from './inline';
 
 /**
  * md-live-preview-plus: the widgets the LaTeX Live Preview draws in place of
@@ -152,29 +151,13 @@ export class TexImageWidget extends WidgetType {
 		return other.path === this.path && other.options === this.options && other.at === this.at;
 	}
 	toDOM(view: EditorView): HTMLElement {
-		const wrap = document.createElement('span');
-		wrap.className = 'mlp-tex-graphic mlp-tex-graphic-loading';
-		wrap.title = this.path;
-		const size = graphicSize(this.options, Math.max(200, view.contentDOM.clientWidth - 40));
-		void resolveTexAsset(this.path).then((asset) => {
-			wrap.classList.remove('mlp-tex-graphic-loading');
-			if (asset.status !== 'image' || !asset.src) {
-				wrap.classList.add('mlp-tex-graphic-missing');
-				wrap.textContent = asset.status === 'unsupported' ? `${asset.name} (cannot be shown)` : `${this.path} (not found)`;
-				view.requestMeasure();
-				return;
-			}
-			const img = document.createElement('img');
-			img.src = asset.src;
-			img.alt = this.path;
-			if (size.width) img.style.width = `${Math.round(size.width)}px`;
-			if (size.height) img.style.height = `${Math.round(size.height)}px`;
+		const wrap = graphicElement(this.path, this.options, Math.max(200, view.contentDOM.clientWidth - 40), (img, size) => {
+			if (!img) return view.requestMeasure();
 			img.addEventListener('load', () => {
 				if (size.scale && !size.width && !size.height) img.style.width = `${Math.round(img.naturalWidth * size.scale)}px`;
 				view.requestMeasure();
 			});
 			img.addEventListener('error', () => view.requestMeasure());
-			wrap.appendChild(img);
 		});
 		wrap.addEventListener('mousedown', (event) => placeCaret(view, this.at, event));
 		return wrap;
