@@ -2,9 +2,10 @@ import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 import { type EditorState, type Range, StateField } from '@codemirror/state';
 import { type TexEnv, type TexMath, type TexScan, readArgs } from '../../../shared/plusTexScanner';
 import { parseTabular, type TexTable } from '../../../shared/plusTexTable';
+import { mathBlockRevealed } from '../mathSyntax';
 import { setTexContext, texContextField, texScanField } from './context';
 import { texMacros } from './macros';
-import { TABLE_ENVS } from './vocabulary';
+import { TABLE_ENVS, isFloatEnv } from './vocabulary';
 import { TexDisplayMathWidget, TexFoldWidget, TexTableWidget } from './widgets';
 
 /**
@@ -28,8 +29,6 @@ export interface TexBlock {
 	env?: TexEnv;
 	table?: TexTable;
 }
-
-const FLOAT_NAMES = /^(figure|table|algorithm|wrapfigure|wraptable|sidewaysfigure|sidewaystable|listing|subfigure|subtable)\*?$/;
 
 /** Only blanks — or blanks and a comment — between `from` and `to`. */
 function blank(text: string, from: number, to: number): boolean {
@@ -118,7 +117,7 @@ export function texBlockCandidates(state: EditorState): TexBlock[] {
 		if (!table.rows.length) continue;
 		blocks.push({ kind: 'table', from, to, env, table });
 	}
-	for (const b of blocks) b.inFloat = b.kind !== 'preamble' && scan.envs.some((e) => FLOAT_NAMES.test(e.name) && e.from < b.from && b.to < e.to);
+	for (const b of blocks) b.inFloat = b.kind !== 'preamble' && scan.envs.some((e) => isFloatEnv(e.name) && e.from < b.from && b.to < e.to);
 	blocks.sort((a, b) => a.from - b.from);
 	// Nested candidates (a table inside a table's cell): only the outer one.
 	const outer: TexBlock[] = [];
@@ -127,14 +126,12 @@ export function texBlockCandidates(state: EditorState): TexBlock[] {
 	return outer;
 }
 
-/** True while the selection is inside or touching `block`, which then shows its source. */
-export function texBlockRevealed(state: EditorState, block: { from: number; to: number }): boolean {
-	return state.selection.ranges.some((r) => r.from <= block.to && r.to >= block.from);
-}
-
-/** The blocks drawn in this state (those the selection is not in). */
+/**
+ * The blocks drawn in this state. One the selection is inside or touching
+ * shows its source instead, by the rule Markdown's display math follows.
+ */
 export function replacedTexBlocks(state: EditorState): TexBlock[] {
-	return texBlockCandidates(state).filter((b) => !texBlockRevealed(state, b));
+	return texBlockCandidates(state).filter((b) => !mathBlockRevealed(state, b));
 }
 
 function build(state: EditorState): DecorationSet {

@@ -35,6 +35,11 @@ export const FLOAT_ENVS: Record<string, string> = {
 	subtable: 'Subtable',
 };
 
+/** Whether `name` is one of FLOAT_ENVS, with or without a star (`wrapfigure*` too). */
+export function isFloatEnv(name: string): boolean {
+	return Object.hasOwn(FLOAT_ENVS, name.replace(/\*$/, ''));
+}
+
 export const THEOREMS: Record<string, string> = {
 	theorem: 'Theorem',
 	lemma: 'Lemma',

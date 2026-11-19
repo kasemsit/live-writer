@@ -349,17 +349,30 @@ function emit(parent: HTMLElement, src: string, from: number, to: number, env: I
 /** Width the inline renderer sizes `\linewidth`-relative figures against (a table cell has no line of its own). */
 const NOMINAL_LINE_WIDTH = 700;
 
-/** An `\includegraphics` inside a widget (a table cell): the image once the host has found it. */
-function graphicElement(path: string, options: string): HTMLElement {
+type GraphicSize = ReturnType<typeof graphicSize>;
+
+/**
+ * An `\includegraphics` as an element: the image once the host has found it,
+ * sized by its options against `lineWidth` (`\linewidth`), or why it cannot
+ * be shown. A table cell uses it as it is; TexImageWidget passes `shown`,
+ * called as the result goes in, with the image (still loading) or null.
+ */
+export function graphicElement(
+	path: string,
+	options: string,
+	lineWidth = NOMINAL_LINE_WIDTH,
+	shown?: (img: HTMLImageElement | null, size: GraphicSize) => void,
+): HTMLElement {
 	const wrap = document.createElement('span');
 	wrap.className = 'mlp-tex-graphic mlp-tex-graphic-loading';
 	wrap.title = path;
-	const size = graphicSize(options, NOMINAL_LINE_WIDTH);
+	const size = graphicSize(options, lineWidth);
 	void resolveTexAsset(path).then((asset) => {
 		wrap.classList.remove('mlp-tex-graphic-loading');
 		if (asset.status !== 'image' || !asset.src) {
 			wrap.classList.add('mlp-tex-graphic-missing');
 			wrap.textContent = asset.status === 'unsupported' ? `${asset.name} (cannot be shown)` : `${path} (not found)`;
+			shown?.(null, size);
 			return;
 		}
 		const img = document.createElement('img');
@@ -367,6 +380,7 @@ function graphicElement(path: string, options: string): HTMLElement {
 		img.alt = path;
 		if (size.width) img.style.width = `${Math.round(size.width)}px`;
 		if (size.height) img.style.height = `${Math.round(size.height)}px`;
+		shown?.(img, size);
 		wrap.appendChild(img);
 	});
 	return wrap;
