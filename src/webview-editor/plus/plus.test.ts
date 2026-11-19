@@ -5,7 +5,7 @@ import { ensureSyntaxTree } from '@codemirror/language';
 import type { SyntaxNode } from '@lezer/common';
 import { GFM } from '../gfmTableFix';
 import { alignedBlockRange, readCellSpans } from '../livePreviewPlugin';
-import { findCitations, findInlineMath, findWikilinks, insideWikilink, splitTarget } from '../../shared/plusWikilinks';
+import { findCitations, findInlineMath, findWikilinks, insideWikilink, splitTableRow, splitTarget } from '../../shared/plusWikilinks';
 import { cleanLine, extractLinks, keysForNote } from '../../shared/plusBacklinks';
 import { quotePrefixLength } from './table';
 import { scanFootnotes, nextFootnoteLabel } from './footnotes';
@@ -105,6 +105,13 @@ describe('footnotes', () => {
 		]);
 		expect(scan.defs.get('x')?.text).toBe('ex more');
 		expect(scan.firstDefLine).toBe(3);
+	});
+
+	it('a fenced code block holds code, not footnotes', () => {
+		const scan = scanFootnotes(doc('a[^b] c\n\n```md\nx[^a]\n[^a]: in code\n[^b]: in code too\n```\n\n[^b]: real\n'));
+		expect([...scan.defs.keys()]).toEqual(['b']);
+		expect(scan.defs.get('b')?.text).toBe('real');
+		expect([...scan.order.entries()]).toEqual([['b', 1]]);
 	});
 
 	it('numbers an uncited definition after the cited ones', () => {
@@ -435,5 +442,13 @@ describe('CRLF offsets', () => {
 		const crs = crlfPositions('ab\ncd');
 		expect(vsToCm(crs, 4)).toBe(4);
 		expect(cmToVs(crs, 4)).toBe(4);
+	});
+});
+
+describe('splitTableRow', () => {
+	it('splits on pipes, but not escaped ones or those in wikilinks and math; in code they split, as GFM says', () => {
+		expect(splitTableRow('| a | [[N\\|label]] | $|x|$ | c \\| d |')).toEqual(['a', '[[N\\|label]]', '$|x|$', 'c \\| d']);
+		expect(splitTableRow('`a|b`')).toEqual(['`a', 'b`']);
+		expect(splitTableRow('a | b')).toEqual(['a', 'b']);
 	});
 });

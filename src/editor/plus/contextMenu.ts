@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
 import type { PlusCommand, PlusEditorToHostMessage, PlusHostToEditorMessage } from '../../shared/messages';
-import { linkTexts } from '../../shared/plusLinks';
+import { linkTexts, NOTE_EXT } from '../../shared/plusLinks';
 import { listNotes, openWikilink, type PlusSession } from './wikiOpen';
 import { texSessionOf } from './tex';
 
@@ -91,7 +91,7 @@ export async function handlePlusDo(session: PlusSession, message: Extract<PlusEd
 			return;
 		case 'copyBlockLink': {
 			const uri = session.getDocument().uri;
-			const name = path.basename(uri.fsPath).replace(/\.(md|markdown)$/i, '');
+			const name = path.basename(uri.fsPath).replace(NOTE_EXT, '');
 			const rel = vscode.workspace.asRelativePath(uri, false);
 			// The same shortest-unique rule completion uses: the bare name unless another note shares it.
 			const notes = await listNotes();

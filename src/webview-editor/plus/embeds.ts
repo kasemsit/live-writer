@@ -1,7 +1,7 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import type { Range } from '@codemirror/state';
 import { cursorTouchesRange, blockRevealChanged } from '../cmUtils';
-import { inSourceContext } from './wikilinks';
+import { inSourceContext } from './cm';
 import { resolveEmbed } from './hostRequests';
 
 /**
@@ -12,7 +12,13 @@ import { resolveEmbed } from './hostRequests';
  * line; clicking the image puts the caret there.
  */
 
-export const IMAGE_EMBED = /!\[\[([^[\]|\n]+?\.(?:png|jpe?g|gif|svg|webp|bmp|avif))(?:\|([^[\]\n]*))?\]\]/gi;
+/** The file types an embed draws as an image. */
+const IMAGE_TYPES = 'png|jpe?g|gif|svg|webp|bmp|avif';
+
+/** A file name `![[…]]` draws as an image (the rest stay wikilinks). */
+export const IMAGE_FILE = new RegExp(String.raw`\.(?:${IMAGE_TYPES})$`, 'i');
+
+export const IMAGE_EMBED = new RegExp(String.raw`!\[\[([^[\]|\n]+?\.(?:${IMAGE_TYPES}))(?:\|([^[\]\n]*))?\]\]`, 'gi');
 
 class EmbedImageWidget extends WidgetType {
 	constructor(

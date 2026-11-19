@@ -10,6 +10,7 @@
 
 import { parse as parseYaml } from 'yaml';
 import { citeStyleOf, type CiteStyle } from './plusCitations';
+import { CODE_FENCE, linesOutsideCode } from './plusCodeFences';
 
 export interface PandocAttrs {
 	id: string;
@@ -113,24 +114,8 @@ export const TRAILING_ATTRS = /\s*\{([^{}\n]*)\}\s*$/;
 /** An attribute block directly after an image: `![a](b){#fig-x width=80%}`. */
 export const LEADING_ATTRS = /^\{([^{}\n]*)\}/;
 
-const CODE_FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const DIV_OPEN = /^ {0,3}(:{3,})\s*(?:\{([^{}\n]*)\}|([^\s{}:]+))\s*:*\s*$/;
 const DIV_CLOSE = /^ {0,3}(:{3,})\s*$/;
-
-/** Indexes of the lines outside fenced code blocks, fence lines excluded. */
-function* outsideCode(lines: readonly string[]): Generator<number> {
-	let code: string | null = null;
-	for (let i = 0; i < lines.length; i++) {
-		const fence = CODE_FENCE.exec(lines[i]);
-		if (code) {
-			if (fence && fence[1][0] === code[0] && fence[1].length >= code.length && lines[i].trim() === fence[1]) code = null;
-		} else if (fence) {
-			code = fence[1];
-		} else {
-			yield i;
-		}
-	}
-}
 
 export interface FencedDiv {
 	/** Line of the opening fence. */
@@ -149,7 +134,7 @@ export interface FencedDiv {
 export function findFencedDivs(lines: readonly string[]): FencedDiv[] {
 	const found: FencedDiv[] = [];
 	const stack: { open: number; attrs: PandocAttrs }[] = [];
-	for (const i of outsideCode(lines)) {
+	for (const i of linesOutsideCode(lines)) {
 		const line = lines[i];
 		const open = DIV_OPEN.exec(line);
 		if (open) {
@@ -249,7 +234,7 @@ export interface CrossRefs {
 /** The figures and sections that `@fig-…` / `@sec-…` can point to. */
 export function scanCrossRefs(lines: readonly string[]): CrossRefs {
 	const refs: CrossRefs = { figures: new Map(), joined: new Map(), sections: new Map() };
-	for (const i of outsideCode(lines)) {
+	for (const i of linesOutsideCode(lines)) {
 		const line = lines[i];
 		const image = IMAGE_LINE.exec(line);
 		if (image) {
@@ -279,7 +264,7 @@ export function scanCrossRefs(lines: readonly string[]): CrossRefs {
  */
 export function joinedHeadingLines(lines: readonly string[]): Set<number> {
 	const out = new Set<number>();
-	for (const i of outsideCode(lines)) {
+	for (const i of linesOutsideCode(lines)) {
 		if (i > 0 && ATX.test(lines[i]) && !opensBlock(lines[i - 1]) && isParagraphText(lines[i - 1])) out.add(i);
 	}
 	return out;

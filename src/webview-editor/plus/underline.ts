@@ -2,7 +2,7 @@ import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewU
 import { EditorSelection, Prec, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import { inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
-import { inSourceContext } from './wikilinks';
+import { inSourceContext } from './cm';
 import { registerInlinePass } from './inlineExtras';
 
 /**

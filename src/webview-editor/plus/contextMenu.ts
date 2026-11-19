@@ -1,4 +1,5 @@
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { BLOCK_ID_LINE, TRAILING_BLOCK_ID } from '../../shared/plusAnchors';
 import type { EditorState } from '@codemirror/state';
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import type { SyntaxNode, Tree } from '@lezer/common';
@@ -40,8 +41,6 @@ function contextTarget(): HTMLElement | null {
 
 // ── Where a block starts and ends, for block links and review comments ──
 
-const BLOCK_ID = /\s\^([A-Za-z0-9][A-Za-z0-9-]*)\s*$/;
-const BLOCK_ID_ONLY = /^\s*\^([A-Za-z0-9][A-Za-z0-9-]*)\s*$/;
 const WHOLE_BLOCKS = /^(Blockquote|Table|FencedCode|CodeBlock|BlockMath|HTMLBlock|CommentBlock|BulletList|OrderedList)$/;
 
 type Block =
@@ -85,12 +84,12 @@ function ensureAnchor(view: EditorView, block: Block): string {
 	const { state } = view;
 	const { doc } = state;
 	if (block.kind === 'heading') {
-		const id = BLOCK_ID.exec(doc.lineAt(block.node.from).text);
-		return id ? `^${id[1]}` : block.text.replace(BLOCK_ID, '').trim();
+		const id = TRAILING_BLOCK_ID.exec(doc.lineAt(block.node.from).text);
+		return id ? `^${id[1]}` : block.text.replace(TRAILING_BLOCK_ID, '').trim();
 	}
 	if (block.kind === 'paragraph') {
 		const lastLine = doc.lineAt(block.node.to);
-		const id = BLOCK_ID.exec(lastLine.text);
+		const id = TRAILING_BLOCK_ID.exec(lastLine.text);
 		if (id) return `^${id[1]}`;
 		const fresh = newBlockId(state);
 		view.dispatch({ changes: { from: lastLine.to, insert: `${/\s$/.test(lastLine.text) ? '' : ' '}^${fresh}` } });
@@ -98,7 +97,7 @@ function ensureAnchor(view: EditorView, block: Block): string {
 	}
 	const lastLine = doc.lineAt(block.node.to);
 	for (let n = lastLine.number + 1; n <= Math.min(doc.lines, lastLine.number + 2); n++) {
-		const id = BLOCK_ID_ONLY.exec(doc.line(n).text);
+		const id = BLOCK_ID_LINE.exec(doc.line(n).text);
 		if (id) return `^${id[1]}`;
 		if (doc.line(n).text.trim()) break;
 	}

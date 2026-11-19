@@ -72,6 +72,14 @@ export function calloutStyle(type: string): { colour: string; icon: string } {
 }
 
 /** The icon `name` (a key of ICONS) as an inline SVG string. */
+/** The icon a callout header starts with: a span holding the named SVG. */
+export function calloutIcon(name: string): HTMLElement {
+	const span = document.createElement('span');
+	span.className = 'mlp-callout-icon';
+	span.innerHTML = calloutIconSvg(name);
+	return span;
+}
+
 export function calloutIconSvg(name: string): string {
 	return (
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -91,9 +99,7 @@ class CalloutIconWidget extends WidgetType {
 		return other.type === this.type && other.label === this.label;
 	}
 	toDOM(): HTMLElement {
-		const span = document.createElement('span');
-		span.className = 'mlp-callout-icon';
-		span.innerHTML = calloutIconSvg(calloutStyle(this.type).icon);
+		const span = calloutIcon(calloutStyle(this.type).icon);
 		if (this.label) {
 			const title = document.createElement('span');
 			title.className = 'mlp-callout-title';

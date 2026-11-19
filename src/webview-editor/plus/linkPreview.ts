@@ -4,7 +4,7 @@ import type { PlusPreview } from '../../shared/messages';
 import { renderInlineInto } from '../tableCellInline';
 import { cellInlineHooks } from '../livePreviewPlugin';
 import { previewLink } from './hostRequests';
-import { insideTableAtom } from '../../shared/plusWikilinks';
+import { splitTableRow } from '../../shared/plusWikilinks';
 import { calloutStyle } from './callouts';
 import { renderMathInto } from './math';
 
@@ -20,25 +20,6 @@ const HIDE_DELAY_MS = 250;
 const CACHE_MS = 15_000;
 
 const inline = (el: HTMLElement, text: string) => renderInlineInto(el, text, cellInlineHooks);
-
-function splitRow(row: string): string[] {
-	const inLink = insideTableAtom(row);
-	const cells: string[] = [];
-	let cell = '';
-	let escaped = false;
-	for (let i = 0; i < row.length; i++) {
-		const ch = row[i];
-		if (ch === '|' && !escaped && !inLink(i)) {
-			cells.push(cell);
-			cell = '';
-		} else cell += ch;
-		escaped = !escaped && ch === '\\';
-	}
-	cells.push(cell);
-	if (cells.length > 1 && !cells[0].trim()) cells.shift();
-	if (cells.length > 1 && !cells[cells.length - 1].trim()) cells.pop();
-	return cells.map((c) => c.trim());
-}
 
 /**
  * A small block renderer for the card: headings, paragraphs (line breaks kept,
@@ -111,7 +92,7 @@ export function renderMarkdownBlocks(parent: HTMLElement, text: string): void {
 				const row = lines[i++];
 				if (/^\s*\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?\s*$/.test(row)) continue;
 				const tr = table.insertRow();
-				for (const cell of splitRow(row.trim())) {
+				for (const cell of splitTableRow(row.trim())) {
 					const td = document.createElement(first ? 'th' : 'td');
 					inline(td, cell);
 					tr.appendChild(td);

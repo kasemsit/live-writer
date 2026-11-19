@@ -4,7 +4,8 @@ import { cursorTouchesRange, inlineCursorTouchesRange, blockRevealChanged } from
 import { describeBib } from '../../shared/plusBib';
 import { findCiteGroups, findNarrativeCitations, formatCiteGroup, formatNarrative, type CiteFormat, type CitePart } from '../../shared/plusCitations';
 import { findCitations } from '../../shared/plusWikilinks';
-import { inSourceContext, linkClass, LINK_CONTEXT, noteIndexChanged } from './wikilinks';
+import { linkClass, LINK_CONTEXT, noteIndexChanged } from './wikilinks';
+import { inSourceContext } from './cm';
 import { registerInlinePass } from './inlineExtras';
 import { citationFormat, onQuartoProject } from './quartoProject';
 

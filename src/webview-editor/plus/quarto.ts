@@ -5,10 +5,9 @@ import type { SyntaxNode } from '@lezer/common';
 import { cursorTouchesRange, inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
 import { blockReplacedLines, cellInlineHooks } from '../livePreviewPlugin';
 import { renderInlineInto } from '../tableCellInline';
-import { calloutIconSvg } from './callouts';
-import { jumpTo } from './footnotes';
+import { calloutIcon } from './callouts';
 import { quartoLabel as label, watchQuartoProject } from './quartoProject';
-import { inSourceContext } from './wikilinks';
+import { inSourceContext, jumpTo } from './cm';
 import {
 	LEADING_ATTRS,
 	TRAILING_ATTRS,
@@ -77,13 +76,6 @@ const CALLOUTS: Record<string, { colour: string; icon: string }> = {
 	caution: { colour: 'orange', icon: 'danger' },
 };
 
-function iconElement(icon: string): HTMLElement {
-	const span = document.createElement('span');
-	span.className = 'mlp-callout-icon';
-	span.innerHTML = calloutIconSvg(icon);
-	return span;
-}
-
 /** The header drawn over a callout's opening fence when no heading gives the title. */
 class CalloutHeadWidget extends WidgetType {
 	constructor(
@@ -98,7 +90,7 @@ class CalloutHeadWidget extends WidgetType {
 	toDOM(): HTMLElement {
 		const span = document.createElement('span');
 		span.className = 'mlp-qc-label';
-		if (this.icon) span.appendChild(iconElement(this.icon));
+		if (this.icon) span.appendChild(calloutIcon(this.icon));
 		const title = document.createElement('span');
 		title.className = 'mlp-callout-title';
 		renderInlineInto(title, this.title, cellInlineHooks);
@@ -119,7 +111,7 @@ class CalloutIconWidget extends WidgetType {
 		return other.icon === this.icon;
 	}
 	toDOM(): HTMLElement {
-		return iconElement(this.icon);
+		return calloutIcon(this.icon);
 	}
 }
 

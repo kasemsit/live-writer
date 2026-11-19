@@ -1,10 +1,10 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
-import { StateEffect, type EditorState, type Extension, type Range } from '@codemirror/state';
-import { syntaxTree } from '@codemirror/language';
-import type { SyntaxNode } from '@lezer/common';
-import { cursorTouchesRange, isBlockRevealed, blockRevealChanged } from '../cmUtils';
+import { StateEffect, type Extension, type Range } from '@codemirror/state';
+import { cursorTouchesRange, blockRevealChanged } from '../cmUtils';
 import { findWikilinks } from '../../shared/plusWikilinks';
 import { registerInlinePass } from './inlineExtras';
+import { inSourceContext } from './cm';
+import { IMAGE_FILE } from './embeds';
 import { isUnresolved, onNoteIndexChange, refreshNoteIndex } from './noteIndex';
 
 /**
@@ -13,21 +13,6 @@ import { isUnresolved, onNoteIndexChange, refreshNoteIndex } from './noteIndex';
  * as ordinary Markdown links do. The host resolves `wiki:` by file name across
  * the workspace (Obsidian semantics) — see src/editor/plus/wikiOpen.ts.
  */
-
-const SOURCE_NODES = /^(FencedCode|CodeBlock|InlineCode|HTMLBlock|CommentBlock|InlineMath|BlockMath)$/;
-
-/**
- * True where Markdown is shown as source rather than rendered: code, raw HTML,
- * and a table switched to code mode. A rendered table is not source — its
- * widget renders cell links itself through `renderInlineInto`.
- */
-export function inSourceContext(state: EditorState, pos: number): boolean {
-	for (let node: SyntaxNode | null = syntaxTree(state).resolveInner(pos, 1); node; node = node.parent) {
-		if (SOURCE_NODES.test(node.name)) return true;
-		if (node.name === 'Table') return isBlockRevealed(state.doc.lineAt(node.from).from);
-	}
-	return false;
-}
 
 const hidden = Decoration.replace({});
 
@@ -60,7 +45,7 @@ function build(view: EditorView): DecorationSet {
 			const labelTo = from + link.labelTo;
 			if (labelTo <= labelFrom) continue;
 			// `![[image.png]]` is an embed, drawn by plus/embeds.ts.
-			if (state.sliceDoc(s - 1, s) === '!' && /\.(png|jpe?g|gif|svg|webp|bmp|avif)$/i.test(link.target)) continue;
+			if (state.sliceDoc(s - 1, s) === '!' && IMAGE_FILE.test(link.target)) continue;
 			if (cursorTouchesRange(state, s, e) || inSourceContext(state, s)) continue;
 			out.push(hidden.range(s, labelFrom), linkMark(link.target).range(labelFrom, labelTo), hidden.range(labelTo, e));
 		}

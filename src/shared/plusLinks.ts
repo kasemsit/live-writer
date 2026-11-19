@@ -1,8 +1,11 @@
 // md-live-preview-plus: how a wikilink target names a file (src/editor/plus/wikiOpen.ts).
 
+/** A note's file extension; a note's name is its file name without it. */
+export const NOTE_EXT = /\.(md|markdown)$/i;
+
 /** The file name a link points to: `name` gets `.md` unless it already names a file type. */
 export function linkFileName(name: string): string {
-	if (/\.(md|markdown)$/i.test(name) || /\.[A-Za-z0-9]{1,5}$/.test(name)) return name;
+	if (NOTE_EXT.test(name) || /\.[A-Za-z0-9]{1,5}$/.test(name)) return name;
 	return `${name}.md`;
 }
 
@@ -24,5 +27,5 @@ export function rankMatches<T extends { rel: string; dir: string; fsPath: string
 export function linkTexts(notes: { name: string; path: string }[]): string[] {
 	const count = new Map<string, number>();
 	for (const n of notes) count.set(n.name.toLowerCase(), (count.get(n.name.toLowerCase()) ?? 0) + 1);
-	return notes.map((n) => (count.get(n.name.toLowerCase())! > 1 ? n.path.replace(/\.(md|markdown)$/i, '') : n.name));
+	return notes.map((n) => (count.get(n.name.toLowerCase())! > 1 ? n.path.replace(NOTE_EXT, '') : n.name));
 }

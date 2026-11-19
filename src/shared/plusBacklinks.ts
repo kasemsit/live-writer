@@ -1,4 +1,6 @@
 import { findCitations, findWikilinks, splitTarget } from './plusWikilinks';
+import { NOTE_EXT } from './plusLinks';
+import { TRAILING_BLOCK_ID } from './plusAnchors';
 
 /**
  * The text side of the Backlinks view: which notes a file links to, and how a
@@ -21,7 +23,7 @@ export function linkKey(name: string): string {
 	return name
 		.trim()
 		.replace(/\\/g, '/')
-		.replace(/\.(md|markdown)$/i, '')
+		.replace(NOTE_EXT, '')
 		.toLowerCase();
 }
 
@@ -33,7 +35,7 @@ export function cleanLine(line: string): string {
 		.replace(/^\s*(?:>\s?)+/, '')
 		.replace(/^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/, '')
 		.replace(/^#{1,6}\s+/, '')
-		.replace(/\s+\^[A-Za-z0-9][A-Za-z0-9-]*\s*$/, '')
+		.replace(TRAILING_BLOCK_ID, '')
 		.replace(/\s+/g, ' ')
 		.trim()
 		.slice(0, 240);

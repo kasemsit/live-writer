@@ -1,6 +1,7 @@
 import { renderInlineInto } from '../tableCellInline';
+import { BLOCK_ID_LINE, TRAILING_BLOCK_ID } from '../../shared/plusAnchors';
 import { cellInlineHooks } from '../livePreviewPlugin';
-import { insideTableAtom } from '../../shared/plusWikilinks';
+import { splitTableRow } from '../../shared/plusWikilinks';
 
 /**
  * Markdown → HTML for pasting into Word, Google Docs or an e-mail ("Copy as
@@ -39,32 +40,12 @@ function clean(root: HTMLElement): void {
 
 function inline(parent: HTMLElement, text: string): void {
 	const span = document.createElement('span');
-	renderInlineInto(span, text.replace(/\s+\^[A-Za-z0-9][A-Za-z0-9-]*\s*$/, ''), cellInlineHooks);
+	renderInlineInto(span, text.replace(TRAILING_BLOCK_ID, ''), cellInlineHooks);
 	clean(span);
 	parent.append(...Array.from(span.childNodes));
 }
 
-function splitRow(row: string): string[] {
-	const inLink = insideTableAtom(row);
-	const cells: string[] = [];
-	let cell = '';
-	let escaped = false;
-	for (let i = 0; i < row.length; i++) {
-		const ch = row[i];
-		if (ch === '|' && !escaped && !inLink(i)) {
-			cells.push(cell);
-			cell = '';
-		} else cell += ch;
-		escaped = !escaped && ch === '\\';
-	}
-	cells.push(cell);
-	if (cells.length > 1 && !cells[0].trim()) cells.shift();
-	if (cells.length > 1 && !cells[cells.length - 1].trim()) cells.pop();
-	return cells.map((c) => c.trim());
-}
-
 const LIST_ITEM = /^(\s*)([-*+]|\d+[.)])\s+(?:\[([ xX])\]\s+)?(.*)$/;
-const BLOCK_ID_ONLY = /^\s*\^[A-Za-z0-9][A-Za-z0-9-]*\s*$/;
 
 function renderBlocks(parent: HTMLElement, lines: string[]): void {
 	const add = <K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K] => {
@@ -75,7 +56,7 @@ function renderBlocks(parent: HTMLElement, lines: string[]): void {
 	let para: HTMLParagraphElement | null = null;
 	for (let i = 0; i < lines.length; ) {
 		const line = lines[i];
-		if (!line.trim() || BLOCK_ID_ONLY.test(line)) {
+		if (!line.trim() || BLOCK_ID_LINE.test(line)) {
 			para = null;
 			i++;
 			continue;
@@ -141,7 +122,7 @@ function renderBlocks(parent: HTMLElement, lines: string[]): void {
 				const row = lines[i++];
 				if (/^\s*\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?\s*$/.test(row)) continue;
 				const tr = table.insertRow();
-				for (const cell of splitRow(row.trim())) {
+				for (const cell of splitTableRow(row.trim())) {
 					const td = document.createElement(first ? 'th' : 'td');
 					inline(td, cell);
 					tr.appendChild(td);
@@ -158,7 +139,7 @@ function renderBlocks(parent: HTMLElement, lines: string[]): void {
 				const m = LIST_ITEM.exec(lines[i]);
 				if (!m) {
 					// A continuation line of the item above.
-					if (lastItem && /^\s+\S/.test(lines[i]) && !BLOCK_ID_ONLY.test(lines[i])) {
+					if (lastItem && /^\s+\S/.test(lines[i]) && !BLOCK_ID_LINE.test(lines[i])) {
 						lastItem.appendChild(document.createElement('br'));
 						inline(lastItem, lines[i].trim());
 						i++;

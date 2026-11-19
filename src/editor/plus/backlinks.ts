@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { NOTE_EXT } from '../../shared/plusLinks';
 import * as path from 'node:path';
 import { extractLinks, keysForNote, type OutgoingLink } from '../../shared/plusBacklinks';
 import { EXCLUDE, openAtLine } from './wikiOpen';
@@ -119,7 +120,7 @@ class BacklinksTree implements vscode.TreeDataProvider<Node> {
 		if (node.kind === 'file') {
 			const rel = vscode.workspace.asRelativePath(node.source, false);
 			const item = new vscode.TreeItem(
-				path.basename(rel).replace(/\.(md|markdown)$/i, ''),
+				path.basename(rel).replace(NOTE_EXT, ''),
 				this.groups.length <= 8 || node.links.length <= 2
 					? vscode.TreeItemCollapsibleState.Expanded
 					: vscode.TreeItemCollapsibleState.Collapsed,
@@ -172,7 +173,7 @@ export function registerBacklinks(context: vscode.ExtensionContext, activeDocume
 			? lines > files
 				? `${lines} links from ${files} notes`
 				: undefined
-			: `No notes link to ${path.basename(note.fsPath).replace(/\.(md|markdown)$/i, '')}.`;
+			: `No notes link to ${path.basename(note.fsPath).replace(NOTE_EXT, '')}.`;
 	};
 	const schedule = () => {
 		clearTimeout(timer);

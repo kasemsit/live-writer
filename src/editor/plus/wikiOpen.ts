@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import type { PlusAnchor, PlusNote, PlusPreview } from '../../shared/messages';
 import { anchorsInText, extractPreview, findAnchorLine } from '../../shared/plusAnchors';
-import { linkFileName, rankMatches } from '../../shared/plusLinks';
+import { linkFileName, NOTE_EXT, rankMatches } from '../../shared/plusLinks';
+import { exists } from './files';
 
 /**
  * Wikilinks on the host: `[[name#anchor]]` resolves by file name anywhere in
@@ -54,12 +55,7 @@ export async function resolveWikiTarget(from: vscode.Uri, name: string): Promise
 	if (!found.length) {
 		// Outside a workspace (or not indexed): try beside the current note.
 		const beside = vscode.Uri.joinPath(from, '..', rel);
-		try {
-			await vscode.workspace.fs.stat(beside);
-			return beside;
-		} catch {
-			return undefined;
-		}
+		return (await exists(beside)) ? beside : undefined;
 	}
 	const ranked = rankMatches(
 		found.map((u) => ({ uri: u, rel: vscode.workspace.asRelativePath(u, false), dir: path.dirname(u.fsPath), fsPath: u.fsPath })),
@@ -108,7 +104,7 @@ export async function openWikilink(session: PlusSession, link: string, beside = 
 			void vscode.window.showWarningMessage(`Wikilink target not found: ${name}`);
 			return;
 		}
-		const isMarkdown = /\.(md|markdown)$/i.test(uri.fsPath);
+		const isMarkdown = NOTE_EXT.test(uri.fsPath);
 		if (!isMarkdown) {
 			await vscode.commands.executeCommand('vscode.open', uri, beside ? vscode.ViewColumn.Beside : undefined);
 			return;
@@ -135,7 +131,7 @@ export async function listNotes(): Promise<PlusNote[]> {
 	if (notesCache && Date.now() - notesCache.at < 20_000) return notesCache.notes;
 	const found = await vscode.workspace.findFiles('**/*.{md,markdown}', EXCLUDE, 50_000);
 	const notes = found
-		.map((u) => ({ name: path.basename(u.fsPath).replace(/\.(md|markdown)$/i, ''), path: vscode.workspace.asRelativePath(u, false) }))
+		.map((u) => ({ name: path.basename(u.fsPath).replace(NOTE_EXT, ''), path: vscode.workspace.asRelativePath(u, false) }))
 		.sort((a, b) => a.name.localeCompare(b.name));
 	notesCache = { at: Date.now(), notes };
 	return notes;
@@ -143,7 +139,7 @@ export async function listNotes(): Promise<PlusNote[]> {
 
 export async function listAnchors(session: PlusSession, target: string): Promise<PlusAnchor[]> {
 	const uri = await resolveWikiTarget(session.getDocument().uri, target.trim());
-	if (!uri || !/\.(md|markdown)$/i.test(uri.fsPath)) return [];
+	if (!uri || !NOTE_EXT.test(uri.fsPath)) return [];
 	try {
 		return anchorsInText((await readLines(uri)).join('\n'));
 	} catch {
@@ -156,11 +152,11 @@ export async function previewWikilink(session: PlusSession, target: string): Pro
 	const parts = target.split('#');
 	const name = parts[0].trim();
 	const anchor = parts.length > 1 ? parts[parts.length - 1].trim() : '';
-	const title = (name ? path.basename(name).replace(/\.(md|markdown)$/i, '') : path.basename(session.getDocument().uri.fsPath).replace(/\.(md|markdown)$/i, '')) + (anchor ? ` › ${anchor}` : '');
+	const title = (name ? path.basename(name).replace(NOTE_EXT, '') : path.basename(session.getDocument().uri.fsPath).replace(NOTE_EXT, '')) + (anchor ? ` › ${anchor}` : '');
 	try {
 		const uri = await resolveWikiTarget(session.getDocument().uri, name);
 		if (!uri) return { title, text: '', status: 'missing', truncated: false };
-		if (!/\.(md|markdown)$/i.test(uri.fsPath)) {
+		if (!NOTE_EXT.test(uri.fsPath)) {
 			return { title, text: vscode.workspace.asRelativePath(uri, false), status: 'not-markdown', truncated: false };
 		}
 		const { text, anchorFound, truncated } = extractPreview(await readLines(uri), anchor);

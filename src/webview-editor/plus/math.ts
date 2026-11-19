@@ -1,9 +1,9 @@
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { StateField, type EditorState, type Extension, type Range } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
-import type { SyntaxNode } from '@lezer/common';
-import { cursorTouchesRange, inlineCursorTouchesRange, isBlockRevealed, blockRevealChanged } from '../cmUtils';
+import { cursorTouchesRange, inlineCursorTouchesRange, blockRevealChanged } from '../cmUtils';
 import { isMultilineMath, mathBlockReplaced, mathTex } from './mathSyntax';
+import { inRevealedTable } from './cm';
 
 /**
  * Renders the math nodes plus/mathSyntax.ts adds to the tree, with KaTeX.
@@ -148,13 +148,6 @@ class MathWidget extends WidgetType {
 	ignoreEvent(): boolean {
 		return true;
 	}
-}
-
-function inRevealedTable(state: EditorState, pos: number): boolean {
-	for (let node: SyntaxNode | null = syntaxTree(state).resolveInner(pos, 1); node; node = node.parent) {
-		if (node.name === 'Table') return isBlockRevealed(state.doc.lineAt(node.from).from);
-	}
-	return false;
 }
 
 function buildInline(view: EditorView): DecorationSet {

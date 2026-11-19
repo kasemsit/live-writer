@@ -158,3 +158,27 @@ export function insideTableAtom(text: string): (i: number) => boolean {
 	if (!math.length) return inLink;
 	return (i) => inLink(i) || math.some(([a, b]) => i > a && i < b);
 }
+
+/**
+ * The cells of a GFM table row, trimmed. A `|` splits a cell unless it is
+ * escaped or inside a wikilink or math (`insideTableAtom`) — inside code it
+ * splits, as GFM says. The outer pipes are optional.
+ */
+export function splitTableRow(row: string): string[] {
+	const inAtom = insideTableAtom(row);
+	const cells: string[] = [];
+	let cell = '';
+	let escaped = false;
+	for (let i = 0; i < row.length; i++) {
+		const ch = row[i];
+		if (ch === '|' && !escaped && !inAtom(i)) {
+			cells.push(cell);
+			cell = '';
+		} else cell += ch;
+		escaped = !escaped && ch === '\\';
+	}
+	cells.push(cell);
+	if (cells.length > 1 && !cells[0].trim()) cells.shift();
+	if (cells.length > 1 && !cells[cells.length - 1].trim()) cells.pop();
+	return cells.map((c) => c.trim());
+}

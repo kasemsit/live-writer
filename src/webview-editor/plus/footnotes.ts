@@ -3,7 +3,8 @@ import type { EditorState, Range, Text as Doc } from '@codemirror/state';
 import { cursorTouchesRange } from '../cmUtils';
 import { renderInlineInto } from '../tableCellInline';
 import { cellInlineHooks } from '../livePreviewPlugin';
-import { inSourceContext } from './wikilinks';
+import { inSourceContext, jumpTo, revealChanged } from './cm';
+import { linesOutsideCode } from '../../shared/plusCodeFences';
 import { registerInlinePass } from './inlineExtras';
 
 /**
@@ -46,7 +47,9 @@ export function scanFootnotes(doc: Doc): FootnoteScan {
 	const order = new Map<string, number>();
 	const first = new Map<string, number>();
 	let firstDefLine = 0;
-	for (let k = 1; k <= doc.lines; k++) {
+	// `[^1]: …` or `[^1]` inside a fenced code block is code, not a footnote.
+	const prose = [...linesOutsideCode(doc.toJSON())].map((i) => i + 1);
+	for (const k of prose) {
 		const line = doc.line(k);
 		const m = DEF_LINE.exec(line.text);
 		if (!m) continue;
@@ -58,7 +61,7 @@ export function scanFootnotes(doc: Doc): FootnoteScan {
 		firstDefLine ||= k;
 	}
 	if (defs.size) {
-		for (let k = 1; k <= doc.lines; k++) {
+		for (const k of prose) {
 			const line = doc.line(k);
 			if (DEF_LINE.test(line.text)) continue;
 			for (const r of line.text.matchAll(REF)) {
@@ -72,35 +75,6 @@ export function scanFootnotes(doc: Doc): FootnoteScan {
 	const scan = { defs, order, first, firstDefLine };
 	scans.set(doc, scan);
 	return (current = scan);
-}
-
-/** Scrolls `pos` to the middle of the editor and briefly highlights its line. */
-export function jumpTo(view: EditorView, pos: number): void {
-	view.dispatch({ effects: EditorView.scrollIntoView(pos, { y: 'center' }) });
-	let tries = 0;
-	const flash = () => {
-		try {
-			const scroller = view.scrollDOM;
-			const block = view.lineBlockAt(pos);
-			const box = scroller.getBoundingClientRect();
-			const top = block.top + view.documentTop - box.top + scroller.scrollTop;
-			const offset = top - scroller.scrollTop;
-			if (offset < -5 || offset > scroller.clientHeight) {
-				if (++tries < 12) setTimeout(flash, 90);
-				return;
-			}
-			if (getComputedStyle(scroller).position === 'static') scroller.style.position = 'relative';
-			const mark = document.createElement('div');
-			mark.className = 'mlp-fn-flashbox';
-			mark.style.top = `${top}px`;
-			mark.style.height = `${block.height}px`;
-			scroller.appendChild(mark);
-			setTimeout(() => mark.remove(), 1500);
-		} catch {
-			if (++tries < 12) setTimeout(flash, 90);
-		}
-	};
-	setTimeout(flash, 60);
 }
 
 function viewOf(el: HTMLElement): EditorView | null {
@@ -240,7 +214,8 @@ export const footnotePlugin = ViewPlugin.fromClass(
 			this.decorations = build(view);
 		}
 		update(update: ViewUpdate) {
-			if (update.docChanged || update.viewportChanged || update.selectionSet) this.decorations = build(update.view);
+			// A table switched to code shows its references as source (inSourceContext).
+			if (update.docChanged || update.viewportChanged || update.selectionSet || revealChanged(update)) this.decorations = build(update.view);
 		}
 	},
 	{ decorations: (v) => v.decorations },

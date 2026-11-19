@@ -7,7 +7,14 @@ import type { PlusAnchor } from './messages';
 
 const FENCE = /^\s*(```|~~~)/;
 const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
-const BLOCK_ID = /(?:^|\s)\^([A-Za-z0-9][A-Za-z0-9-]*)\s*$/;
+/** A block id's name, after its `^`: letters, digits and dashes. */
+const ID = '[A-Za-z0-9][A-Za-z0-9-]*';
+/** A block id ending a line, after a space or alone on it. Group 1: the id without `^`. */
+export const BLOCK_ID_AT_END = new RegExp(String.raw`(?:^|\s)\^(${ID})\s*$`);
+/** A block id ending a line of text, with the space before it, as removed from that text. Group 1: the id. */
+export const TRAILING_BLOCK_ID = new RegExp(String.raw`\s+\^(${ID})\s*$`);
+/** A line that is only a block id (it names the list or table above it). Group 1: the id. */
+export const BLOCK_ID_LINE = new RegExp(String.raw`^\s*\^(${ID})\s*$`);
 
 export function anchorsInText(text: string): PlusAnchor[] {
 	const out: PlusAnchor[] = [];
@@ -20,7 +27,7 @@ export function anchorsInText(text: string): PlusAnchor[] {
 		if (inFence) continue;
 		const h = HEADING.exec(line);
 		if (h) out.push({ kind: 'heading', text: h[2], level: h[1].length });
-		const b = BLOCK_ID.exec(line);
+		const b = BLOCK_ID_AT_END.exec(line);
 		if (b) out.push({ kind: 'block', text: b[1] });
 	}
 	return out;
@@ -37,7 +44,7 @@ export function findAnchorLine(lines: string[], anchor: string): number {
 	if (!anchor) return 0;
 	if (anchor.startsWith('^')) {
 		const id = anchor.slice(1);
-		return lines.findIndex((l) => BLOCK_ID.exec(l)?.[1] === id) + 1;
+		return lines.findIndex((l) => BLOCK_ID_AT_END.exec(l)?.[1] === id) + 1;
 	}
 	const want = normalize(anchor);
 	let inFence = false;
@@ -50,7 +57,6 @@ export function findAnchorLine(lines: string[], anchor: string): number {
 	return 0;
 }
 
-const BLOCK_ID_ONLY = /^\s*\^[A-Za-z0-9][A-Za-z0-9-]*\s*$/;
 const LIST_ITEM = /^\s*([-*+]|\d+[.)])\s/;
 const MAX_PREVIEW_LINES = 40;
 const MAX_PREVIEW_CHARS = 4000;
@@ -71,7 +77,7 @@ function blockAround(lines: string[], line: number): [number, number] {
 		}
 		return [line, end];
 	}
-	if (BLOCK_ID_ONLY.test(text)) {
+	if (BLOCK_ID_LINE.test(text)) {
 		// An id on its own line names the block just above it — Obsidian puts a
 		// blank line between them for tables and quotes, which is skipped.
 		let end = line;
@@ -106,7 +112,7 @@ export function extractPreview(lines: string[], anchor: string): { text: string;
 		while (from < lines.length && !lines[from].trim()) from++;
 		range = [from, lines.length];
 	}
-	let out = lines.slice(range[0], range[1]).map((l) => l.replace(/\s+\^[A-Za-z0-9][A-Za-z0-9-]*\s*$/, ''));
+	let out = lines.slice(range[0], range[1]).map((l) => l.replace(TRAILING_BLOCK_ID, ''));
 	while (out.length && !out[out.length - 1].trim()) out.pop();
 	let truncated = false;
 	if (out.length > MAX_PREVIEW_LINES) {
