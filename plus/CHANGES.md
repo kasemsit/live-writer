@@ -2,7 +2,7 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
-## Unreleased
+## 0.4.12
 
 - **LaTeX Live Preview.** A `.tex` file opens in the Live Preview (*Open With → Live Preview*, or the preview icon in the title bar) and is drawn the way Overleaf's Visual Editor draws it. As with Markdown, the source comes back wherever the caret is.
   - **Drawn:** section headings, `\textbf` / `\emph` and the other text styles, math with KaTeX (with the document's `\newcommand` macros), lists with their markers, `abstract`, figures and tables in a frame, captions, `tabular` with booktabs rules and `\multicolumn`, `\includegraphics` images, footnotes, links, `~ -- --- `` ''` and accents. Comments are tinted as notes. The preamble folds into one line.
