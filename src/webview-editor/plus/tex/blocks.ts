@@ -4,6 +4,7 @@ import { type TexEnv, type TexMath, type TexScan, readArgs } from '../../../shar
 import { parseTabular, type TexTable } from '../../../shared/plusTexTable';
 import { setTexContext, texContextField, texScanField } from './context';
 import { texMacros } from './macros';
+import { TABLE_ENVS } from './vocabulary';
 import { TexDisplayMathWidget, TexFoldWidget, TexTableWidget } from './widgets';
 
 /**
@@ -29,8 +30,6 @@ export interface TexBlock {
 }
 
 const FLOAT_NAMES = /^(figure|table|algorithm|wrapfigure|wraptable|sidewaysfigure|sidewaystable|listing|subfigure|subtable)\*?$/;
-
-export const TABLE_ENVS = new Set(['tabular', 'tabular*', 'tabularx', 'tabulary', 'longtable', 'tabu', 'supertabular']);
 
 /** Only blanks — or blanks and a comment — between `from` and `to`. */
 function blank(text: string, from: number, to: number): boolean {

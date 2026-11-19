@@ -5,6 +5,7 @@ import { isLetter, lineEnd, matchBrace, readArgs } from '../../../shared/plusTex
 import { CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent, textLigature, texToPlain } from '../../../shared/plusTexText';
 import { renderMathInto } from '../math';
 import { resolveTexAsset } from './context';
+import { CITE_COMMANDS, REF_COMMANDS, STYLE_CLASS } from './vocabulary';
 
 /**
  * md-live-preview-plus: a LaTeX fragment drawn as DOM — for the cells of a
@@ -17,40 +18,6 @@ export interface InlineEnv {
 	ctx: PlusTexContext;
 	macros: Record<string, string>;
 }
-
-/** Command → class of the element its argument is drawn in. */
-export const STYLE_CLASS: Record<string, string> = {
-	textbf: 'mlp-strong',
-	textit: 'mlp-em',
-	emph: 'mlp-em',
-	textsl: 'mlp-em',
-	texttt: 'mlp-tex-tt',
-	underline: 'mlp-underline',
-	uline: 'mlp-underline',
-	textsc: 'mlp-tex-sc',
-	textsf: 'mlp-tex-sf',
-	textsuperscript: 'mlp-tex-sup',
-	textsubscript: 'mlp-tex-sub',
-	uppercase: 'mlp-tex-upper',
-	MakeUppercase: 'mlp-tex-upper',
-	MakeTextUppercase: 'mlp-tex-upper',
-	MakeLowercase: 'mlp-tex-lower',
-	sout: 'mlp-strikethrough',
-	st: 'mlp-strikethrough',
-	xout: 'mlp-strikethrough',
-	hl: 'mlp-tex-hl',
-	textrm: '',
-	textnormal: '',
-	textup: '',
-	textmd: '',
-	mbox: '',
-	makebox: '',
-	text: '',
-	hbox: '',
-	makecell: '',
-	shortstack: '',
-	thead: 'mlp-strong',
-};
 
 /** Declarations that style the rest of their group (`{\bfseries x}`). */
 const DECLARATIONS: Record<string, string> = {
@@ -85,8 +52,6 @@ const DECLARATIONS: Record<string, string> = {
 	color: '',
 };
 
-export const REF_COMMANDS = /^(ref|eqref|autoref|cref|Cref|pageref|nameref|vref|Vref|subref|labelcref)$/;
-export const CITE_COMMANDS = /^(cite|citep|citet|citealp|citealt|citeauthor|citeyear|citeyearpar|citenum|parencite|textcite|autocite|footcite|supercite|smartcite|Cite|Citep|Citet|Textcite|Parencite|Autocite)$/;
 const TEXTUAL_CITES = /^(citet|Citet|textcite|Textcite)$/;
 
 /** The text a `\ref`-family command shows: the number from the last build, with the prefix the command adds. */
