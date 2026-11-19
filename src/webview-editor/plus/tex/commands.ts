@@ -1,8 +1,9 @@
-import { EditorSelection, type EditorState, type Extension, Prec } from '@codemirror/state';
+import { EditorSelection, type Extension, Prec } from '@codemirror/state';
 import { type EditorView, keymap } from '@codemirror/view';
 import { autocompletion, type Completion, type CompletionContext, type CompletionResult, snippetCompletion } from '@codemirror/autocomplete';
 import { readArgs } from '../../../shared/plusTexScanner';
-import { texContextField, texScanField } from './context';
+import { fileLabels, texContextField, texScanField } from './context';
+import { REF_COMMANDS } from './vocabulary';
 
 /**
  * md-live-preview-plus: editing commands of the LaTeX Live Preview, as in
@@ -166,21 +167,17 @@ function envCompletions(closing: boolean): Completion[] {
 	);
 }
 
-function labelsInDoc(state: EditorState): string[] {
-	const text = state.doc.toString();
-	return [...text.matchAll(/\\label\s*\{([^{}]+)\}/g)].map((m) => m[1].trim());
-}
-
 export function texCompletionSource(context: CompletionContext): CompletionResult | null {
 	const { state, pos } = context;
 	const line = state.doc.lineAt(pos);
 	const before = state.sliceDoc(line.from, pos);
 	const ctx = state.field(texContextField);
 
-	const refMatch = /\\(?:ref|eqref|autoref|cref|Cref|pageref|nameref|vref|labelcref)\{([^{}]*)$/.exec(before);
-	if (refMatch) {
-		const typed = refMatch[1].split(',').pop()!;
-		const keys = new Set([...Object.keys(ctx.labels), ...labelsInDoc(state)]);
+	// A key after any command the preview draws as a reference (REF_COMMANDS): the last build's labels and this file's.
+	const refMatch = /\\([A-Za-z]+)\{([^{}]*)$/.exec(before);
+	if (refMatch && REF_COMMANDS.test(refMatch[1])) {
+		const typed = refMatch[2].split(',').pop()!;
+		const keys = new Set([...Object.keys(ctx.labels), ...fileLabels(state)]);
 		return {
 			from: pos - typed.trimStart().length,
 			options: [...keys].map((k) => ({ label: k, type: 'variable', detail: ctx.labels[k] ? `→ ${ctx.labels[k]}` : 'not yet built' })),

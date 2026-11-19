@@ -127,6 +127,7 @@ export const STYLE_CLASS: Record<string, string> = {
 	thead: 'mlp-strong',
 };
 
+/** The `\ref` family: drawn as the numbers the last build gave their keys, and completed with labels. */
 export const REF_COMMANDS = /^(ref|eqref|autoref|cref|Cref|pageref|nameref|vref|Vref|subref|labelcref)$/;
 export const CITE_COMMANDS = /^(cite|citep|citet|citealp|citealt|citeauthor|citeyear|citeyearpar|citenum|parencite|textcite|autocite|footcite|supercite|smartcite|Cite|Citep|Citet|Textcite|Parencite|Autocite)$/;
 

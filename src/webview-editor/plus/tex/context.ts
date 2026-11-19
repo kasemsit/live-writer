@@ -1,7 +1,7 @@
-import { StateEffect, StateField } from '@codemirror/state';
+import { type EditorState, StateEffect, StateField } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../../shared/messages';
-import { scanTex, type TexScan } from '../../../shared/plusTexScanner';
+import { readArgs, scanTex, type TexScan } from '../../../shared/plusTexScanner';
 import { request } from '../hostRequests';
 
 /**
@@ -28,6 +28,31 @@ export const texScanField = StateField.define<TexScan>({
 	create: (state) => scanTex(state.doc.toString()),
 	update: (value, tr) => (tr.docChanged ? scanTex(tr.state.doc.toString()) : value),
 });
+
+const ownLabels = new WeakMap<TexScan, Set<string>>();
+
+/**
+ * Labels defined in this file (outside comments and verbatim, in math too):
+ * for telling "not built yet" from "undefined", and for completion.
+ */
+export function fileLabels(state: EditorState): Set<string> {
+	const scan = state.field(texScanField);
+	let set = ownLabels.get(scan);
+	if (!set) {
+		const text = state.doc.toString();
+		const keys: string[] = [];
+		for (const cmd of scan.commands) {
+			if (cmd.name !== 'label') continue;
+			const arg = readArgs(text, cmd.to, 'm')?.args[0];
+			if (arg) keys.push(text.slice(arg.from, arg.to).trim());
+		}
+		for (const m of scan.maths) for (const l of text.slice(m.innerFrom, m.innerTo).matchAll(/\\label\s*\{([^{}]*)\}/g)) keys.push(l[1].trim());
+		// An empty `\label{}` (as just typed, with its closing brace put in) names nothing.
+		set = new Set(keys.filter(Boolean));
+		ownLabels.set(scan, set);
+	}
+	return set;
+}
 
 // ── Requests to the host ────────────────────────────────────────────────────
 

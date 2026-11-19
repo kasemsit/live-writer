@@ -6,7 +6,7 @@ import { type TexCommand, type TexEnv, type TexScan, envAt, isLetter, rangeAt, r
 import { ACCENTS, CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent } from '../../../shared/plusTexText';
 import { cursorTouchesRange, inlineCursorTouchesRange } from '../../cmUtils';
 import { replacedTexBlocks, texBlockCandidates, displayTex, type TexBlock } from './blocks';
-import { setTexContext, texContextField, texScanField } from './context';
+import { fileLabels, setTexContext, texContextField, texScanField } from './context';
 import { citeText, cssColor, refText, splitKeys } from './inline';
 import { texMacros } from './macros';
 import { LINK_CONTEXT } from '../wikilinks';
@@ -357,24 +357,6 @@ function cite(b: Builder, c: TexCommand): void {
 	chipFor(b, c, args.end, new TexChipWidget(shown.text, `mlp-tex-cite${shown.missing ? ' mlp-tex-chip-missing' : ''}${c.name === 'nocite' ? ' mlp-tex-chip-faint' : ''}`, shown.title, keysArg.from));
 }
 
-/** Labels defined in this file, for telling "not built yet" from "undefined". */
-const ownLabels = new WeakMap<TexScan, Set<string>>();
-
-function labelsOf(b: Builder): Set<string> {
-	let set = ownLabels.get(b.scan);
-	if (!set) {
-		set = new Set();
-		for (const cmd of b.scan.commands) {
-			if (cmd.name !== 'label') continue;
-			const arg = readArgs(b.text, cmd.to, 'm')?.args[0];
-			if (arg) set.add(b.text.slice(arg.from, arg.to).trim());
-		}
-		for (const m of b.scan.maths) for (const l of b.text.slice(m.innerFrom, m.innerTo).matchAll(/\\label\s*\{([^{}]*)\}/g)) set.add(l[1].trim());
-		ownLabels.set(b.scan, set);
-	}
-	return set;
-}
-
 function ref(b: Builder, c: TexCommand): void {
 	const args = readArgs(b.text, c.to, 'sm');
 	const arg = args?.args[0];
@@ -387,7 +369,7 @@ function ref(b: Builder, c: TexCommand): void {
 	}
 	const keys = splitKeys(b.text.slice(arg.from, arg.to));
 	const shown = refText(c.name, keys, b.ctx.labels);
-	const pending = shown.missing && keys.every((k) => k in b.ctx.labels || labelsOf(b).has(k));
+	const pending = shown.missing && keys.every((k) => k in b.ctx.labels || fileLabels(b.state).has(k));
 	const title = `\\${c.name}{${keys.join(',')}}${shown.missing ? (pending ? ' — defined, not yet in the last build' : ' — undefined in the last build') : ''}`;
 	chipFor(b, c, args.end, new TexChipWidget(pending ? shown.text.replace(/\?\?/g, '?') : shown.text, `mlp-tex-ref${shown.missing && !pending ? ' mlp-tex-chip-missing' : ''}`, title, arg.from));
 }
