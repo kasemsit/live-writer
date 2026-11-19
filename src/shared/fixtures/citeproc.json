@@ -1,0 +1,1062 @@
+{
+	"generator": "pandoc 3.8.3 --citeproc via quarto; apa = the apa.csl of a real Quarto book, chicago = Quarto's default (no csl)",
+	"bib": "@misc{chen2015,\n  author       = {Chen, Daqing},\n  title        = {Online Retail [Data set]},\n  howpublished = {UCI Machine Learning Repository},\n  year         = {2015},\n  doi          = {10.24432/C5BW33}\n}\n@article{hormby2010,\n  author  = {Hormby, Sharon and Morrison, Julia and Dave, Prashant and Meyers, Michele and Tenca, Tim},\n  title   = {Marriott International Increases Revenue by Implementing a Group Pricing Optimizer},\n  journal = {Interfaces},\n  year    = {2010}\n}\n@article{wei2022,\n  author  = {Wei, Jason and Wang, Xuezhi and Schuurmans, Dale and others},\n  title   = {Chain-of-Thought Prompting Elicits Reasoning in Large Language Models},\n  year    = {2022}\n}\n@misc{acca_analytics,\n  author       = {{Association of Chartered Certified Accountants}},\n  title        = {Data Analytics and the Auditor},\n  url          = {https://www.accaglobal.com/gb/en/student/x%20y.html}\n}\n@book{lee2019,\n  author = {Lee, Ann and Park, Bo},\n  title  = {Two Authors},\n  year   = {2019}\n}\n@article{three2020,\n  author = {Smith, John and Jones, Mary and Brown, Kate},\n  title  = {Three Authors Paper},\n  journal = {J},\n  year   = {2020}\n}\n@article{four2021,\n  author = {Adams, A and Baker, B and Clark, C and Davis, D},\n  title  = {Four Authors Paper},\n  journal = {J},\n  year   = {2021}\n}\n@article{oneothers2018,\n  author = {Single, Sam and others},\n  title  = {One Author And Others},\n  journal = {J},\n  year   = {2018}\n}\n@article{twoothers2017,\n  author = {First, Fay and Second, Sid and others},\n  title  = {Two Authors And Others},\n  journal = {J},\n  year   = {2017}\n}\n@article{noauthorart,\n  title  = {An Article Without Authors},\n  journal = {Some Journal},\n  year   = {2016}\n}\n@book{noauthorbook,\n  title  = {A Book Without Authors},\n  publisher = {Pub},\n  year   = {2014}\n}\n@misc{noauthormisc,\n  title  = {A Web Page Without Authors},\n  year   = {2013}\n}\n@book{editoronly,\n  editor = {Editor, Ed},\n  title  = {Edited Volume},\n  publisher = {Pub},\n  year   = {2012}\n}\n@manual{orgonly,\n  title  = {Org Manual},\n  organization = {Some Organisation},\n  year   = {2011}\n}\n@article{same2015a,\n  author = {Chen, Daqing},\n  title  = {Second Chen Paper},\n  journal = {J},\n  year   = {2015}\n}\n@article{smith2019,\n  author = {Smith, John},\n  title  = {Smith Early},\n  journal = {J},\n  year   = {2019}\n}\n@article{smith2020b,\n  author = {Smith, John},\n  title  = {Smith Later},\n  journal = {J},\n  year   = {2020}\n}\n@article{vanb,\n  author = {Ludwig van Beethoven},\n  title  = {Particles},\n  journal = {J},\n  year   = {1800}\n}\n@article{datefield,\n  author = {Date, Dan},\n  title  = {Uses the date field},\n  journal = {J},\n  date   = {2023-05-01}\n}\n@article{doe:2020,\n  author = {Doe, Jane},\n  title  = {Colon Key},\n  journal = {J},\n  year   = {2020}\n}\n@article{doe.2020a,\n  author = {Doe, John},\n  title  = {Dot Key},\n  journal = {J},\n  year   = {2021}\n}\n",
+	"cases": [
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015] Y.",
+			"expected": "X (Chen, 2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@hormby2010] Y.",
+			"expected": "X (Hormby et al., 2010) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@acca_analytics] Y.",
+			"expected": "X (Association of Chartered Certified Accountants, n.d.) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@wei2022] Y.",
+			"expected": "X (Wei et al., 2022) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@lee2019] Y.",
+			"expected": "X (Lee & Park, 2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@three2020] Y.",
+			"expected": "X (Smith et al., 2020) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@four2021] Y.",
+			"expected": "X (Adams et al., 2021) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@oneothers2018] Y.",
+			"expected": "X (Single et al., 2018) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@twoothers2017] Y.",
+			"expected": "X (First et al., 2017) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @lee2019 Y.",
+			"expected": "X Lee & Park (2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @three2020 Y.",
+			"expected": "X Smith et al. (2020) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @chen2015 Y.",
+			"expected": "X Chen (2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @acca_analytics Y.",
+			"expected": "X Association of Chartered Certified Accountants (n.d.) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @hormby2010 Y.",
+			"expected": "X Hormby et al. (2010) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @twoothers2017 Y.",
+			"expected": "X First et al. (2017) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015, 33] Y.",
+			"expected": "X (Chen, 2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015 p. 33] Y.",
+			"expected": "X (Chen, 2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015, p. 33] Y.",
+			"expected": "X (Chen, 2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015, pp. 33-35] Y.",
+			"expected": "X (Chen, 2015, pp. 33–35) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015, chap. 2] Y.",
+			"expected": "X (Chen, 2015, Chapter 2) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015, 33, emphasis added] Y.",
+			"expected": "X (Chen, 2015, p. 33, emphasis added) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015, หน้า 4] Y.",
+			"expected": "X (Chen, 2015, หน้า 4) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [ดู @chen2015 หน้า 4] Y.",
+			"expected": "X (ดู Chen, 2015 หน้า 4) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @chen2015 [p. 33] Y.",
+			"expected": "X Chen (2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @chen2015 [33] Y.",
+			"expected": "X Chen (2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [see @chen2015] Y.",
+			"expected": "X (see Chen, 2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [see @chen2015, p. 3; also @lee2019] Y.",
+			"expected": "X (see Chen, 2015, p. 3; also Lee & Park, 2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [-@chen2015] Y.",
+			"expected": "X (2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [-@chen2015, p. 33] Y.",
+			"expected": "X (2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@lee2019; @chen2015] Y.",
+			"expected": "X (Chen, 2015; Lee & Park, 2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015; @chen2015] Y.",
+			"expected": "X (Chen, 2015, 2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@smith2019; @smith2020b] Y.",
+			"expected": "X (Smith, 2019, 2020) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015; @same2015a] Y.",
+			"expected": "X (Chen, 2015a, 2015b) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@noauthorart] Y.",
+			"expected": "X (“An Article Without Authors,” 2016) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@noauthorbook] Y.",
+			"expected": "X (A Book Without Authors, 2014) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@noauthormisc] Y.",
+			"expected": "X (A Web Page Without Authors, 2013) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@editoronly] Y.",
+			"expected": "X (Editor, 2012) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@orgonly] Y.",
+			"expected": "X (Org Manual, 2011) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@vanb] Y.",
+			"expected": "X (Beethoven, 1800) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@datefield] Y.",
+			"expected": "X (Date, 2023) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@doe:2020] and [@doe.2020a] Y.",
+			"expected": "X (Doe, 2020) and (Doe, 2021) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X @doe:2020 says and @doe.2020a. Y.",
+			"expected": "X Doe (2020) says and Doe (2021). Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@nosuch] Y.",
+			"expected": "X (nosuch?) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "en-US",
+			"text": "X [@chen2015; @nosuch] Y.",
+			"expected": "X (Chen, 2015; nosuch?) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015] Y.",
+			"expected": "X (Chen, 2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@hormby2010] Y.",
+			"expected": "X (Hormby และคณะ, 2010) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@acca_analytics] Y.",
+			"expected": "X (Association of Chartered Certified Accountants, ม.ป.ป.) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@wei2022] Y.",
+			"expected": "X (Wei และคณะ, 2022) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@lee2019] Y.",
+			"expected": "X (Lee & Park, 2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@three2020] Y.",
+			"expected": "X (Smith และคณะ, 2020) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@four2021] Y.",
+			"expected": "X (Adams และคณะ, 2021) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@oneothers2018] Y.",
+			"expected": "X (Single และคณะ, 2018) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@twoothers2017] Y.",
+			"expected": "X (First และคณะ, 2017) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @lee2019 Y.",
+			"expected": "X Lee & Park (2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @three2020 Y.",
+			"expected": "X Smith และคณะ (2020) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @chen2015 Y.",
+			"expected": "X Chen (2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @acca_analytics Y.",
+			"expected": "X Association of Chartered Certified Accountants (ม.ป.ป.) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @hormby2010 Y.",
+			"expected": "X Hormby และคณะ (2010) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @twoothers2017 Y.",
+			"expected": "X First และคณะ (2017) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015, 33] Y.",
+			"expected": "X (Chen, 2015, น. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015 p. 33] Y.",
+			"expected": "X (Chen, 2015 p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015, p. 33] Y.",
+			"expected": "X (Chen, 2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015, pp. 33-35] Y.",
+			"expected": "X (Chen, 2015, pp. 33-35) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015, chap. 2] Y.",
+			"expected": "X (Chen, 2015, chap. 2) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015, 33, emphasis added] Y.",
+			"expected": "X (Chen, 2015, น. 33, emphasis added) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015, หน้า 4] Y.",
+			"expected": "X (Chen, 2015, หน้า 4) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [ดู @chen2015 หน้า 4] Y.",
+			"expected": "X (ดู Chen, 2015, หน้า 4) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @chen2015 [p. 33] Y.",
+			"expected": "X Chen (2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @chen2015 [33] Y.",
+			"expected": "X Chen (2015, น. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [see @chen2015] Y.",
+			"expected": "X (see Chen, 2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [see @chen2015, p. 3; also @lee2019] Y.",
+			"expected": "X (see Chen, 2015, p. 3; also Lee & Park, 2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [-@chen2015] Y.",
+			"expected": "X (2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [-@chen2015, p. 33] Y.",
+			"expected": "X (2015, p. 33) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@lee2019; @chen2015] Y.",
+			"expected": "X (Chen, 2015; Lee & Park, 2019) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015; @chen2015] Y.",
+			"expected": "X (Chen, 2015, 2015) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@smith2019; @smith2020b] Y.",
+			"expected": "X (Smith, 2019, 2020) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015; @same2015a] Y.",
+			"expected": "X (Chen, 2015a, 2015b) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@noauthorart] Y.",
+			"expected": "X (“An Article Without Authors”, 2016) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@noauthorbook] Y.",
+			"expected": "X (A Book Without Authors, 2014) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@noauthormisc] Y.",
+			"expected": "X (A Web Page Without Authors, 2013) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@editoronly] Y.",
+			"expected": "X (Editor, 2012) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@orgonly] Y.",
+			"expected": "X (Org Manual, 2011) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@vanb] Y.",
+			"expected": "X (Beethoven, 1800) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@datefield] Y.",
+			"expected": "X (Date, 2023) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@doe:2020] and [@doe.2020a] Y.",
+			"expected": "X (Doe, 2020) and (Doe, 2021) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X @doe:2020 says and @doe.2020a. Y.",
+			"expected": "X Doe (2020) says and Doe (2021). Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@nosuch] Y.",
+			"expected": "X (nosuch?) Y."
+		},
+		{
+			"style": "apa",
+			"lang": "th",
+			"text": "X [@chen2015; @nosuch] Y.",
+			"expected": "X (Chen, 2015; nosuch?) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015] Y.",
+			"expected": "X (Chen 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@hormby2010] Y.",
+			"expected": "X (Hormby et al. 2010) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@acca_analytics] Y.",
+			"expected": "X (Association of Chartered Certified Accountants, n.d.) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@wei2022] Y.",
+			"expected": "X (Wei et al. 2022) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@lee2019] Y.",
+			"expected": "X (Lee and Park 2019) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@three2020] Y.",
+			"expected": "X (Smith et al. 2020) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@four2021] Y.",
+			"expected": "X (Adams et al. 2021) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@oneothers2018] Y.",
+			"expected": "X (Single et al. 2018) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@twoothers2017] Y.",
+			"expected": "X (First et al. 2017) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @lee2019 Y.",
+			"expected": "X Lee and Park (2019) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @three2020 Y.",
+			"expected": "X Smith et al. (2020) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @chen2015 Y.",
+			"expected": "X Chen (2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @acca_analytics Y.",
+			"expected": "X Association of Chartered Certified Accountants (n.d.) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @hormby2010 Y.",
+			"expected": "X Hormby et al. (2010) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @twoothers2017 Y.",
+			"expected": "X First et al. (2017) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015, 33] Y.",
+			"expected": "X (Chen 2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015 p. 33] Y.",
+			"expected": "X (Chen 2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015, p. 33] Y.",
+			"expected": "X (Chen 2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015, pp. 33-35] Y.",
+			"expected": "X (Chen 2015, 33–35) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015, chap. 2] Y.",
+			"expected": "X (Chen 2015, chap. 2) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015, 33, emphasis added] Y.",
+			"expected": "X (Chen 2015, 33, emphasis added) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015, หน้า 4] Y.",
+			"expected": "X (Chen 2015, หน้า 4) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [ดู @chen2015 หน้า 4] Y.",
+			"expected": "X (ดู Chen 2015 หน้า 4) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @chen2015 [p. 33] Y.",
+			"expected": "X Chen (2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @chen2015 [33] Y.",
+			"expected": "X Chen (2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [see @chen2015] Y.",
+			"expected": "X (see Chen 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [see @chen2015, p. 3; also @lee2019] Y.",
+			"expected": "X (see Chen 2015, 3; also Lee and Park 2019) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [-@chen2015] Y.",
+			"expected": "X (2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [-@chen2015, p. 33] Y.",
+			"expected": "X (2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@lee2019; @chen2015] Y.",
+			"expected": "X (Lee and Park 2019; Chen 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015; @chen2015] Y.",
+			"expected": "X (Chen 2015, 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@smith2019; @smith2020b] Y.",
+			"expected": "X (Smith 2019, 2020) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015; @same2015a] Y.",
+			"expected": "X (Chen 2015a, 2015b) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@noauthorart] Y.",
+			"expected": "X (“An Article Without Authors” 2016) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@noauthorbook] Y.",
+			"expected": "X (A Book Without Authors 2014) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@noauthormisc] Y.",
+			"expected": "X (A Web Page Without Authors 2013) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@editoronly] Y.",
+			"expected": "X (Editor 2012) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@orgonly] Y.",
+			"expected": "X (Org Manual 2011) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@vanb] Y.",
+			"expected": "X (Beethoven 1800) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@datefield] Y.",
+			"expected": "X (Date 2023) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@doe:2020] and [@doe.2020a] Y.",
+			"expected": "X (Doe 2020) and (Doe 2021) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X @doe:2020 says and @doe.2020a. Y.",
+			"expected": "X Doe (2020) says and Doe (2021). Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@nosuch] Y.",
+			"expected": "X (nosuch?) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "en-US",
+			"text": "X [@chen2015; @nosuch] Y.",
+			"expected": "X (Chen 2015; nosuch?) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015] Y.",
+			"expected": "X (Chen 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@hormby2010] Y.",
+			"expected": "X (Hormby และคณะ 2010) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@acca_analytics] Y.",
+			"expected": "X (Association of Chartered Certified Accountants, ม.ป.ป.) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@wei2022] Y.",
+			"expected": "X (Wei และคณะ 2022) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@lee2019] Y.",
+			"expected": "X (Lee และ Park 2019) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@three2020] Y.",
+			"expected": "X (Smith และคณะ 2020) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@four2021] Y.",
+			"expected": "X (Adams และคณะ 2021) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@oneothers2018] Y.",
+			"expected": "X (Single และคณะ 2018) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@twoothers2017] Y.",
+			"expected": "X (First และคณะ 2017) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @lee2019 Y.",
+			"expected": "X Lee และ Park (2019) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @three2020 Y.",
+			"expected": "X Smith และคณะ (2020) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @chen2015 Y.",
+			"expected": "X Chen (2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @acca_analytics Y.",
+			"expected": "X Association of Chartered Certified Accountants (ม.ป.ป.) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @hormby2010 Y.",
+			"expected": "X Hormby และคณะ (2010) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @twoothers2017 Y.",
+			"expected": "X First และคณะ (2017) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015, 33] Y.",
+			"expected": "X (Chen 2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015 p. 33] Y.",
+			"expected": "X (Chen 2015 p. 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015, p. 33] Y.",
+			"expected": "X (Chen 2015, p. 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015, pp. 33-35] Y.",
+			"expected": "X (Chen 2015, pp. 33-35) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015, chap. 2] Y.",
+			"expected": "X (Chen 2015, chap. 2) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015, 33, emphasis added] Y.",
+			"expected": "X (Chen 2015, 33, emphasis added) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015, หน้า 4] Y.",
+			"expected": "X (Chen 2015, หน้า 4) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [ดู @chen2015 หน้า 4] Y.",
+			"expected": "X (ดู Chen 2015, หน้า 4) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @chen2015 [p. 33] Y.",
+			"expected": "X Chen (2015, p. 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @chen2015 [33] Y.",
+			"expected": "X Chen (2015, 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [see @chen2015] Y.",
+			"expected": "X (see Chen 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [see @chen2015, p. 3; also @lee2019] Y.",
+			"expected": "X (see Chen 2015, p. 3; also Lee และ Park 2019) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [-@chen2015] Y.",
+			"expected": "X (2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [-@chen2015, p. 33] Y.",
+			"expected": "X (2015, p. 33) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@lee2019; @chen2015] Y.",
+			"expected": "X (Lee และ Park 2019; Chen 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015; @chen2015] Y.",
+			"expected": "X (Chen 2015, 2015) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@smith2019; @smith2020b] Y.",
+			"expected": "X (Smith 2019, 2020) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015; @same2015a] Y.",
+			"expected": "X (Chen 2015a, 2015b) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@noauthorart] Y.",
+			"expected": "X (“An Article Without Authors” 2016) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@noauthorbook] Y.",
+			"expected": "X (A Book Without Authors 2014) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@noauthormisc] Y.",
+			"expected": "X (A Web Page Without Authors 2013) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@editoronly] Y.",
+			"expected": "X (Editor 2012) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@orgonly] Y.",
+			"expected": "X (Org Manual 2011) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@vanb] Y.",
+			"expected": "X (Beethoven 1800) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@datefield] Y.",
+			"expected": "X (Date 2023) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@doe:2020] and [@doe.2020a] Y.",
+			"expected": "X (Doe 2020) and (Doe 2021) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X @doe:2020 says and @doe.2020a. Y.",
+			"expected": "X Doe (2020) says and Doe (2021). Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@nosuch] Y.",
+			"expected": "X (nosuch?) Y."
+		},
+		{
+			"style": "chicago",
+			"lang": "th",
+			"text": "X [@chen2015; @nosuch] Y.",
+			"expected": "X (Chen 2015; nosuch?) Y."
+		}
+	]
+}

@@ -44,10 +44,10 @@ export async function readQuartoProject(document: vscode.TextDocument): Promise<
 	const yaml = projectFile ? ((await readText(projectFile)) ?? '') : '';
 	const labels = labelsFromQuartoYaml(yaml);
 	const watched = projectFile ? [projectFile] : [];
-	if (!isQuartoDocument(document)) return { project: { labels, citations: null }, watched };
+	if (!isQuartoDocument(document)) return { project: { labels, citations: null, quarto: false }, watched };
 
 	const plan = quartoCitationPlan(yaml, document.getText());
-	if (!plan) return { project: { labels, citations: null }, watched };
+	if (!plan) return { project: { labels, citations: null, quarto: true }, watched };
 	const docDir = vscode.Uri.joinPath(document.uri, '..');
 	const base = plan.base === 'project' && projectFile ? vscode.Uri.joinPath(projectFile, '..') : docDir;
 
@@ -58,7 +58,7 @@ export async function readQuartoProject(document: vscode.TextDocument): Promise<
 		const text = await readText(uri);
 		if (text) Object.assign(bib, parseBib(text));
 	}
-	return { project: { labels, citations: { style: plan.style, lang: plan.lang, bib } }, watched };
+	return { project: { labels, citations: { style: plan.style, lang: plan.lang, bib }, quarto: true }, watched };
 }
 
 const watching = new WeakMap<PlusSession, vscode.Disposable>();

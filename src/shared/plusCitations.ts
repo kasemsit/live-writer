@@ -58,21 +58,57 @@ export function citeLabel(keys: string[], cites: Record<string, string>, bib: Re
 }
 
 // ── Pandoc / Quarto: citeproc's author–date ─────────────────────────────────
+//
+// The rules below were read off Pandoc's citeproc (Quarto 1.8, pandoc 3.8) with
+// apa.csl and the default Chicago author-date style, in English and Thai; the
+// cases are pinned in plusCitations.citeproc.test.ts.
 
 /** `apa` puts a comma before the year; `chicago` (author-date, Quarto's default) does not. */
 export type CiteStyle = 'apa' | 'chicago' | 'numeric';
 
-/** The words citeproc takes from the CSL locale. */
+/** The words and locator labels citeproc takes from the CSL locale. */
 export interface CiteTerms {
 	and: string;
 	etAl: string;
 	noDate: string;
+	/** The page label APA prints before one page, and before a range. */
+	page: string;
+	pages: string;
+	/** A written page label the locale recognises (`p. 33`); anything else is text. */
+	pageLabel: RegExp;
+	/** A written chapter label the locale recognises (`chap. 2`), if any. */
+	chapterLabel: RegExp | null;
+	/** A label the locale recognises but citeproc prints as written (Thai `หน้า 4`). */
+	asWritten: RegExp | null;
+	/** A comma after a quoted title goes inside the quotes (“Title,”), as in American English. */
+	commaInQuotes: boolean;
 }
 
 const TERMS: Record<string, CiteTerms> = {
-	en: { and: 'and', etAl: 'et al.', noDate: 'n.d.' },
-	// As Quarto prints a `lang: th` book: "(Hormby และคณะ, 2010)", "(ACCA, ม.ป.ป.)".
-	th: { and: 'และ', etAl: 'และคณะ', noDate: 'ม.ป.ป.' },
+	en: {
+		and: 'and',
+		etAl: 'et al.',
+		noDate: 'n.d.',
+		page: 'p.',
+		pages: 'pp.',
+		pageLabel: /^(?:pp?\.|pages?\b)\s*/i,
+		chapterLabel: /^(?:chap\.|chapter\b)\s*/i,
+		asWritten: null,
+		commaInQuotes: true,
+	},
+	// As Quarto prints a `lang: th` book: "(Hormby และคณะ, 2010)", "(ACCA, ม.ป.ป.)",
+	// "(Chen, 2015, น. 33)". The Thai locale does not read "p." as a label.
+	th: {
+		and: 'และ',
+		etAl: 'และคณะ',
+		noDate: 'ม.ป.ป.',
+		page: 'น.',
+		pages: 'น.',
+		pageLabel: /^น\.\s*/,
+		chapterLabel: null,
+		asWritten: /^หน้า(?=[\s\d])/,
+		commaInQuotes: false,
+	},
 };
 
 /** The locale terms for a `lang:` value (`th`, `th-TH`, `en-US`); English when unknown. */
@@ -93,21 +129,69 @@ export function citeStyleOf(csl: string | undefined): CiteStyle {
 	return 'apa';
 }
 
-/** The author part of one citation. APA joins two names with "&" inside parentheses. */
-function authorPart(e: BibEntry, style: CiteStyle, terms: CiteTerms, narrative: boolean): string {
+/** Entry types citeproc cites by a quoted title when there is no author: parts of a larger work. */
+const QUOTED_TITLE = /^(?:article|inproceedings|conference|incollection|inbook)$/;
+
+/** Who a citation names: the authors, or the title when there are none. */
+function authorPart(e: BibEntry, style: CiteStyle, terms: CiteTerms): { text: string; quoted: boolean } {
 	const f = e.families;
-	if (!f.length) return e.title ? `“${e.title}”` : e.key;
-	if (e.others || f.length >= (style === 'apa' ? 3 : 4)) return `${f[0]} ${terms.etAl}`;
-	if (f.length === 1) return f[0];
-	if (f.length === 2) return style === 'apa' && !narrative ? `${f[0]} & ${f[1]}` : `${f[0]} ${terms.and} ${f[1]}`;
-	return `${f[0]}, ${f[1]}, ${terms.and} ${f[2]}`;
+	if (!f.length) {
+		if (!e.title) return { text: e.key, quoted: false };
+		return QUOTED_TITLE.test(e.type) ? { text: `“${e.title}”`, quoted: true } : { text: e.title, quoted: false };
+	}
+	if (e.others || f.length >= 3) return { text: `${f[0]} ${terms.etAl}`, quoted: false };
+	if (f.length === 1) return { text: f[0], quoted: false };
+	// APA joins two authors with "&", in the text as well as in parentheses.
+	return { text: style === 'apa' ? `${f[0]} & ${f[1]}` : `${f[0]} ${terms.and} ${f[1]}`, quoted: false };
+}
+
+/**
+ * "Chen, 2015" in APA, "Chen 2015" in Chicago — but "Org, n.d." there too.
+ * In English the comma after a quoted title goes inside it: “Title,” 2016.
+ */
+function authorYear(e: BibEntry, style: CiteStyle, terms: CiteTerms): string {
+	const who = authorPart(e, style, terms);
+	if (style !== 'apa') return e.year ? `${who.text} ${e.year}` : `${who.text}, ${terms.noDate}`;
+	const year = e.year || terms.noDate;
+	return who.quoted && terms.commaInQuotes ? `${who.text.slice(0, -1)},” ${year}` : `${who.text}, ${year}`;
+}
+
+/** Pandoc's smart typography puts a non-breaking space after these abbreviations in written text. */
+const ABBREVIATION = /\b(p|pp|ch|chap|sec|vol)\. (?=\S)/g;
+const smart = (text: string) => text.replace(ABBREVIATION, '$1. ');
+
+const LOCATOR_NUMBER = /^((?:\d+|[ivxlcdm]+)(?:\s*[-–—]+\s*(?:\d+|[ivxlcdm]+))?)(?![\p{L}\p{N}])/iu;
+
+/**
+ * What follows the key, as citeproc prints it. A locator — written after a
+ * comma, or starting with a label the locale knows — is redrawn: a page reads
+ * `p. 33` / `pp. 33–35` in APA and `33` in Chicago, a chapter `Chapter 2` in
+ * APA. Other text is kept, after a comma if it had one, else after a space.
+ * `bracketed`: the `[33]` of an in-text `@key [33]`, read like text after a comma.
+ */
+function locatorText(raw: string, style: CiteStyle, terms: CiteTerms, bracketed = false): string {
+	let text = raw.trim();
+	if (!text) return '';
+	const comma = bracketed || text.startsWith(',');
+	if (text.startsWith(',')) text = text.slice(1).trim();
+	if (terms.asWritten?.test(text)) return `, ${smart(text)}`;
+	const page = terms.pageLabel.exec(text);
+	const chapter = page ? null : (terms.chapterLabel?.exec(text) ?? null);
+	const after = text.slice((page ?? chapter)?.[0].length ?? 0);
+	const number = page || chapter || comma ? LOCATOR_NUMBER.exec(after) : null;
+	if (!number) return `${comma ? ', ' : ' '}${smart(text)}`;
+	const value = number[1].replace(/\s*[-–—]+\s*/, '–');
+	const rest = smart(after.slice(number[0].length));
+	if (chapter) return `, ${style === 'apa' ? 'Chapter' : 'chap.'} ${value}${rest}`;
+	if (style !== 'apa') return `, ${value}${rest}`;
+	return `, ${value.includes('–') ? terms.pages : terms.page} ${value}${rest}`;
 }
 
 /** One item of a citation group: `see @key, p. 33` or `-@key`. */
 export interface CiteItem {
 	key: string;
 	prefix: string;
-	/** After the key, without its leading comma: `p. 33`. */
+	/** What follows the key, as written: `, p. 33`, `p. 33`, `หน้า 4`. */
 	suffix: string;
 	suppressAuthor: boolean;
 }
@@ -123,7 +207,7 @@ export function parseCiteGroup(inner: string): CiteItem[] | null {
 	for (const part of inner.split(';')) {
 		const m = ITEM.exec(part.trim());
 		if (!m) return null;
-		items.push({ prefix: m[1].trim(), suppressAuthor: m[2] === '-', key: m[3], suffix: m[4].trim().replace(/^,\s*/, '') });
+		items.push({ prefix: m[1].trim(), suppressAuthor: m[2] === '-', key: m[3], suffix: m[4].trim() });
 	}
 	return items.length ? items : null;
 }
@@ -142,7 +226,12 @@ export interface CiteFormat {
 	bib: Record<string, BibEntry>;
 }
 
-/** A bracketed citation group as citeproc prints it: `(Chen, 2015; Wei et al., 2022, p. 3)`. */
+/**
+ * A bracketed citation group as citeproc prints it: `(Chen, 2015; Wei et al.,
+ * 2022, p. 3)`. APA orders the works by author, then year; Chicago keeps the
+ * writer's order. Works by the same author run together: `(Smith, 2019, 2020)`.
+ * Not done: the `a`/`b` that tell apart two works by one author in one year.
+ */
 export function formatCiteGroup(items: CiteItem[], { style, terms, bib }: CiteFormat): CitePart[] {
 	if (style === 'numeric') {
 		const parts: CitePart[] = [{ text: '[' }];
@@ -153,30 +242,36 @@ export function formatCiteGroup(items: CiteItem[], { style, terms, bib }: CiteFo
 		parts.push({ text: ']' });
 		return parts;
 	}
-	const parts: CitePart[] = [{ text: '(' }];
-	items.forEach((item, i) => {
-		if (i) parts.push({ text: '; ' });
-		if (item.prefix) parts.push({ text: `${item.prefix} ` });
+	const sortKey = (item: CiteItem) => {
 		const e = bib[item.key];
-		if (!e) {
-			parts.push({ text: `${item.key}?`, key: item.key, missing: true });
-		} else {
-			const year = e.year || terms.noDate;
-			const who = authorPart(e, style, terms, false);
-			const text = item.suppressAuthor ? year : style === 'apa' ? `${who}, ${year}` : `${who} ${year}`;
-			parts.push({ text, key: item.key });
-		}
-		if (item.suffix) parts.push({ text: `, ${item.suffix}` });
+		return e ? `${authorPart(e, style, terms).text.toLowerCase()}\u0000${e.year}` : '￿';
+	};
+	const ordered = style === 'apa' ? [...items].sort((a, b) => (sortKey(a) < sortKey(b) ? -1 : sortKey(a) > sortKey(b) ? 1 : 0)) : items;
+	const parts: CitePart[] = [{ text: '(' }];
+	let run: string | null = null;
+	ordered.forEach((item, i) => {
+		const e = bib[item.key];
+		const who = e && !item.suppressAuthor ? authorPart(e, style, terms).text : null;
+		const sameAuthor = who !== null && who === run && !item.prefix;
+		if (i) parts.push({ text: sameAuthor ? ', ' : '; ' });
+		if (item.prefix) parts.push({ text: `${smart(item.prefix)} ` });
+		if (!e) parts.push({ text: `${item.key}?`, key: item.key, missing: true });
+		else parts.push({ text: item.suppressAuthor || sameAuthor ? e.year || terms.noDate : authorYear(e, style, terms), key: item.key });
+		const locator = locatorText(item.suffix, style, terms);
+		if (locator) parts.push({ text: locator });
+		// A locator ends the run: (Smith, 2019, p. 3; Smith, 2020).
+		run = locator ? null : who;
 	});
 	parts.push({ text: ')' });
 	return parts;
 }
 
-/** An in-text citation, bare `@key`: `Chen (2015)`. */
-export function formatNarrative(key: string, { style, terms, bib }: CiteFormat): CitePart[] {
+/** An in-text citation, bare `@key`, with the locator of `@key [p. 33]`: `Chen (2015, p. 33)`. */
+export function formatNarrative(key: string, { style, terms, bib }: CiteFormat, locator = ''): CitePart[] {
 	const e = bib[key];
 	if (!e || style === 'numeric') return [{ text: `@${key}`, key, missing: !e }];
-	return [{ text: `${authorPart(e, style, terms, true)} (${e.year || terms.noDate})`, key }];
+	const year = e.year || terms.noDate;
+	return [{ text: `${authorPart(e, style, terms).text} (${year}${locator ? locatorText(locator, style, terms, true) : ''})`, key }];
 }
 
 /** The plain text of drawn parts, for tests and accessible names. */
@@ -218,14 +313,27 @@ const NARRATIVE = new RegExp(String.raw`(?<![\w@.\\/[-])@(${CITE_KEY_PATTERN})`,
  * bibliography holds: an unknown `@word` in prose is more often a handle or a
  * decorator than a mistyped key.
  */
-export function findNarrativeCitations(text: string, known: (key: string) => boolean): { from: number; to: number; key: string }[] {
+/** The `[p. 33]` right after an in-text `@key`: its locator. Not a link, footnote or wikilink. */
+const NARRATIVE_LOCATOR = /^ ?\[(?!\^)([^[\]@\n]*)\](?![(\[:])/;
+
+export interface NarrativeCitation {
+	from: number;
+	/** Past the key, or past its `[locator]`. */
+	to: number;
+	key: string;
+	locator: string;
+}
+
+export function findNarrativeCitations(text: string, known: (key: string) => boolean): NarrativeCitation[] {
 	if (!text.includes('@')) return [];
 	const groups = findCitations(text).map((c) => [c.groupFrom, c.groupTo] as const);
-	const out: { from: number; to: number; key: string }[] = [];
+	const out: NarrativeCitation[] = [];
 	for (const m of text.matchAll(NARRATIVE)) {
 		const from = m.index!;
 		if (!known(m[1]) || isCrossRefKey(m[1]) || groups.some(([a, b]) => from > a && from < b)) continue;
-		out.push({ from, to: from + m[0].length, key: m[1] });
+		const to = from + m[0].length;
+		const locator = NARRATIVE_LOCATOR.exec(text.slice(to));
+		out.push({ from, to: to + (locator?.[0].length ?? 0), key: m[1], locator: locator?.[1] ?? '' });
 	}
 	return out;
 }

@@ -66,10 +66,11 @@ describe('Quarto citations as citeproc prints them', () => {
 		expect(group('@acca_analytics', APA_TH)).toBe('(Association of Chartered Certified Accountants, ม.ป.ป.)');
 	});
 
-	it('APA in English: & between two authors in parentheses, "and" in the text', () => {
+	it('APA in English: & between two authors, et al. from three', () => {
 		expect(group('@lee2019', APA_EN)).toBe('(Lee & Park, 2019)');
 		expect(group('@hormby2010', APA_EN)).toBe('(Hormby et al., 2010)');
-		expect(citeText(formatNarrative('lee2019', APA_EN))).toBe('Lee and Park (2019)');
+		// citeproc's APA uses & in the text too.
+		expect(citeText(formatNarrative('lee2019', APA_EN))).toBe('Lee & Park (2019)');
 		expect(group('@acca_analytics', APA_EN)).toBe('(Association of Chartered Certified Accountants, n.d.)');
 	});
 
@@ -83,6 +84,9 @@ describe('Quarto citations as citeproc prints them', () => {
 		expect(group('see @chen2015, p. 3; @lee2019', APA_EN)).toBe('(see Chen, 2015, p. 3; Lee & Park, 2019)');
 		expect(group('-@chen2015', APA_EN)).toBe('(2015)');
 		expect(group('ดู @chen2015 หน้า 4', APA_TH)).toBe('(ดู Chen, 2015, หน้า 4)');
+		expect(group('@chen2015, 33', APA_TH)).toBe('(Chen, 2015, น. 33)');
+		expect(group('@chen2015, 33-35', APA_EN)).toBe('(Chen, 2015, pp. 33–35)');
+		expect(group('@chen2015, 33', CHICAGO)).toBe('(Chen 2015, 33)');
 	});
 
 	it('marks a key the bibliography does not hold, as citeproc does', () => {

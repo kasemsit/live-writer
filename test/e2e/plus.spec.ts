@@ -146,6 +146,7 @@ test.describe('Quarto', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await mountEditor(page, DOC);
+		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: true } });
 	});
 
 	test('a callout is a coloured box with its fences hidden', async ({ page }) => {
@@ -185,10 +186,17 @@ test.describe('Quarto', () => {
 		await expect(page.locator('.cm-content')).toContainText('::: {.callout-tip}');
 	});
 
+	test('a Markdown note is not held to Pandoc’s blank-line rules', async ({ page }) => {
+		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: false } });
+		await expect(page.locator('.mlp-q-warning')).toHaveCount(0);
+		await expect(page.locator('.cm-line.mlp-q-joined')).toHaveCount(0);
+		await expect(page.locator('.mlp-qfig')).toHaveCount(2);
+	});
+
 	test('the words come from the project’s _quarto.yml', async ({ page }) => {
 		await postToWebview(page, {
 			type: 'plusQuartoProject',
-			project: { labels: { 'crossref-fig-title': 'รูปที่', 'callout-tip-title': 'เคล็ดลับ' }, citations: null },
+			project: { labels: { 'crossref-fig-title': 'รูปที่', 'callout-tip-title': 'เคล็ดลับ' }, citations: null, quarto: true },
 		});
 		await expect(page.locator('.mlp-qfig-caption').first()).toHaveText('รูปที่ 1: A caption');
 		await expect(page.locator('.mlp-xref').first()).toHaveText('รูปที่ 1');
@@ -209,7 +217,7 @@ test.describe('Quarto citations', () => {
 		venue: '',
 	});
 	const BIB = { chen2015: entry('chen2015', ['Chen'], '2015', 'Online Retail'), lee2019: entry('lee2019', ['Lee', 'Park'], '2019', 'Two Authors') };
-	const project = (lang: string) => ({ type: 'plusQuartoProject', project: { labels: {}, citations: { style: 'apa', lang, bib: BIB } } });
+	const project = (lang: string) => ({ type: 'plusQuartoProject', project: { labels: {}, citations: { style: 'apa', lang, bib: BIB }, quarto: true } });
 	const DOC = [
 		'# Title',
 		'',
@@ -248,7 +256,7 @@ test.describe('Quarto citations', () => {
 	});
 
 	test('without a bibliography, [@key] still links to the @key note', async ({ page }) => {
-		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null } });
+		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: false } });
 		await expect(page.locator('.cm-line a.mlp-cite')).toHaveCount(3);
 		await expect(page.locator('.mlp-qcite')).toHaveCount(0);
 	});

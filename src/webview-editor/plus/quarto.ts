@@ -6,7 +6,7 @@ import { cursorTouchesRange, inlineCursorTouchesRange } from '../cmUtils';
 import { blockReplacedLines, cellInlineHooks } from '../livePreviewPlugin';
 import { renderInlineInto } from '../tableCellInline';
 import { calloutIcon } from './callouts';
-import { quartoLabel as label, watchQuartoProject } from './quartoProject';
+import { isQuartoDocument, quartoLabel as label, watchQuartoProject } from './quartoProject';
 import { inSourceContext, jumpTo, revealChanged } from './cm';
 import {
 	LEADING_ATTRS,
@@ -179,7 +179,8 @@ function resolveXref(refs: CrossRefs, id: string): XrefTarget {
 	if (figure) return { text: `${label('crossref-fig-title')} ${figure.number}`, line: figure.line, hint: figure.caption, missing: false };
 	const section = refs.sections.get(id);
 	if (section) return { text: section.text, line: section.line, hint: section.text, missing: false };
-	const joined = refs.joined.get(id);
+	// Only Pandoc joins an image to its neighbours; in a Markdown note it is just an image.
+	const joined = isQuartoDocument() ? refs.joined.get(id) : undefined;
 	if (joined) {
 		const where = joined.with < joined.line ? 'above' : 'below';
 		return { text: `?${id}`, line: joined.line, hint: `Quarto does not number this image: it needs a blank line ${where} it.`, missing: true };
@@ -296,7 +297,7 @@ export function quartoImage(state: EditorState, image: SyntaxNode, src: string, 
 	const attrs = parseAttrs(block[1]);
 	const refs = state.field(quartoScan, false)?.refs;
 	const figure = refs?.figures.get(attrs.id);
-	const joined = refs?.joined.get(attrs.id);
+	const joined = isQuartoDocument() ? refs?.joined.get(attrs.id) : undefined;
 	const alone = !state.sliceDoc(line.from, image.from).trim() && !state.sliceDoc(to, line.to).trim();
 	const number = figure ? `${label('crossref-fig-title')} ${figure.number}` : '';
 	const warning = joined
@@ -331,7 +332,8 @@ function decorateLine(state: EditorState, line: Line, scan: QuartoScan, out: Ran
 	if (ATX_LINE.test(text) && !inSourceContext(state, line.from)) {
 		const attrs = TRAILING_ATTRS.exec(text);
 		if (attrs) out.push((touched ? attrMark : hidden).range(line.from + attrs.index, line.to));
-		if (scan.joined.has(line.number - 1)) {
+		// CommonMark lets a heading follow a line of text; only a .qmd is flagged.
+		if (scan.joined.has(line.number - 1) && isQuartoDocument()) {
 			out.push(Decoration.line({ class: 'mlp-q-joined' }).range(line.from));
 			out.push(Decoration.widget({ widget: new JoinedHeadingWidget(), side: 2 }).range(line.to));
 		}

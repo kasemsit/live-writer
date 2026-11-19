@@ -104,6 +104,11 @@ export interface PlusQuartoProject {
 	 * citation then links to the `@key` note, as in a notes vault.
 	 */
 	citations: { style: CiteStyle; lang: string; bib: Record<string, BibEntry> } | null;
+	/**
+	 * The document is a `.qmd`, so Pandoc's rules hold: a heading needs a blank
+	 * line before it. A Markdown note follows CommonMark, where it does not.
+	 */
+	quarto: boolean;
 }
 
 /** An `\includegraphics` target: a URI the webview may load, or why there is none. */

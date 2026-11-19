@@ -49,14 +49,14 @@ function quartoProject(docPath) {
 	const yaml = projectFile ? fs.readFileSync(projectFile, 'utf8') : '';
 	const labels = labelsFromQuartoYaml(yaml);
 	const plan = /\.qmd$/i.test(docPath) ? quartoCitationPlan(yaml, fs.readFileSync(docPath, 'utf8')) : null;
-	if (!plan) return { labels, citations: null };
+	if (!plan) return { labels, citations: null, quarto: true };
 	const base = plan.base === 'project' && projectFile ? path.dirname(projectFile) : path.dirname(path.resolve(docPath));
 	const bib = {};
 	for (const name of plan.files) {
 		const file = path.join(base, name);
 		if (fs.existsSync(file)) Object.assign(bib, parseBib(fs.readFileSync(file, 'utf8')));
 	}
-	return { labels, citations: { style: plan.style, lang: plan.lang, bib } };
+	return { labels, citations: { style: plan.style, lang: plan.lang, bib }, quarto: true };
 }
 const css = option('--css') ? fs.readFileSync(option('--css'), 'utf8') : '';
 

@@ -14,13 +14,18 @@ import { postPlus } from './hostRequests';
  * citations through the inline renderer, which has no editor state to read.
  */
 
-let project: PlusQuartoProject = { labels: {}, citations: null };
+let project: PlusQuartoProject = { labels: {}, citations: null, quarto: false };
 let format: CiteFormat | null = null;
 let asked = false;
 
 /** A word the preview draws (`crossref-fig-title`, `callout-tip-title`, …): the project's, else Quarto's default. */
 export function quartoLabel(key: string): string | undefined {
 	return project.labels[key] ?? QUARTO_LABELS[key];
+}
+
+/** True for a `.qmd`: Pandoc's paragraph rules hold (see PlusQuartoProject.quarto). */
+export function isQuartoDocument(): boolean {
+	return project.quarto;
 }
 
 /** How `[@key]` reads in this document; null when citations link to `@key` notes instead. */

@@ -105,7 +105,7 @@ function decorateQuartoLine(state: EditorState, from: number, text: string, form
 		else out.push(Decoration.replace({ widget: new CitationWidget(parts, format, text.slice(start, end)) }).range(a, b));
 	};
 	for (const g of findCiteGroups(text)) draw(g.from, g.to, formatCiteGroup(g.items, format));
-	for (const c of findNarrativeCitations(text, (k) => k in format.bib)) draw(c.from, c.to, formatNarrative(c.key, format));
+	for (const c of findNarrativeCitations(text, (k) => k in format.bib)) draw(c.from, c.to, formatNarrative(c.key, format, c.locator));
 }
 
 /** Rewrites the citations in rendered text (table cells, cards) as the book prints them. */
@@ -119,7 +119,7 @@ function drawQuartoCitations(root: HTMLElement, format: CiteFormat): void {
 		const value = node.nodeValue ?? '';
 		const found: { from: number; to: number; parts: CitePart[] }[] = [
 			...findCiteGroups(value).map((g) => ({ from: g.from, to: g.to, parts: formatCiteGroup(g.items, format) })),
-			...findNarrativeCitations(value, (k) => k in format.bib).map((c) => ({ ...c, parts: formatNarrative(c.key, format) })),
+			...findNarrativeCitations(value, (k) => k in format.bib).map((c) => ({ ...c, parts: formatNarrative(c.key, format, c.locator) })),
 		].sort((a, b) => a.from - b.from);
 		if (!found.length) continue;
 		const frag = document.createDocumentFragment();

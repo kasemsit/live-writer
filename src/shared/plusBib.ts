@@ -31,7 +31,12 @@ export interface BibEntry {
 	type: string;
 	/** "Smith", "Smith and Jones", "Smith et al." — the English author–year LaTeX shows. */
 	authorShort: string;
-	/** Family names in order, "others" left out; an organisation is one name. */
+	/**
+	 * Family names as citeproc cites them, in order: "others" left out, and a
+	 * lower-case particle dropped ("van Beethoven" → "Beethoven"); a braced
+	 * organisation is one name. Empty when no person is author or editor — an
+	 * `organization` field is not an author to citeproc, which cites the title.
+	 */
 	families: string[];
 	/** The name list ends in "and others": there are more authors than `families`. */
 	others: boolean;
@@ -155,13 +160,13 @@ export function parseBib(text: string): Record<string, BibEntry> {
 		const others = names.length > 1 && names[names.length - 1].toLowerCase() === 'others';
 		const people = others ? names.slice(0, -1) : names;
 		const organisation = texToPlain(fields.organization ?? fields.institution ?? '');
-		const families = people.length ? people.map(familyName) : organisation ? [organisation] : [];
+		const familyNames = people.map(familyName);
 		const year = fields.year ?? (fields.date ?? '').slice(0, 4);
 		entries[key] = {
 			key,
 			type,
-			authorShort: authorShort(families, others),
-			families,
+			authorShort: authorShort(familyNames.length ? familyNames : organisation ? [organisation] : [], others),
+			families: familyNames.map((n) => n.replace(/^(?:[a-z][\w'’]*\s+)+(?=\S)/, '')),
 			others,
 			authors: people.map((n) => texToPlain(n)).join('; ') + (others ? '; …' : ''),
 			title: texToPlain(fields.title ?? ''),
