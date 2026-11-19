@@ -1,16 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import {
-	bibFilesOf,
-	extractMacros,
-	extractTexHeadings,
-	graphicsPathOf,
-	inputsOf,
-	magicRoot,
-	readAccent,
-	readArgs,
-	scanTex,
-	texToPlain,
-} from './plusTexScan';
+import { extractTexHeadings } from './plusTexHeadings';
+import { extractMacros } from './plusTexMacros';
+import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot } from './plusTexProject';
+import { readArgs, scanTex } from './plusTexScanner';
+import { readAccent, texToPlain } from './plusTexText';
 import { cleanAuxNumber, parseAux } from './plusTexAux';
 import { familyName, parseBib } from './plusBib';
 import { citeLabel, formatCiteNumbers } from './plusCitations';

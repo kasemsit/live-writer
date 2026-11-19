@@ -1,5 +1,6 @@
 import type { EditorState } from '@codemirror/state';
-import { extractMacros, type TexScan } from '../../../shared/plusTexScan';
+import { extractMacros } from '../../../shared/plusTexMacros';
+import type { TexScan } from '../../../shared/plusTexScanner';
 import { texContextField, texScanField } from './context';
 
 /**

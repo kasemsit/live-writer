@@ -1,7 +1,7 @@
 import { StateEffect, StateField } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../../shared/messages';
-import { scanTex, type TexScan } from '../../../shared/plusTexScan';
+import { scanTex, type TexScan } from '../../../shared/plusTexScanner';
 import { request } from '../hostRequests';
 
 /**

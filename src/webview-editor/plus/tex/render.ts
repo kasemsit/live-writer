@@ -1,20 +1,9 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, type WidgetType } from '@codemirror/view';
 import type { EditorState, Range } from '@codemirror/state';
 import type { PlusTexContext } from '../../../shared/messages';
-import {
-	ACCENTS,
-	CONTROL_SYMBOLS,
-	SECTION_LEVELS,
-	TEXT_SYMBOLS,
-	type TexCommand,
-	type TexEnv,
-	type TexScan,
-	envAt,
-	isLetter,
-	rangeAt,
-	readAccent,
-	readArgs,
-} from '../../../shared/plusTexScan';
+import { SECTION_LEVELS } from '../../../shared/plusTexHeadings';
+import { type TexCommand, type TexEnv, type TexScan, envAt, isLetter, rangeAt, readArgs } from '../../../shared/plusTexScanner';
+import { ACCENTS, CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent } from '../../../shared/plusTexText';
 import { cursorTouchesRange, inlineCursorTouchesRange } from '../../cmUtils';
 import { TABLE_ENVS, replacedTexBlocks, texBlockCandidates, displayTex, type TexBlock } from './blocks';
 import { setTexContext, texContextField, texScanField } from './context';

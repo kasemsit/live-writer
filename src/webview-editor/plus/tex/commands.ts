@@ -1,7 +1,7 @@
 import { EditorSelection, type EditorState, type Extension, Prec } from '@codemirror/state';
 import { type EditorView, keymap } from '@codemirror/view';
 import { autocompletion, type Completion, type CompletionContext, type CompletionResult, snippetCompletion } from '@codemirror/autocomplete';
-import { readArgs } from '../../../shared/plusTexScan';
+import { readArgs } from '../../../shared/plusTexScanner';
 import { texContextField, texScanField } from './context';
 
 /**

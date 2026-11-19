@@ -1,6 +1,6 @@
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 import { type EditorState, type Range, StateField } from '@codemirror/state';
-import { type TexEnv, type TexMath, type TexScan, readArgs } from '../../../shared/plusTexScan';
+import { type TexEnv, type TexMath, type TexScan, readArgs } from '../../../shared/plusTexScanner';
 import { parseTabular, type TexTable } from '../../../shared/plusTexTable';
 import { setTexContext, texContextField, texScanField } from './context';
 import { texMacros } from './macros';

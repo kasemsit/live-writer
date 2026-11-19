@@ -1,7 +1,8 @@
 import type { PlusTexContext } from '../../../shared/messages';
 import { describeBib } from '../../../shared/plusBib';
 import { citeLabel } from '../../../shared/plusCitations';
-import { CONTROL_SYMBOLS, TEXT_SYMBOLS, isLetter, lineEnd, matchBrace, readAccent, readArgs, textLigature, texToPlain } from '../../../shared/plusTexScan';
+import { isLetter, lineEnd, matchBrace, readArgs } from '../../../shared/plusTexScanner';
+import { CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent, textLigature, texToPlain } from '../../../shared/plusTexText';
 import { renderMathInto } from '../math';
 import { resolveTexAsset } from './context';
 

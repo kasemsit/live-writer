@@ -5,7 +5,9 @@ import { createHash } from 'node:crypto';
 import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../shared/messages';
 import { mergeAux, parseAux, type AuxData } from '../../shared/plusTexAux';
 import { parseBib, type BibEntry } from '../../shared/plusBib';
-import { bibFilesOf, extractMacros, graphicsPathOf, inputsOf, magicRoot, scanTex } from '../../shared/plusTexScan';
+import { extractMacros } from '../../shared/plusTexMacros';
+import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot } from '../../shared/plusTexProject';
+import { scanTex } from '../../shared/plusTexScanner';
 import { isPathInside } from '../../shared/pathContainment';
 import { exists, readText } from './files';
 
