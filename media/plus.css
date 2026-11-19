@@ -409,6 +409,28 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 	border-left: 1px solid rgba(127, 127, 127, 0.3);
 	border-right: 1px solid rgba(127, 127, 127, 0.3);
 }
+/* A TikZ picture as the last build drew it (plus/tex/widgets.ts TexPictureWidget). */
+.mlp-tex-picture { position: relative; text-align: center; padding: 0.4em 0.8em; cursor: text; }
+.mlp-tex-picture-img { max-width: 100%; height: auto; vertical-align: top; }
+.mlp-tex-picture-src {
+	margin: 0;
+	text-align: left;
+	white-space: pre-wrap;
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 0.85em;
+	opacity: 0.75;
+}
+.mlp-tex-picture-note { margin-top: 0.3em; font-size: 0.8em; opacity: 0.7; text-align: left; }
+.mlp-tex-picture-stale {
+	position: absolute;
+	top: 0.3em;
+	right: 0.6em;
+	padding: 0 0.4em;
+	border-radius: 4px;
+	font-size: 0.75em;
+	color: var(--vscode-editorWarning-foreground, #b45309);
+	background: rgba(234, 88, 12, 0.12);
+}
 .cm-line.mlp-tex-float-first { border-top: 1px solid rgba(127, 127, 127, 0.3); border-radius: 6px 6px 0 0; padding-top: 0.25em !important; }
 .cm-line.mlp-tex-float-last { border-bottom: 1px solid rgba(127, 127, 127, 0.3); border-radius: 0 0 6px 6px; padding-bottom: 0.25em !important; }
 .cm-line.mlp-tex-center { text-align: center; }

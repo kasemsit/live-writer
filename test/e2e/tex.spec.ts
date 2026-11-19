@@ -39,6 +39,7 @@ Last line.
 `.replace('QQ', '``'); // a template literal cannot hold LaTeX's opening quotes
 
 const CONTEXT = {
+	build: '1',
 	labels: { 'sec:intro': 'I', 'fig:a': '3', 'eq:e': '2', 'tab:r': '4' },
 	cites: { smith2020: '1', jones2021: '2' },
 	bib: {
@@ -164,12 +165,43 @@ test.describe('LaTeX Live Preview', () => {
 		await expect(page.locator('.mlp-tex-graphic img')).toHaveAttribute('src', pixel);
 	});
 
-	test('drawing code (TikZ) stays source: no typography, no hidden markup', async ({ page }) => {
-		await mountTex(page, 'Text -- here.\n\\begin{tikzpicture}\n\\draw (a) -- (b) node {\\textbf{x}};\n\\end{tikzpicture}\nEnd.');
-		const text = await content(page).innerText();
-		expect(text).toContain('Text – here.');
-		expect(text).toContain('\\draw (a) -- (b) node {\\textbf{x}};');
-		await expect(page.locator('.cm-line.mlp-tex-code')).toHaveCount(3);
+	test.describe('TikZ pictures', () => {
+		const DOC = 'Text -- here.\n\\begin{tikzpicture}\n\\draw (a) -- (b) node {\\textbf{x}};\n\\end{tikzpicture}\nEnd.';
+		const pictureRequest = async (page: Page) => {
+			const request = await page.waitForFunction(() =>
+				(window as unknown as { __posted: { type: string; lines?: number[]; requestId?: number }[] }).__posted.find((m) => m.type === 'plusTexPicture'),
+			);
+			return (await request.jsonValue()) as { lines: number[]; requestId: number };
+		};
+
+		test('show the last build\'s drawing, asked for by the lines inside them', async ({ page }) => {
+			await mountTex(page, DOC);
+			const asked = await pictureRequest(page);
+			expect(asked.lines).toEqual([3, 2]);
+			const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+			await postToWebview(page, { type: 'plusTexPictureResult', requestId: asked.requestId, picture: { status: 'image', src: pixel, note: 'main.pdf, p. 1', stale: true } });
+			await expect(page.locator('.mlp-tex-picture img')).toHaveAttribute('src', pixel);
+			await expect(page.locator('.mlp-tex-picture-stale')).toHaveText('last build');
+			await expect(page.locator('.mlp-tex-picture-src')).toHaveCount(0);
+			expect(await content(page).innerText()).toContain('Text – here.');
+		});
+
+		test('without a build, keep their source as written, with a note', async ({ page }) => {
+			await mountTex(page, DOC);
+			const asked = await pictureRequest(page);
+			await postToWebview(page, { type: 'plusTexPictureResult', requestId: asked.requestId, picture: { status: 'missing', src: null, note: 'No build of this document found.', stale: false } });
+			await expect(page.locator('.mlp-tex-picture-note')).toHaveText('No build of this document found.');
+			await expect(page.locator('.mlp-tex-picture-src')).toContainText('\\draw (a) -- (b) node {\\textbf{x}};');
+		});
+
+		test('a click shows the drawing code as source: no typography, no hidden markup', async ({ page }) => {
+			await mountTex(page, DOC);
+			await page.locator('.mlp-tex-picture').click();
+			const text = await content(page).innerText();
+			expect(text).toContain('\\draw (a) -- (b) node {\\textbf{x}};');
+			await expect(page.locator('.cm-line.mlp-tex-code')).toHaveCount(3);
+			await expect(page.locator('.mlp-tex-picture')).toHaveCount(0);
+		});
 	});
 
 	for (const command of ['Vref', 'subref']) {

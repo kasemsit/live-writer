@@ -2,6 +2,15 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 0.4.14
+
+- **LaTeX Live Preview: TikZ pictures are drawn.** A `tikzpicture` (also `tikzcd`, `pgfpicture`, `circuitikz`, and pgfplots axes inside them) shows as your last build drew it.
+  - SyncTeX finds where the picture landed in the build's PDF, and `pdftoppm` cuts that box out at its printed size. Nothing is compiled, as for `\ref` numbers.
+  - Its code comes back while the caret is in it; a click on the picture puts the caret there.
+  - A picture the file has changed since carries a *last build* tag; it is redrawn when you build again.
+  - With no build (or no `synctex` command) the code stays, with a note saying what is missing.
+  - Checked on a paper's five pictures (flowcharts, a pgfplots plot, a two-column architecture diagram): each is cut whole.
+
 ## 0.4.13
 
 **Quarto books in Live Preview**, with citations and cross-references as Quarto prints them, and fixes.

@@ -75,7 +75,8 @@ export type PlusHostToEditorMessage =
 	| { type: 'plusRun'; command: PlusCommand; range?: { from: number; to: number } }
 	// LaTeX: what the last build and the bibliography say (see PlusTexContext).
 	| { type: 'plusTexContext'; context: PlusTexContext }
-	| { type: 'plusTexAssetResult'; requestId: number; asset: PlusTexAsset };
+	| { type: 'plusTexAssetResult'; requestId: number; asset: PlusTexAsset }
+	| { type: 'plusTexPictureResult'; requestId: number; picture: PlusTexPicture };
 
 /**
  * md-live-preview-plus: what the LaTeX Live Preview needs beyond the file:
@@ -90,6 +91,8 @@ export interface PlusTexContext {
 	macros: Record<string, string>;
 	/** The root file, workspace-relative ('' when the document is its own root). */
 	root: string;
+	/** When the last build wrote its `.aux` ('' without one): a new value redraws what came from the build. */
+	build: string;
 }
 
 /**
@@ -112,6 +115,16 @@ export interface PlusQuartoProject {
 }
 
 /** An `\includegraphics` target: a URI the webview may load, or why there is none. */
+/** A `tikzpicture` as the last build drew it, cut from its PDF by SyncTeX, or why there is none. */
+export interface PlusTexPicture {
+	status: 'image' | 'missing' | 'unsupported';
+	src: string | null;
+	/** Where it came from (`main.pdf, p. 8`), or what is missing. */
+	note: string;
+	/** The file changed after that build: the picture may be out of date. */
+	stale: boolean;
+}
+
 export interface PlusTexAsset {
 	status: 'image' | 'missing' | 'unsupported';
 	src: string | null;
@@ -142,4 +155,6 @@ export type PlusEditorToHostMessage =
 	| { type: 'plusDo'; action: 'openUrl'; url: string }
 	| { type: 'plusDo'; action: 'notify'; message: string; error?: boolean }
 	// LaTeX: find the file an `\includegraphics{path}` means.
-	| { type: 'plusTexAsset'; requestId: number; path: string };
+	| { type: 'plusTexAsset'; requestId: number; path: string }
+	// LaTeX: the last build's drawing of the picture on these lines (1-based) of this file.
+	| { type: 'plusTexPicture'; requestId: number; lines: number[] };

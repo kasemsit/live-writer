@@ -66,6 +66,15 @@ export function handlePlusMessage(
 			);
 			return true;
 		}
+		case 'plusTexPicture': {
+			const tex = texSessionOf(session);
+			const missing = { status: 'missing' as const, src: null, note: 'Not a LaTeX document.', stale: false };
+			void (tex ? tex.resolvePicture(message.lines) : Promise.resolve(missing)).then(
+				(picture) => post({ type: 'plusTexPictureResult', requestId: message.requestId, picture }),
+				() => post({ type: 'plusTexPictureResult', requestId: message.requestId, picture: missing }),
+			);
+			return true;
+		}
 		case 'openLink':
 			if (message.href.startsWith('tex:')) {
 				void texSessionOf(session)?.open(message.href);

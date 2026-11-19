@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../shared/messages';
+import type { HostToEditorMessage, PlusTexAsset, PlusTexContext, PlusTexPicture } from '../../shared/messages';
+import { cropOf, largestBox, parseSynctexView, type SynctexBox } from '../../shared/plusSynctex';
 import { mergeAux, parseAux, type AuxData } from '../../shared/plusTexAux';
 import { parseBib, type BibEntry } from '../../shared/plusBib';
 import { extractMacros } from '../../shared/plusTexMacros';
@@ -114,9 +115,16 @@ async function readAux(root: vscode.Uri): Promise<{ data: AuxData; file: vscode.
 	return { data: { labels: {}, cites: {}, includes: [] }, file: null };
 }
 
+/** Runs a command; its output, or null when it is missing or fails. */
+function run(command: string, args: string[], timeout: number): Promise<string | null> {
+	return new Promise((resolve) => execFile(command, args, { timeout, maxBuffer: 1 << 20 }, (err, stdout) => resolve(err ? null : String(stdout))));
+}
+
 export class TexSession implements vscode.Disposable {
 	private root: vscode.Uri | undefined;
 	private graphicsPath: string[] = [];
+	/** The `.aux` the last build wrote; its PDF and SyncTeX file sit beside it. */
+	private auxFile: vscode.Uri | null = null;
 	private watchers: vscode.Disposable[] = [];
 	private watchedDirs = '';
 	private timer: ReturnType<typeof setTimeout> | undefined;
@@ -149,8 +157,10 @@ export class TexSession implements vscode.Disposable {
 		this.root = root;
 		const rootText = root.toString() === this.document.uri.toString() ? this.document.getText() : ((await readText(root)) ?? '');
 		const rootScan = scanTex(rootText);
-		const { data } = await readAux(root);
+		const { data, file: auxFile } = await readAux(root);
+		const build = auxFile ? await vscode.workspace.fs.stat(auxFile).then((s) => String(s.mtime), () => '') : '';
 		if (overtaken()) return;
+		this.auxFile = auxFile;
 		const rootDir = this.rootDir();
 		const docDir = vscode.Uri.joinPath(this.document.uri, '..');
 		this.graphicsPath = graphicsPathOf(rootText, rootScan);
@@ -197,6 +207,7 @@ export class TexSession implements vscode.Disposable {
 			bib,
 			macros,
 			root: root.toString() === this.document.uri.toString() ? '' : vscode.workspace.asRelativePath(root, false),
+			build,
 		};
 		if (overtaken()) return;
 		this.post({ type: 'plusTexContext', context });
@@ -262,6 +273,49 @@ export class TexSession implements vscode.Disposable {
 			}
 		}
 		return missing;
+	}
+
+	/**
+	 * A `tikzpicture` (on `lines` of this file, 1-based) as the last build drew
+	 * it: SyncTeX says where those lines landed in the PDF, and pdftoppm cuts
+	 * that box out (cached by PDF time and box). Nothing is compiled.
+	 */
+	async resolvePicture(lines: number[]): Promise<PlusTexPicture> {
+		const none = (status: PlusTexPicture['status'], note: string): PlusTexPicture => ({ status, src: null, note, stale: false });
+		const aux = this.auxFile;
+		if (!aux || aux.scheme !== 'file' || this.document.uri.scheme !== 'file') return none('missing', 'No build of this document found (its .aux and .pdf).');
+		const pdf = aux.with({ path: aux.path.replace(/\.aux$/i, '.pdf') });
+		let pdfTime: number;
+		try {
+			pdfTime = (await vscode.workspace.fs.stat(pdf)).mtime;
+		} catch {
+			return none('missing', `No ${path.basename(pdf.fsPath)} beside the build's .aux.`);
+		}
+		const boxes: SynctexBox[] = [];
+		for (const line of lines.slice(0, 4)) {
+			const output = await run('synctex', ['view', '-i', `${line}:1:${this.document.uri.fsPath}`, '-o', pdf.fsPath], 10_000);
+			if (output === null) return none('unsupported', 'SyncTeX (the synctex command) is needed to show pictures from the build.');
+			boxes.push(...parseSynctexView(output));
+			if (largestBox(boxes)) break;
+		}
+		const box = largestBox(boxes);
+		if (!box) return none('missing', 'Not in the last build: build with SyncTeX on (LaTeX Workshop does by default).');
+		const dpi = 144;
+		const crop = cropOf(box, dpi);
+		const key = createHash('sha1').update(`${pdf.fsPath}|${pdfTime}|${box.page}|${crop.x},${crop.y},${crop.width},${crop.height}`).digest('hex').slice(0, 16);
+		const out = vscode.Uri.joinPath(this.figureCache, `tikz-${key}.png`);
+		if (!(await exists(out))) {
+			await vscode.workspace.fs.createDirectory(this.figureCache);
+			const args = ['-png', '-r', String(dpi), '-f', String(box.page), '-l', String(box.page), '-x', String(crop.x), '-y', String(crop.y), '-W', String(crop.width), '-H', String(crop.height), '-singlefile', pdf.fsPath, out.fsPath.replace(/\.png$/, '')];
+			if ((await run('pdftoppm', args, 20_000)) === null || !(await exists(out))) return none('unsupported', 'pdftoppm (poppler) is needed to show pictures from the build.');
+		}
+		const docTime = await vscode.workspace.fs.stat(this.document.uri).then((s) => s.mtime, () => 0);
+		return {
+			status: 'image',
+			src: this.asWebviewUri(out),
+			note: `${vscode.workspace.asRelativePath(pdf, false)}, p. ${box.page}`,
+			stale: this.document.isDirty || docTime > pdfTime,
+		};
 	}
 
 	/** The first page of a PDF figure as PNG (cached by path, size and time), or null without pdftoppm. */

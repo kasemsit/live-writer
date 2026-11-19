@@ -4,6 +4,7 @@ import type { TexTable } from '../../../shared/plusTexTable';
 import { renderMathInto } from '../math';
 import { LINK_CONTEXT } from '../wikilinks';
 import { graphicElement, renderTexInline } from './inline';
+import { NO_BUILD_YET, resolveTexPicture } from './context';
 
 /**
  * md-live-preview-plus: the widgets the LaTeX Live Preview draws in place of
@@ -159,6 +160,79 @@ export class TexImageWidget extends WidgetType {
 			});
 			img.addEventListener('error', () => view.requestMeasure());
 		});
+		wrap.addEventListener('mousedown', (event) => placeCaret(view, this.at, event));
+		return wrap;
+	}
+	ignoreEvent(): boolean {
+		return true;
+	}
+}
+
+/**
+ * A `tikzpicture` as the last build drew it, cut from the PDF (context.ts,
+ * the host's tex.ts). Its source shows until the picture arrives, and stays
+ * with a note when there is none; a click puts the caret in it.
+ */
+export class TexPictureWidget extends WidgetType {
+	constructor(
+		readonly source: string,
+		readonly lines: number[],
+		readonly at: number,
+		/** The build the picture comes from: a rebuild draws it again. */
+		readonly build: string,
+		readonly inFloat = false,
+	) {
+		super();
+	}
+	eq(other: TexPictureWidget): boolean {
+		return (
+			other.source === this.source &&
+			other.at === this.at &&
+			other.build === this.build &&
+			other.inFloat === this.inFloat &&
+			other.lines.join() === this.lines.join()
+		);
+	}
+	toDOM(view: EditorView): HTMLElement {
+		const wrap = document.createElement('div');
+		wrap.className = `mlp-tex-picture${this.inFloat ? ' mlp-tex-in-float' : ''}`;
+		const code = document.createElement('pre');
+		code.className = 'mlp-tex-picture-src';
+		code.textContent = this.source;
+		wrap.appendChild(code);
+		// The host's context, which says which build there is, comes right after the text: ask then.
+		if (this.build === NO_BUILD_YET) return this.finish(view, wrap);
+		void resolveTexPicture(this.lines, this.build).then((picture) => {
+			if (picture.status === 'image' && picture.src) {
+				const img = document.createElement('img');
+				img.className = 'mlp-tex-picture-img';
+				img.alt = 'tikzpicture';
+				// Cut at 144 dpi: shown at the PDF's own size (96 CSS px per inch), never wider than the column.
+				img.addEventListener('load', () => {
+					img.style.width = `${Math.round((img.naturalWidth * 96) / 144)}px`;
+					view.requestMeasure();
+				});
+				img.addEventListener('error', () => view.requestMeasure());
+				img.src = picture.src;
+				code.replaceWith(img);
+				wrap.title = picture.stale ? `${picture.note} — the file has changed since this build` : picture.note;
+				if (picture.stale) {
+					const badge = document.createElement('span');
+					badge.className = 'mlp-tex-picture-stale';
+					badge.textContent = 'last build';
+					wrap.appendChild(badge);
+				}
+			} else {
+				const note = document.createElement('div');
+				note.className = 'mlp-tex-picture-note';
+				note.textContent = picture.note;
+				wrap.appendChild(note);
+			}
+			view.requestMeasure();
+		});
+		return this.finish(view, wrap);
+	}
+	private finish(view: EditorView, wrap: HTMLElement): HTMLElement {
 		wrap.addEventListener('mousedown', (event) => placeCaret(view, this.at, event));
 		return wrap;
 	}

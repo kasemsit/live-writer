@@ -59,6 +59,9 @@ export const THEOREMS: Record<string, string> = {
 };
 export const ITALIC_THEOREMS = new Set(['theorem', 'lemma', 'corollary', 'proposition', 'conjecture', 'claim', 'hypothesis']);
 
+/** Drawings shown as the last build drew them (cut from its PDF by SyncTeX); their source while the caret is in them. */
+export const PICTURE_ENVS = new Set(['tikzpicture', 'tikzcd', 'pgfpicture', 'circuitikz']);
+
 /** Environments whose body is code-like (drawing commands): shown in a monospace block. */
 export const CODE_ENVS = new Set(['tikzpicture', 'tikzcd', 'axis', 'semilogxaxis', 'semilogyaxis', 'loglogaxis', 'groupplot', 'pgfpicture', 'scope', 'circuitikz', 'forest', 'algorithmic', 'tabular', 'tabular*', 'tabularx', 'tabulary', 'longtable', 'array']);
 

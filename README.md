@@ -41,6 +41,7 @@ This fork adds:
   - Headings, text styles, KaTeX math (with the document's macros), lists, `abstract`, figures, captions, `tabular` (booktabs rules, `\multicolumn`), images, footnotes, links and LaTeX typography (`~`, `--`, ``` `` ```…`''`) are drawn. The preamble folds into one line.
   - `\ref`, `\eqref`, `\cite`, captions and equation numbers show **the numbers of your last build**, read from the root's `.aux`, and follow every rebuild. Hover a citation to read its `.bib` entry.
   - The root is found by `% !TEX root`, `\documentclass`, or the file that `\input`s this one; `\input{…}` opens the file in the Live Preview. PDF figures show their first page when `pdftoppm` is installed.
+  - **TikZ pictures** (`tikzpicture`, `tikzcd`, `pgfpicture`, `circuitikz`, pgfplots inside them) show as your last build drew them: SyncTeX finds the picture in the PDF and `pdftoppm` cuts it out. The code comes back while the caret is in it, and *last build* marks a picture the file has changed since. Needs a build with SyncTeX (LaTeX Workshop's default) and the `synctex` command.
   - Ctrl/Cmd+B / +I wrap in `\textbf` / `\textit`, Ctrl/Cmd+/ comments lines, Enter continues an `\item`; completion after `\ref{`, `\cite{` and `\begin{`.
   - Nothing is compiled. Keep building with LaTeX Workshop (or latexmk) for the PDF.
 

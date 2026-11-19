@@ -1,6 +1,6 @@
 import { type EditorState, StateEffect, StateField } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../../shared/messages';
+import type { HostToEditorMessage, PlusTexAsset, PlusTexContext, PlusTexPicture } from '../../../shared/messages';
 import { readArgs, scanTex, type TexScan } from '../../../shared/plusTexScanner';
 import { request } from '../hostRequests';
 
@@ -11,7 +11,10 @@ import { request } from '../hostRequests';
  * Kept in editor state so a new context redraws whatever depends on it.
  */
 
-export const EMPTY_CONTEXT: PlusTexContext = { labels: {}, cites: {}, bib: {}, macros: {}, root: '' };
+/** The `build` of the context in place before the host's first one: nothing has been read yet. */
+export const NO_BUILD_YET = 'waiting';
+
+export const EMPTY_CONTEXT: PlusTexContext = { labels: {}, cites: {}, bib: {}, macros: {}, root: '', build: NO_BUILD_YET };
 
 export const setTexContext = StateEffect.define<PlusTexContext>();
 
@@ -76,10 +79,28 @@ export function resolveTexAsset(path: string): Promise<PlusTexAsset> {
 	return found;
 }
 
+const pictures = new Map<string, Promise<PlusTexPicture>>();
+
+/**
+ * The last build's drawing of the picture on `lines` (1-based), cut from its
+ * PDF by the host. Cached until the next context, which a rebuild sends.
+ */
+export function resolveTexPicture(lines: number[], build: string): Promise<PlusTexPicture> {
+	const key = `${build}|${lines.join(',')}`;
+	let found = pictures.get(key);
+	if (!found) {
+		const none: PlusTexPicture = { status: 'missing', src: null, note: 'The host did not answer.', stale: false };
+		found = request<PlusTexPicture>((requestId) => ({ type: 'plusTexPicture', requestId, lines }), none, 20_000);
+		pictures.set(key, found);
+	}
+	return found;
+}
+
 /** Handles the host's LaTeX context. Returns true when the message was one. (Replies go through hostRequests.) */
 export function handleTexHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
 	if (message.type === 'plusTexContext') {
 		assets.clear();
+		pictures.clear();
 		view?.dispatch({ effects: setTexContext.of(message.context) });
 		return true;
 	}

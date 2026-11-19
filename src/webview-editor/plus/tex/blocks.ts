@@ -5,11 +5,11 @@ import { parseTabular, type TexTable } from '../../../shared/plusTexTable';
 import { mathBlockRevealed } from '../mathSyntax';
 import { setTexContext, texContextField, texScanField } from './context';
 import { texMacros } from './macros';
-import { TABLE_ENVS, isFloatEnv } from './vocabulary';
-import { TexDisplayMathWidget, TexFoldWidget, TexTableWidget } from './widgets';
+import { PICTURE_ENVS, TABLE_ENVS, isFloatEnv } from './vocabulary';
+import { TexDisplayMathWidget, TexFoldWidget, TexPictureWidget, TexTableWidget } from './widgets';
 
 /**
- * md-live-preview-plus: display math and tables, drawn over the whole lines
+ * md-live-preview-plus: display math, tables and TikZ pictures, drawn over the whole lines
  * they occupy — block widgets, which CodeMirror accepts only from state.
  *
  * Unlike Markdown tables (switched by their own button), these follow the
@@ -19,7 +19,7 @@ import { TexDisplayMathWidget, TexFoldWidget, TexTableWidget } from './widgets';
  */
 
 export interface TexBlock {
-	kind: 'math' | 'table' | 'preamble';
+	kind: 'math' | 'table' | 'preamble' | 'picture';
 	/** Inside a figure or table float, whose frame the widget continues. */
 	inFloat?: boolean;
 	/** Line-aligned range the widget covers. */
@@ -117,6 +117,14 @@ export function texBlockCandidates(state: EditorState): TexBlock[] {
 		if (!table.rows.length) continue;
 		blocks.push({ kind: 'table', from, to, env, table });
 	}
+	for (const env of scan.envs) {
+		if (!PICTURE_ENVS.has(env.name) || !env.closed || env.from < scan.bodyFrom) continue;
+		const from = lineStart(text, env.from);
+		const to = lineEndAt(text, env.to);
+		// On lines of its own, perhaps inside a wrapper: `\resizebox{\linewidth}{!}{%` … `}`.
+		if (!WRAPPER_PREFIX.test(text.slice(from, env.from)) || !/^[ \t}]*(%.*)?$/.test(text.slice(env.to, to))) continue;
+		blocks.push({ kind: 'picture', from, to, env });
+	}
 	for (const b of blocks) b.inFloat = b.kind !== 'preamble' && scan.envs.some((e) => isFloatEnv(e.name) && e.from < b.from && b.to < e.to);
 	blocks.sort((a, b) => a.from - b.from);
 	// Nested candidates (a table inside a table's cell): only the outer one.
@@ -154,6 +162,13 @@ function build(state: EditorState): DecorationSet {
 			const source = state.sliceDoc(block.from, block.to);
 			const cellText = block.table.rows.map((row) => row.cells.map((cell) => state.sliceDoc(cell.from, cell.to)));
 			const widget = new TexTableWidget(source, block.table, block.env.from, ctx, macros, cellText, !!block.inFloat);
+			out.push(Decoration.replace({ widget, block: true }).range(block.from, block.to));
+		} else if (block.kind === 'picture' && block.env) {
+			const first = state.doc.lineAt(block.env.from).number;
+			const last = state.doc.lineAt(block.env.to).number;
+			// SyncTeX is asked about lines inside the picture, the middle one first.
+			const lines = [...new Set([Math.floor((first + last) / 2), first + 1, last - 1, first])].filter((n) => n >= first && n <= last);
+			const widget = new TexPictureWidget(state.sliceDoc(block.env.from, block.env.to), lines, block.env.from, ctx.build, !!block.inFloat);
 			out.push(Decoration.replace({ widget, block: true }).range(block.from, block.to));
 		}
 	}
