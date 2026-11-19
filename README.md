@@ -43,6 +43,13 @@ This fork adds:
   - The root is found by `% !TEX root`, `\documentclass`, or the file that `\input`s this one; `\input{…}` opens the file in the Live Preview. PDF figures show their first page when `pdftoppm` is installed.
   - Ctrl/Cmd+B / +I wrap in `\textbf` / `\textit`, Ctrl/Cmd+/ comments lines, Enter continues an `\item`; completion after `\ref{`, `\cite{` and `\begin{`.
   - Nothing is compiled. Keep building with LaTeX Workshop (or latexmk) for the PDF.
+
+- **Quarto `.qmd` files** open in Live Preview (*Open With → Markdown Live Preview*) and look like the rendered book:
+  - `::: {.callout-note}` … `:::` is a callout box, titled by its first heading, `title="…"` or its type. `icon=false` and `appearance="simple"`/`"minimal"` are followed.
+  - `![caption](img.png){#fig-id width=80%}` is a figure, sized and captioned, numbered per file as Quarto numbers a chapter.
+  - `@fig-id` reads *Figure 2* and `@sec-id` the heading's text; a click jumps there. The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …).
+  - `{#sec-id}` after a heading is hidden, and callout titles stay out of the Outline.
+  - A heading or image that Pandoc joins to the line above or below it is flagged. Quarto would print the heading as `## …` and leave the figure unnumbered.
 - **Claude Code sees your selection**: the exact Markdown source, its line numbers and the file path. A webview's selection is otherwise invisible to VS Code and to Claude.
   - The file is saved when you select, so the line numbers match the file on disk.
   - Text selected inside a rendered table is sent as the cells' Markdown source.

@@ -109,6 +109,8 @@ export type PlusHostToEditorMessage =
 	| { type: 'plusPreviewResult'; requestId: number; preview: PlusPreview }
 	// `src` is a webview-loadable URI, or null when no such file exists.
 	| { type: 'plusEmbedResult'; requestId: number; src: string | null }
+	// The labels the nearest `_quarto.yml` sets (`crossref-fig-title`, …); empty when there is none.
+	| { type: 'plusQuartoLabelsResult'; requestId: number; labels: Record<string, string> }
 	// The reader's text size, a factor over the theme's (setting mdLivePreview.plus.textScale).
 	| { type: 'plusTextScale'; scale: number }
 	// The next externalUpdate came from disk (Claude, git, …): show it as tracked changes.
@@ -157,6 +159,7 @@ export type PlusEditorToHostMessage =
 	| { type: 'plusPreview'; requestId: number; target: string }
 	// `![[image.png]]`: find the file by name and give back a URI the webview may load.
 	| { type: 'plusResolveEmbed'; requestId: number; target: string }
+	| { type: 'plusQuartoLabels'; requestId: number }
 	// What a context-menu command needs the host for: the clipboard, opening
 	// files, telling the user something.
 	| { type: 'plusDo'; action: 'copy'; text: string; notice: string }

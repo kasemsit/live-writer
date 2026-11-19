@@ -4,6 +4,7 @@ import { hasSessionFor, listAnchors, listNotes, openWikilink, previewWikilink, r
 import { forgetSelectionOf, writeSelection } from './selectionFile';
 import { handlePlusDo } from './contextMenu';
 import { texSessionOf } from './tex';
+import { quartoLabels } from './quartoConfig';
 
 export { takePendingJump } from './wikiOpen';
 
@@ -47,6 +48,11 @@ export function handlePlusMessage(
 			void resolveWikiTarget(session.getDocument().uri, message.target.trim()).then(
 				(uri) => post({ type: 'plusEmbedResult', requestId: message.requestId, src: uri ? session.asWebviewUri(uri) : null }),
 				() => post({ type: 'plusEmbedResult', requestId: message.requestId, src: null }),
+			);
+			return true;
+		case 'plusQuartoLabels':
+			void quartoLabels(session.getDocument().uri).then((labels) =>
+				post({ type: 'plusQuartoLabelsResult', requestId: message.requestId, labels }),
 			);
 			return true;
 		case 'plusDo':

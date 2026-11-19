@@ -21,6 +21,7 @@ import { blockReplacedLines } from '../livePreviewPlugin';
 // Simple 24x24 stroke icons (stroke = currentColor), drawn for this extension.
 const ICONS: Record<string, string> = {
 	info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+	alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/>',
 	warn: '<path d="M12 3 2.5 20h19z"/><path d="M12 10v5M12 17.5v.01"/>',
 	danger: '<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M12 8v5M12 16v.01"/>',
 	ok: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16.5 9.5"/>',
@@ -70,6 +71,15 @@ export function calloutStyle(type: string): { colour: string; icon: string } {
 	return { colour, icon };
 }
 
+/** The icon `name` (a key of ICONS) as an inline SVG string. */
+export function calloutIconSvg(name: string): string {
+	return (
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+		(ICONS[name] ?? ICONS.note) +
+		'</svg>'
+	);
+}
+
 class CalloutIconWidget extends WidgetType {
 	constructor(
 		private readonly type: string,
@@ -83,10 +93,7 @@ class CalloutIconWidget extends WidgetType {
 	toDOM(): HTMLElement {
 		const span = document.createElement('span');
 		span.className = 'mlp-callout-icon';
-		span.innerHTML =
-			'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-			ICONS[calloutStyle(this.type).icon] +
-			'</svg>';
+		span.innerHTML = calloutIconSvg(calloutStyle(this.type).icon);
 		if (this.label) {
 			const title = document.createElement('span');
 			title.className = 'mlp-callout-title';

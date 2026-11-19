@@ -75,6 +75,9 @@
           },
           {
             "filenamePattern": "*.tex"
+          },
+          {
+            "filenamePattern": "*.qmd"
           }
         ],
         "priority": "option"
@@ -267,7 +270,7 @@
       "editor/title": [
         {
           "command": "mdLivePreview.openWithLivePreview",
-          "when": "resourceLangId == markdown && activeCustomEditorId != mdLivePreview.editor || resourceLangId == latex && activeCustomEditorId != mdLivePreview.editor",
+          "when": "(resourceLangId == markdown || resourceLangId == latex || resourceExtname == .qmd) && activeCustomEditorId != mdLivePreview.editor",
           "group": "navigation"
         },
         {

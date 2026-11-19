@@ -2,6 +2,17 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## Unreleased
+
+- **Quarto `.qmd` files** open in Live Preview and look like the rendered book.
+  - Callouts (`::: {.callout-note}` … `:::`) are coloured boxes with their fences hidden, titled by their first heading, `title="…"` or their type. `icon=false` and `appearance="simple"`/`"minimal"` are followed.
+  - `![caption](img.png){#fig-id width=80%}` is a sized, captioned figure, numbered per file as Quarto numbers a book chapter's figures.
+  - `@fig-id` reads *Figure 2* and `@sec-id` the heading's text; a click jumps to it. An id with nothing to point at reads `?fig-id` in red, as Quarto prints it.
+  - The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …).
+  - `{#sec-id}` after a heading is hidden; callout titles are not listed in the Outline.
+  - **Flags what Quarto reads differently from how it looks.** A heading straight after a line of text, with no blank line between, is part of that paragraph in Pandoc: Quarto prints it as `## …`, and an image in that paragraph is not numbered.
+- The source of each of these shows again while the caret is on its line.
+
 ## 0.4.12
 
 - **LaTeX Live Preview.** A `.tex` file opens in the Live Preview (*Open With → Live Preview*, or the preview icon in the title bar) and is drawn the way Overleaf's Visual Editor draws it. As with Markdown, the source comes back wherever the caret is.

@@ -15,6 +15,7 @@ import { t } from '../shared/i18n';
 import { insideTableAtom, insideWikilink, isCitationAt } from '../shared/plusWikilinks';
 import { mathBlockReplaced } from './plus/mathSyntax';
 import { isUndefinedReferenceLink } from './plus/references';
+import { quartoImage } from './plus/quarto';
 
 const HEADING_LINE_CLASS: Record<string, string> = {
 	ATXHeading1: 'mlp-line-h1',
@@ -1726,8 +1727,10 @@ function buildDecorations(view: EditorView): DecorationSet {
 							// diagram widget (which reads the file through the host)
 							// instead. `.drawio.svg`/`.drawio.png` deliberately do not —
 							// those are real images that an <img> already shows correctly.
-							const widget = isDrawioPath(src) ? new DrawioFileWidget(src, alt, node.from) : new ImageWidget(src, alt);
-							pushReplace(node.from, node.to, Decoration.replace({ widget }));
+							// plus: `![…](…){#fig-id width=…}` is a Quarto figure (plus/quarto.ts).
+							const figure = isDrawioPath(src) ? null : quartoImage(state, node.node, src, alt);
+							const widget = figure ? figure.widget : isDrawioPath(src) ? new DrawioFileWidget(src, alt, node.from) : new ImageWidget(src, alt);
+							pushReplace(node.from, figure?.to ?? node.to, Decoration.replace({ widget }));
 						}
 						return false;
 					}

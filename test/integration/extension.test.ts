@@ -39,7 +39,7 @@ suite('extension', () => {
 		assert.ok(Array.isArray(config.get('enabledStyles')));
 	});
 
-	test('claims .md and .markdown for its custom editor', () => {
+	test('claims .md, .markdown and (plus) Quarto .qmd for its custom editor', () => {
 		const extension = vscode.extensions.getExtension(EXTENSION_ID);
 		assert.ok(extension);
 		const editors = extension.packageJSON.contributes.customEditors as Array<{
@@ -49,7 +49,7 @@ suite('extension', () => {
 		const editor = editors.find((e) => e.viewType === 'mdLivePreview.editor');
 		assert.ok(editor, 'the custom editor is not contributed');
 		const patterns = editor.selector.map((s) => s.filenamePattern);
-		assert.deepStrictEqual(patterns, ['*.md', '*.markdown']);
+		assert.deepStrictEqual(patterns, ['*.md', '*.markdown', '*.qmd']);
 	});
 
 	test('ships its localization bundles', async () => {

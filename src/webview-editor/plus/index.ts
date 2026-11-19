@@ -3,6 +3,7 @@ import type { EditorView } from '@codemirror/view';
 import type { EditorToHostMessage, HostToEditorMessage } from '../../shared/messages';
 import { wikilinkExtension } from './wikilinks';
 import { calloutPlugin } from './callouts';
+import { quartoExtension } from './quarto';
 import { footnotePlugin, insertFootnote } from './footnotes';
 import { blockIdPlugin } from './blockIds';
 import { commentPlugin } from './comments';
@@ -29,6 +30,7 @@ export function plusExtensions(post: (message: EditorToHostMessage) => void): Ex
 		wikilinkExtension((href) => post({ type: 'openLink', href })),
 		linkPreviewExtension((href) => post({ type: 'openLink', href })),
 		calloutPlugin,
+		quartoExtension,
 		footnotePlugin,
 		blockIdPlugin,
 		commentPlugin,

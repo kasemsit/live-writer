@@ -73,13 +73,19 @@ export function previewLink(target: string): Promise<PlusPreview | null> {
 	return request<PlusPreview | null>((requestId) => ({ type: 'plusPreview', requestId, target }), null);
 }
 
+/** The labels this document's Quarto project sets in `_quarto.yml`. */
+export function quartoLabels(): Promise<Record<string, string>> {
+	return request<Record<string, string>>((requestId) => ({ type: 'plusQuartoLabels', requestId }), {});
+}
+
 /** Routes a host reply to its request. Returns true when the message was one. */
 export function handlePlusReply(message: HostToEditorMessage): boolean {
 	if (
 		message.type === 'plusNotes' ||
 		message.type === 'plusAnchors' ||
 		message.type === 'plusPreviewResult' ||
-		message.type === 'plusEmbedResult'
+		message.type === 'plusEmbedResult' ||
+		message.type === 'plusQuartoLabelsResult'
 	) {
 		const resolve = waiting.get(message.requestId);
 		waiting.delete(message.requestId);
@@ -90,7 +96,9 @@ export function handlePlusReply(message: HostToEditorMessage): boolean {
 					? message.anchors
 					: message.type === 'plusPreviewResult'
 						? message.preview
-						: message.src,
+						: message.type === 'plusQuartoLabelsResult'
+							? message.labels
+							: message.src,
 		);
 		return true;
 	}

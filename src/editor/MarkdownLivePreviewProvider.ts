@@ -6,6 +6,7 @@ import { escapeAttribute } from '../shared/i18n';
 import type { PlusHostToEditorMessage } from '../shared/messages';
 import { extractTexHeadings } from '../shared/plusTexScan';
 import { isTexDocument } from './plus/tex';
+import { quartoOutline } from '../shared/plusQuarto';
 
 export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvider {
 	static readonly viewType = 'mdLivePreview.editor';
@@ -94,7 +95,10 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 		if (!session) return undefined;
 		const document = session.getDocument();
 		// md-live-preview-plus: a LaTeX document's outline is its sectioning commands.
-		return isTexDocument(document) ? extractTexHeadings(document.getText()) : extractHeadings(document.getText());
+		if (isTexDocument(document)) return extractTexHeadings(document.getText());
+		// md-live-preview-plus: callout titles are not sections; `{#sec-id}` is not a name.
+		const text = document.getText();
+		return quartoOutline(extractHeadings(text), text);
 	}
 
 	/** md-live-preview-plus: the document of the active Live Preview panel, if any. */

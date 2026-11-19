@@ -114,6 +114,78 @@ test.describe('callouts and quoted tables', () => {
 	});
 });
 
+test.describe('Quarto', () => {
+	const DOC = [
+		'# Title',
+		'',
+		'See @fig-one, @sec-part and @fig-gone.',
+		'',
+		'::: {.callout-important}',
+		'## Read this',
+		'Body **text**.',
+		':::',
+		'',
+		'::: {.callout-tip}',
+		'Untitled.',
+		':::',
+		'',
+		'::: {.callout-note icon=false}',
+		'## No icon',
+		'- a list item',
+		':::',
+		'',
+		'![A caption](data:image/gif;base64,R0lGODlhAQABAAAAACw=){#fig-one width=50%}',
+		'',
+		'## 1.2 Part {#sec-part}',
+		'',
+		'![Joined](data:image/gif;base64,R0lGODlhAQABAAAAACw=){#fig-two}',
+		'## 1.3 Swallowed',
+		'',
+		'End.',
+	].join('\n');
+
+	test.beforeEach(async ({ page }) => {
+		await mountEditor(page, DOC);
+	});
+
+	test('a callout is a coloured box with its fences hidden', async ({ page }) => {
+		const box = page.locator('.cm-line.mlp-qc.mlp-co-red');
+		await expect(box).toHaveCount(4);
+		await expect(box.nth(0)).toHaveClass(/mlp-qc-fence/);
+		await expect(box.nth(1)).toHaveClass(/mlp-qc-title/);
+		await expect(box.nth(1).locator('.mlp-callout-icon svg')).toHaveCount(1);
+		await expect(page.locator('.cm-content')).not.toContainText(':::');
+	});
+
+	test('an untitled callout is headed by its type name; icon=false drops the icon', async ({ page }) => {
+		await expect(page.locator('.cm-line.mlp-co-green .mlp-qc-label')).toHaveText('Tip');
+		await expect(page.locator('.cm-line.mlp-co-blue.mlp-qc-title .mlp-callout-icon')).toHaveCount(0);
+	});
+
+	test('a figure is sized, captioned and numbered; its attributes hide', async ({ page }) => {
+		const figure = page.locator('.mlp-qfig').first();
+		await expect(figure.locator('.mlp-qfig-caption')).toHaveText('Figure 1: A caption');
+		await expect(figure.locator('img')).toHaveAttribute('style', /width: 50%/);
+		await expect(page.locator('.cm-content')).not.toContainText('{#');
+	});
+
+	test('references read as their target, or ?id with nothing to point at', async ({ page }) => {
+		await expect(page.locator('.mlp-xref')).toHaveText(['Figure 1', '1.2 Part', '?fig-gone']);
+		await expect(page.locator('.mlp-xref').nth(2)).toHaveClass(/mlp-xref-missing/);
+	});
+
+	test('an image and heading Pandoc joins into one paragraph are flagged', async ({ page }) => {
+		await expect(page.locator('.mlp-qfig').nth(1).locator('.mlp-qfig-caption')).toHaveCount(0);
+		await expect(page.locator('.cm-line.mlp-q-joined')).toContainText('1.3 Swallowed');
+		await expect(page.locator('.mlp-q-warning')).toHaveCount(2);
+	});
+
+	test('the caret on a fence shows its source', async ({ page }) => {
+		await page.locator('.cm-line.mlp-qc-label, .cm-line:has(.mlp-qc-label)').first().click({ position: { x: 4, y: 6 } });
+		await expect(page.locator('.cm-content')).toContainText('::: {.callout-tip}');
+	});
+});
+
 test.describe('footnotes', () => {
 	const DOC = [
 		'# Title',

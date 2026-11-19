@@ -11,10 +11,11 @@ import { registerContextMenu } from './editor/plus/contextMenu';
 import { registerTextScale } from './editor/plus/textScale';
 
 function getActiveMarkdownUri(): vscode.Uri | undefined {
-	// plus: a LaTeX file opens in the LaTeX Live Preview.
-	const languageId = vscode.window.activeTextEditor?.document.languageId;
-	if (languageId === 'markdown' || languageId === 'latex' || languageId === 'tex') {
-		return vscode.window.activeTextEditor!.document.uri;
+	const editor = vscode.window.activeTextEditor;
+	// md-live-preview-plus: a LaTeX file opens in the LaTeX Live Preview, and a `.qmd`
+	// is "quarto" when the Quarto extension is installed.
+	if (editor && ['markdown', 'latex', 'tex', 'quarto'].includes(editor.document.languageId)) {
+		return editor.document.uri;
 	}
 	const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
 	if (input instanceof vscode.TabInputText) {

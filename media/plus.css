@@ -159,6 +159,7 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
    Each callout line carries .mlp-callout + a colour class; first/last lines round
    the card. The colour is one RGB triple per family, used at different strengths. */
 .cm-line.mlp-callout { --co: 59, 130, 246; }
+.cm-line.mlp-co-blue   { --co: 59, 130, 246; }
 .cm-line.mlp-co-cyan   { --co: 8, 145, 178; }
 .cm-line.mlp-co-green  { --co: 22, 163, 74; }
 .cm-line.mlp-co-yellow { --co: 202, 138, 4; }
@@ -468,3 +469,124 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 .mlp-tex-table td.mlp-tex-rule-thick { border-top: 2px solid rgba(127, 127, 127, 0.85); }
 .mlp-tex-table td.mlp-tex-rule-below-thin { border-bottom: 1px solid rgba(127, 127, 127, 0.6); }
 .mlp-tex-table td.mlp-tex-rule-below-thick { border-bottom: 2px solid rgba(127, 127, 127, 0.85); }
+
+/* ── Quarto (.qmd), rendered by plus/quarto.ts ──
+   A callout is every line from `::: {.callout-…}` to `:::`, each with .mlp-qc and a
+   colour class (above). Hidden fences shrink to the card's top and bottom edge; the
+   header (the fence, or the title heading) is tinted more strongly, as Quarto does.
+   The fill is a background-image so a code block inside keeps its own background
+   (a theme's `background` shorthand may clear the fill there; the code's own shows),
+   and the bar a box-shadow so it needs no border width or padding of its own. */
+.cm-line.mlp-qc {
+	--qc-fill: rgba(var(--co), 0.05);
+	background-image: linear-gradient(var(--qc-fill), var(--qc-fill));
+	box-shadow: inset 4px 0 0 rgb(var(--co));
+	padding-left: 1.2em !important;
+	padding-right: 1.1em !important;
+}
+/* A quote inside: the callout's bar at the edge, the quote's own bar indented after it.
+   A theme's blockquote background and border would otherwise replace the callout's. */
+.cm-line.mlp-qc.mlp-line-quote {
+	border-left: 0 !important;
+	border-radius: 0 !important;
+	background: linear-gradient(var(--qc-fill), var(--qc-fill)) !important;
+}
+.cm-line.mlp-qc.mlp-line-quote:not(.mlp-qc-fence):not(.mlp-qc-src) {
+	background:
+		linear-gradient(rgba(127, 127, 127, 0.45), rgba(127, 127, 127, 0.45)) 1.2em 0 / 3px 100% no-repeat,
+		linear-gradient(var(--qc-fill), var(--qc-fill)) !important;
+	padding-left: 2.1em !important;
+}
+.cm-line.mlp-qc.mlp-line-quote.mlp-qc-last { border-bottom-right-radius: 6px !important; }
+/* A code block inside keeps its square left edge, so the bar runs straight past it. */
+.cm-line.mlp-qc.mlp-line-code, .cm-line.mlp-qc.mlp-code-toolbar-line {
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+}
+.cm-line.mlp-qc-head, .cm-line.mlp-qc-cap { --qc-fill: rgba(var(--co), 0.13); }
+.cm-line.mlp-qc-head { padding-top: 0.4em !important; padding-bottom: 0.4em !important; }
+.cm-line.mlp-qc-first { border-top-right-radius: 6px; }
+.cm-line.mlp-qc-last { border-bottom-right-radius: 6px; }
+.cm-line.mlp-qc-fence, .cm-line.mlp-qdiv-fence {
+	height: 0.55em;
+	line-height: 0.55em;
+	padding-top: 0 !important;
+	padding-bottom: 0 !important;
+	overflow: hidden;
+}
+.cm-line.mlp-qdiv-fence { height: 0.3em; line-height: 0.3em; }
+.cm-line.mlp-qc-src, .cm-line.mlp-qdiv-src {
+	font-family: var(--vscode-editor-font-family, monospace);
+	font-size: 0.9em;
+	color: var(--vscode-descriptionForeground, inherit);
+}
+/* A title heading is the callout's title, not a section: none of the heading's size or rule. */
+.cm-line.mlp-qc-title {
+	font-size: inherit !important;
+	line-height: inherit !important;
+	border-bottom: 0 !important;
+	color: rgb(var(--co)) !important;
+}
+.cm-line.mlp-qc-title * { font-size: inherit !important; color: inherit !important; }
+.mlp-qc-label { display: inline-flex; align-items: center; }
+.cm-line.mlp-qc-simple.mlp-qc-head, .cm-line.mlp-qc-simple.mlp-qc-cap { --qc-fill: rgba(var(--co), 0.05); }
+.cm-line.mlp-qc-minimal { --qc-fill: transparent; box-shadow: inset 3px 0 0 rgba(var(--co), 0.55); }
+.cm-line.mlp-qdiv-end { text-align: right; }
+.cm-line.mlp-qdiv-center { text-align: center; }
+/* A table drawn as a block between a callout's lines continues the card. */
+.cm-line.mlp-qc + .mlp-block:has(+ .cm-line.mlp-qc) {
+	background-image: linear-gradient(rgba(var(--co), 0.05), rgba(var(--co), 0.05));
+	box-shadow: inset 4px 0 0 rgb(var(--co));
+	padding-left: 1.2em;
+	padding-right: 1.1em;
+	box-sizing: border-box;
+}
+.cm-line.mlp-qc + .mlp-block { --co: 59, 130, 246; }
+.cm-line.mlp-co-green + .mlp-block { --co: 22, 163, 74; }
+.cm-line.mlp-co-yellow + .mlp-block { --co: 202, 138, 4; }
+.cm-line.mlp-co-orange + .mlp-block { --co: 234, 88, 12; }
+.cm-line.mlp-co-red + .mlp-block { --co: 220, 38, 38; }
+
+/* Figures: `![caption](img){#fig-id width=80%}`, captioned and numbered. */
+.mlp-qfig {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	gap: 0.2em;
+	padding: 0.3em 0 0.5em;
+	vertical-align: top;
+}
+.mlp-qfig .mlp-image { height: auto; }
+.mlp-qfig.mlp-qfig-inline { width: auto; padding: 0; }
+.mlp-qfig-caption {
+	max-width: 100%;
+	font-size: 0.92em;
+	text-align: center;
+	color: var(--vscode-descriptionForeground, inherit);
+}
+.mlp-qfig-number { font-weight: 700; }
+
+/* `@fig-id` / `@sec-id`, and `?fig-id` for one with nothing to point at. */
+.mlp-xref { color: var(--vscode-textLink-foreground, #0969da); cursor: pointer; text-decoration: none; }
+.mlp-xref:hover { text-decoration: underline; }
+.mlp-xref.mlp-xref-missing { color: var(--vscode-errorForeground, #d1242f); font-weight: 600; }
+/* Source the rendered view hides, while the caret shows it: `{#fig-id …}`, `@fig-id`. */
+.mlp-qattr { opacity: 0.5; }
+
+/* What Pandoc reads differently from how it looks: a heading or figure joined to its neighbour. */
+.mlp-q-warning {
+	display: inline-block;
+	margin-left: 0.6em;
+	padding: 0.05em 0.5em;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.5;
+	vertical-align: middle;
+	color: var(--vscode-editorWarning-foreground, #b45309);
+	background: rgba(234, 88, 12, 0.12);
+}
+.mlp-qfig .mlp-q-warning { margin-left: 0; }
+.cm-line.mlp-q-joined { text-decoration: underline wavy rgba(234, 88, 12, 0.7); text-underline-offset: 0.25em; }
+.cm-line.mlp-q-joined .mlp-q-warning { text-decoration: none; }
