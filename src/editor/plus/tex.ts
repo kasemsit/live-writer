@@ -6,7 +6,7 @@ import type { HostToEditorMessage, PlusTexAsset, PlusTexContext } from '../../sh
 import { mergeAux, parseAux, type AuxData } from '../../shared/plusTexAux';
 import { parseBib, type BibEntry } from '../../shared/plusBib';
 import { extractMacros } from '../../shared/plusTexMacros';
-import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot } from '../../shared/plusTexProject';
+import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot, outermostFolders } from '../../shared/plusTexProject';
 import { scanTex } from '../../shared/plusTexScanner';
 import { isPathInside } from '../../shared/pathContainment';
 import { exists, readText } from './files';
@@ -74,7 +74,10 @@ export async function findRoot(document: vscode.TextDocument): Promise<vscode.Ur
 	return fallback ?? document.uri;
 }
 
-/** The folders LaTeX Workshop may have written the `.aux` to, most likely first. */
+/**
+ * The folders LaTeX Workshop may have written the `.aux` to, most likely
+ * first. The root's own folder is always one of them.
+ */
 function auxDirs(root: vscode.Uri): vscode.Uri[] {
 	const rootDir = vscode.Uri.joinPath(root, '..');
 	const dirs = [rootDir];
@@ -87,7 +90,8 @@ function auxDirs(root: vscode.Uri): vscode.Uri[] {
 			.replace(/%DOCFILE%/g, base)
 			.replace(/%DOC%/g, root.path.replace(/\.tex$/i, ''))
 			.replace(/%WORKSPACE_FOLDER%/g, workspace?.uri.path ?? rootDir.path);
-		dirs.unshift(path.posix.isAbsolute(resolved) ? root.with({ path: resolved }) : vscode.Uri.joinPath(rootDir, resolved));
+		// Normalized (`%DIR%/../build`), since a file watcher takes the folder as given.
+		dirs.unshift(path.posix.isAbsolute(resolved) ? root.with({ path: path.posix.normalize(resolved) }) : vscode.Uri.joinPath(rootDir, resolved));
 	}
 	dirs.push(vscode.Uri.joinPath(rootDir, 'out'), vscode.Uri.joinPath(rootDir, 'build'));
 	return dirs;
@@ -114,9 +118,11 @@ export class TexSession implements vscode.Disposable {
 	private root: vscode.Uri | undefined;
 	private graphicsPath: string[] = [];
 	private watchers: vscode.Disposable[] = [];
-	private watchedDir = '';
+	private watchedDirs = '';
 	private timer: ReturnType<typeof setTimeout> | undefined;
 	private disposed = false;
+	/** Counts sendContext's runs, so that a run a newer one has overtaken can tell, and stop. */
+	private runs = 0;
 
 	constructor(
 		private readonly document: vscode.TextDocument,
@@ -134,11 +140,17 @@ export class TexSession implements vscode.Disposable {
 	 * again), and when the build rewrites its files (reusing the root found).
 	 */
 	async sendContext(findRootAgain = true): Promise<void> {
+		// A rebuild can start a run while an earlier one is still reading, and the
+		// earlier one may finish last: only the latest run changes the session or posts.
+		const run = ++this.runs;
+		const overtaken = () => this.disposed || run !== this.runs;
 		const root = !findRootAgain && this.root ? this.root : await findRoot(this.document);
+		if (overtaken()) return;
 		this.root = root;
 		const rootText = root.toString() === this.document.uri.toString() ? this.document.getText() : ((await readText(root)) ?? '');
 		const rootScan = scanTex(rootText);
 		const { data } = await readAux(root);
+		if (overtaken()) return;
 		const rootDir = this.rootDir();
 		const docDir = vscode.Uri.joinPath(this.document.uri, '..');
 		this.graphicsPath = graphicsPathOf(rootText, rootScan);
@@ -186,24 +198,31 @@ export class TexSession implements vscode.Disposable {
 			macros,
 			root: root.toString() === this.document.uri.toString() ? '' : vscode.workspace.asRelativePath(root, false),
 		};
-		if (this.disposed) return;
+		if (overtaken()) return;
 		this.post({ type: 'plusTexContext', context });
-		this.watch(rootDir);
+		this.watch(root);
 	}
 
-	/** Re-sends the context when the build rewrites `.aux` or a `.bib` changes. */
-	private watch(dir: vscode.Uri): void {
-		if (this.watchedDir === dir.toString()) return;
+	/**
+	 * Re-sends the context when the build rewrites `.aux` or a `.bib` changes:
+	 * in the root's folder and every folder readAux looks in (LaTeX Workshop's
+	 * outDir may lie outside it), each watched once.
+	 */
+	private watch(root: vscode.Uri): void {
+		const dirs = outermostFolders(auxDirs(root), (dir) => dir.fsPath, process.platform === 'win32');
+		const key = dirs.map((dir) => dir.toString()).join('\n');
+		if (this.watchedDirs === key) return;
 		this.watchers.forEach((w) => w.dispose());
 		this.watchers = [];
-		this.watchedDir = dir.toString();
+		this.watchedDirs = key;
 		const schedule = () => {
 			if (this.timer) clearTimeout(this.timer);
 			this.timer = setTimeout(() => void this.sendContext(false), 400);
 		};
-		const pattern = new vscode.RelativePattern(dir, '**/*.{aux,bib}');
-		const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-		this.watchers.push(watcher, watcher.onDidChange(schedule), watcher.onDidCreate(schedule), watcher.onDidDelete(schedule));
+		for (const dir of dirs) {
+			const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(dir, '**/*.{aux,bib}'));
+			this.watchers.push(watcher, watcher.onDidChange(schedule), watcher.onDidCreate(schedule), watcher.onDidDelete(schedule));
+		}
 		// A root edited in another tab changes macros and \graphicspath.
 		this.watchers.push(
 			vscode.workspace.onDidSaveTextDocument((doc) => {

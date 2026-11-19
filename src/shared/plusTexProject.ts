@@ -1,9 +1,11 @@
+import { isPathInside } from './pathContainment';
 import { readArgs, scanTex, type TexScan } from './plusTexScanner';
 
 /**
  * md-live-preview-plus: what a LaTeX file says about the project around it —
  * the root it names, the files it pulls in, its bibliographies and graphics
- * folders — for the host, which finds the root file and its build from them.
+ * folders — for the host, which finds the root file and its build from them
+ * (and watches the build's folders).
  */
 
 /** `% !TEX root = ../main.tex` in the first lines, as LaTeX Workshop and TeXShop read it. */
@@ -58,4 +60,16 @@ export function graphicsPathOf(text: string, scan: TexScan = scanTex(text)): str
 		return [...text.slice(arg.from, arg.to).matchAll(/\{([^{}]*)\}/g)].map((m) => m[1]);
 	}
 	return [];
+}
+
+/**
+ * `folders` without repeats and without those inside another, in order: the
+ * folders to watch for a rebuild, since a watch on a folder sees its
+ * subfolders too. `pathOf` gives each one's file-system path.
+ */
+export function outermostFolders<T>(folders: readonly T[], pathOf: (folder: T) => string, caseInsensitive = false): T[] {
+	const paths = folders.map(pathOf);
+	const inside = (i: number, j: number) => isPathInside(paths[j], paths[i], caseInsensitive);
+	// Left out: a folder inside another, or the same as one before it.
+	return folders.filter((_, i) => !paths.some((_path, j) => j !== i && inside(i, j) && (j < i || !inside(j, i))));
 }

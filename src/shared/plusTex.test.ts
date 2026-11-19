@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { extractTexHeadings } from './plusTexHeadings';
 import { extractMacros } from './plusTexMacros';
-import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot } from './plusTexProject';
+import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot, outermostFolders } from './plusTexProject';
 import { readArgs, scanTex } from './plusTexScanner';
 import { readAccent, texToPlain } from './plusTexText';
 import { cleanAuxNumber, parseAux } from './plusTexAux';
@@ -163,6 +163,26 @@ describe('document structure', () => {
 		expect(inputsOf('\\input{sections/01_intro}\n% \\input{old}\n\\include{b.tex}')).toEqual(['sections/01_intro', 'b']);
 		expect(bibFilesOf('\\bibliography{refs, more}\n\\addbibresource{x.bib}')).toEqual(['refs.bib', 'more.bib', 'x.bib']);
 		expect(graphicsPathOf('\\graphicspath{{figures/}{img/}}')).toEqual(['figures/', 'img/']);
+	});
+});
+
+describe('watching the build', () => {
+	const watched = (dirs: string[], caseInsensitive = false) => outermostFolders(dirs, (dir) => dir, caseInsensitive);
+
+	it("watches the root's folder alone when the .aux folders are inside it", () => {
+		// auxDirs without an outDir: the root's folder, its out/ and build/.
+		expect(watched(['/p', '/p/out', '/p/build'])).toEqual(['/p']);
+		expect(watched(['/p', '/p/out', '/p'])).toEqual(['/p']);
+	});
+
+	it('watches an outDir outside the root folder as well, or alone when it holds the root folder', () => {
+		expect(watched(['/w/out', '/w/paper', '/w/paper/out', '/w/paper/build'])).toEqual(['/w/out', '/w/paper']);
+		expect(watched(['/w', '/w/paper', '/w/paper/out', '/w/paper/build'])).toEqual(['/w']);
+	});
+
+	it('compares paths, not strings', () => {
+		expect(watched(['/p/out', '/p/outer', '/p/out/../build'])).toEqual(['/p/out', '/p/outer', '/p/out/../build']);
+		expect(watched(['C:/Paper', 'c:/paper/out'], true)).toEqual(['C:/Paper']);
 	});
 });
 
