@@ -2,13 +2,13 @@
 
 *Formerly md-live-preview-plus.* Write Markdown, LaTeX and Quarto in their rendered form, with your citations, your Zotero library and Claude beside you.
 
-A fork of [Markdown Live Preview Editor](https://github.com/t-shoot/md-live-preview-editor)
-by t-shoot, for notes written the Obsidian way, with a bridge to Claude Code. It is
-independent: it is affiliated with neither t-shoot nor Obsidian.
+Live Writer is developed on its own. It began in October 2026 as a fork of
+[Markdown Live Preview Editor](https://github.com/t-shoot/md-live-preview-editor) by t-shoot
+(MIT), whose editor core it still builds on: editing in the rendered preview, Mermaid and
+draw.io diagrams, editable tables, CSS themes. It no longer follows that project, and it is
+affiliated with neither t-shoot nor Obsidian.
 
-Everything upstream does still works: editing in the rendered preview, Mermaid and
-draw.io diagrams, editable tables, CSS themes. See [README.upstream.md](README.upstream.md).
-This fork adds:
+What Live Writer adds:
 
 - **Wikilinks**: `[[note]]`, `[[note#Heading]]` and `[[note#^block-id|label]]` render as links.
   - A click opens the note in Live Preview at the heading or block.
@@ -69,8 +69,8 @@ This fork adds:
 
 ![Sample note rendered with the Thai/English theme](plus/preview/sample.png)
 
-**Get it from [Releases](../../releases), not from the VS Code Marketplace.** This fork is not
-published there, on purpose: the Marketplace extension is t-shoot's own. Its id is
+**Get it from [Releases](../../releases), not from the VS Code Marketplace.** It is not
+published there. Its id is
 `kasemsit.live-writer` (until 0.4.17 it was `local.markdown-live-preview-editor-claude`; the
 installer removes that one, and settings made under `mdLivePreview.*` carry over to `liveWriter.*`). It checks
 GitHub once a day and tells you when a newer release is out.
@@ -84,7 +84,7 @@ installer from that folder:
 - **macOS / Linux:** `./install.sh` (needs `python3`)
 
 The installer does three things:
-1. It removes t-shoot's original extension if present, because both register the same editor. Then it installs the `.vsix`.
+1. It removes earlier installs that register the same editor (Live Writer's former id, and t-shoot's Markdown Live Preview Editor), then installs the `.vsix`.
 2. It copies the Claude Code hook to `~/.claude/hooks/`, or `%USERPROFILE%\.claude\hooks\` on Windows.
 3. It registers the hook in Claude Code's `settings.json`, keeping your other settings. Running it twice is harmless.
 
@@ -150,7 +150,7 @@ end is never drawn.
 
 ## Where the code is
 
-The changes are kept apart so that upstream releases merge cleanly:
+Live Writer's own code is kept apart from the editor core it started from:
 
 - **New files:**
   - `src/webview-editor/plus/` holds the editor side: one module per feature, `cm.ts` for the helpers they share, and `hostRequests.ts`, the one channel to the extension host.
@@ -160,20 +160,15 @@ The changes are kept apart so that upstream releases merge cleanly:
     - `plusBib.ts` reads `.bib` files; `plusCitations.ts` says how a citation reads (LaTeX's numbers, citeproc's author–date, checked against `quarto pandoc --citeproc` output in `fixtures/citeproc.json`).
     - `plusQuarto.ts` and `plusCodeFences.ts`: Pandoc's divs, attributes and cross-references.
     - `plusTex*.ts`: the LaTeX scanner, headings, text, macros and project files, and the `.aux` and `tabular` readers.
-    - `plusMessages.ts`: every message the fork adds; upstream's `messages.ts` only re-exports it.
+    - `plusMessages.ts`: every message Live Writer adds; `messages.ts` re-exports it.
   - `media/plus.css`, `plus/` (theme, fonts, hooks, installers, tools), `test/e2e/plus.spec.ts` and `test/e2e/tex.spec.ts`.
-- **Upstream files** carry only small hooks, each marked `plus:` or `md-live-preview-plus`.
+- **The editor core's files** carry small hooks into that code, marked `plus:` or `md-live-preview-plus`. Since Live Writer no longer merges from t-shoot, this split is a convenience, not a rule.
   - `src/webview-editor/plus/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.
-
-To take a new upstream release (upstream's branch is `master`):
-```
-git fetch upstream && git merge upstream/master
-```
 
 ## Licence
 
-- **The code:** MIT, see `LICENSE`. It is t-shoot's licence, with this fork's copyright added for the changes.
-- **AWS shapes (from upstream):** their own terms, see `THIRD-PARTY-NOTICES.md` and `LICENSE-SHAPES`.
+- **The code:** MIT, see `LICENSE`. It is t-shoot's licence, kept as MIT requires for the code Live Writer still contains, with Live Writer's copyright added.
+- **AWS shapes (from t-shoot's editor):** their own terms, see `THIRD-PARTY-NOTICES.md` and `LICENSE-SHAPES`.
 - **KaTeX** (bundled for math, fonts included): MIT, © Khan Academy and other contributors, as its npm package states; listed in `THIRD-PARTY-NOTICES.md`.
 - **Sarabun:** © 2018 The Sarabun Project Authors, SIL Open Font License 1.1, see `plus/fonts/OFL.txt`.
   - It is embedded in the theme.
