@@ -43,6 +43,7 @@ export type PlusCommand =
 	| 'copyRichText'
 	| 'openAsTextHere'
 	| 'openLinkBeside'
+	| 'openInZotero'
 	| 'copyTex'
 	| 'searchGoogle'
 	| 'searchScholar'
@@ -76,7 +77,8 @@ export type PlusHostToEditorMessage =
 	// LaTeX: what the last build and the bibliography say (see PlusTexContext).
 	| { type: 'plusTexContext'; context: PlusTexContext }
 	| { type: 'plusTexAssetResult'; requestId: number; asset: PlusTexAsset }
-	| { type: 'plusTexPictureResult'; requestId: number; picture: PlusTexPicture };
+	| { type: 'plusTexPictureResult'; requestId: number; picture: PlusTexPicture }
+	| { type: 'plusZoteroLinksResult'; requestId: number; links: PlusZoteroLinks };
 
 /**
  * md-live-preview-plus: what the LaTeX Live Preview needs beyond the file:
@@ -115,6 +117,13 @@ export interface PlusQuartoProject {
 }
 
 /** An `\includegraphics` target: a URI the webview may load, or why there is none. */
+/** Where a cited paper is in Zotero: zotero:// links to its PDF and to the item, or why there are none. */
+export interface PlusZoteroLinks {
+	pdf: string | null;
+	item: string | null;
+	note: string;
+}
+
 /** A `tikzpicture` as the last build drew it, cut from its PDF by SyncTeX, or why there is none. */
 export interface PlusTexPicture {
 	status: 'image' | 'missing' | 'unsupported';
@@ -153,8 +162,12 @@ export type PlusEditorToHostMessage =
 	| { type: 'plusDo'; action: 'openAsText'; line: number }
 	| { type: 'plusDo'; action: 'openBeside'; href: string }
 	| { type: 'plusDo'; action: 'openUrl'; url: string }
+	// A zotero:// link (shared/plusZotero.ts ZOTERO_LINK): a PDF in Zotero's reader or an item in the library.
+	| { type: 'plusDo'; action: 'openZotero'; url: string }
 	| { type: 'plusDo'; action: 'notify'; message: string; error?: boolean }
 	// LaTeX: find the file an `\includegraphics{path}` means.
 	| { type: 'plusTexAsset'; requestId: number; path: string }
 	// LaTeX: the last build's drawing of the picture on these lines (1-based) of this file.
-	| { type: 'plusTexPicture'; requestId: number; lines: number[] };
+	| { type: 'plusTexPicture'; requestId: number; lines: number[] }
+	// The Zotero links for a citation key.
+	| { type: 'plusZoteroLinks'; requestId: number; key: string };

@@ -5,6 +5,7 @@ import { forgetSelectionOf, writeSelection } from './selectionFile';
 import { handlePlusDo } from './contextMenu';
 import { texSessionOf } from './tex';
 import { stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
+import { zoteroLinks } from './zotero';
 
 export { takePendingJump } from './wikiOpen';
 
@@ -49,6 +50,11 @@ export function handlePlusMessage(
 			void resolveWikiTarget(session.getDocument().uri, message.target.trim()).then(
 				(uri) => post({ type: 'plusEmbedResult', requestId: message.requestId, src: uri ? session.asWebviewUri(uri) : null }),
 				() => post({ type: 'plusEmbedResult', requestId: message.requestId, src: null }),
+			);
+			return true;
+		case 'plusZoteroLinks':
+			void zoteroLinks(session.getDocument().uri, message.key).then((links) =>
+				post({ type: 'plusZoteroLinksResult', requestId: message.requestId, links }),
 			);
 			return true;
 		case 'plusQuartoWatch':

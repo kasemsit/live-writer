@@ -1,4 +1,5 @@
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { citeKeysOf, openInZotero, zoteroLinks } from './zotero';
 import { BLOCK_ID_LINE, TRAILING_BLOCK_ID } from '../../shared/plusAnchors';
 import type { EditorState } from '@codemirror/state';
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
@@ -358,6 +359,18 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
 			return void copyRichText(view, range);
 		case 'openAsTextHere':
 			return post({ type: 'plusDo', action: 'openAsText', line: view.state.doc.lineAt(contextPos(view)).number });
+		case 'openInZotero': {
+			const cite = contextTarget()?.closest('[data-citekeys]') as HTMLElement | null;
+			const key = cite ? citeKeysOf(cite)[0]?.key : undefined;
+			if (key) {
+				void zoteroLinks(key).then((links) => {
+					const url = links.pdf ?? links.item;
+					if (url) openInZotero(url);
+					else notify(links.note, true);
+				});
+			}
+			return;
+		}
 		case 'openLinkBeside': {
 			const href = (contextTarget()?.closest('[data-href]') as HTMLElement | null)?.dataset.href;
 			if (!href) return notify('Right-click a link first.', true);

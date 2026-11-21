@@ -354,7 +354,7 @@ function cite(b: Builder, c: TexCommand): void {
 		b.mark(keysArg.from, keysArg.to, 'mlp-tex-key');
 		return;
 	}
-	chipFor(b, c, args.end, new TexChipWidget(shown.text, `mlp-tex-cite${shown.missing ? ' mlp-tex-chip-missing' : ''}${c.name === 'nocite' ? ' mlp-tex-chip-faint' : ''}`, shown.title, keysArg.from));
+	chipFor(b, c, args.end, new TexChipWidget(shown.text, `mlp-tex-cite${shown.missing ? ' mlp-tex-chip-missing' : ''}${c.name === 'nocite' ? ' mlp-tex-chip-faint' : ''}`, shown.title, keysArg.from, null, keys));
 }
 
 function ref(b: Builder, c: TexCommand): void {

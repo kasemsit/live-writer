@@ -68,3 +68,15 @@ export function jumpTo(view: EditorView, pos: number): void {
 	};
 	setTimeout(flash, 60);
 }
+
+/** Puts a floating card under `anchor`, or above it when there is no room below, inside the window. */
+export function placeCard(card: HTMLElement, anchor: HTMLElement): void {
+	const r = anchor.getBoundingClientRect();
+	const vw = document.documentElement.clientWidth;
+	const vh = document.documentElement.clientHeight;
+	const w = card.offsetWidth;
+	const h = card.offsetHeight;
+	card.style.left = `${Math.max(8, Math.min(r.left, vw - w - 8))}px`;
+	const below = r.bottom + 6;
+	card.style.top = `${below + h <= vh - 8 || r.top - h - 6 < 8 ? below : r.top - h - 6}px`;
+}

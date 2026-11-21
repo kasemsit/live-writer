@@ -2,7 +2,7 @@
   "name": "markdown-live-preview-editor-claude",
   "displayName": "Markdown Live Preview Editor (Plus)",
   "description": "md-live-preview-plus: wikilinks with completion, callouts, footnotes, tables in quotes, and Claude Code sees the selected text. Edit the preview itself, Obsidian-style — with Mermaid and draw.io diagrams rendered inline. The only VS Code Markdown editor that draws .drawio files.",
-  "version": "0.4.14",
+  "version": "0.4.15",
   "publisher": "local",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -181,6 +181,11 @@
         "category": "Markdown Live Preview"
       },
       {
+        "command": "mdLivePreview.plus.openInZotero",
+        "title": "Open PDF in Zotero",
+        "category": "Markdown Live Preview"
+      },
+      {
         "command": "mdLivePreview.plus.openAsTextHere",
         "title": "Open as Text at This Line",
         "category": "Markdown Live Preview"
@@ -321,6 +326,10 @@
           "when": "false"
         },
         {
+          "command": "mdLivePreview.plus.openInZotero",
+          "when": "false"
+        },
+        {
           "command": "mdLivePreview.plus.openAsTextHere",
           "when": "activeCustomEditorId == mdLivePreview.editor"
         },
@@ -407,6 +416,11 @@
           "command": "mdLivePreview.plus.openLinkBeside",
           "when": "webviewId == 'mdLivePreview.editor' && mlpLink",
           "group": "3_plus_open@1"
+        },
+        {
+          "command": "mdLivePreview.plus.openInZotero",
+          "when": "webviewId == 'mdLivePreview.editor' && mlpCite",
+          "group": "3_plus_open@2"
         },
         {
           "command": "mdLivePreview.plus.openAsTextHere",

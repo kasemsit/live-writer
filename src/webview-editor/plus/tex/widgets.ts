@@ -5,6 +5,7 @@ import { renderMathInto } from '../math';
 import { LINK_CONTEXT } from '../wikilinks';
 import { graphicElement, renderTexInline } from './inline';
 import { NO_BUILD_YET, resolveTexPicture } from './context';
+import { CITE_CONTEXT } from '../zotero';
 
 /**
  * md-live-preview-plus: the widgets the LaTeX Live Preview draws in place of
@@ -55,17 +56,30 @@ export class TexChipWidget extends WidgetType {
 		readonly title: string,
 		readonly at: number,
 		readonly href: string | null = null,
+		/** A citation's keys: the card (zotero.ts) then shows `title`'s entries with links to Zotero. */
+		readonly keys: readonly string[] = [],
 	) {
 		super();
 	}
 	eq(other: TexChipWidget): boolean {
-		return other.text === this.text && other.cls === this.cls && other.title === this.title && other.at === this.at && other.href === this.href;
+		return (
+			other.text === this.text &&
+			other.cls === this.cls &&
+			other.title === this.title &&
+			other.at === this.at &&
+			other.href === this.href &&
+			other.keys.join() === this.keys.join()
+		);
 	}
 	toDOM(view: EditorView): HTMLElement {
 		const el = document.createElement('span');
 		el.className = `mlp-tex-chip ${this.cls}${this.href ? ' mlp-link' : ''}`;
 		el.textContent = this.text;
-		if (this.title) el.title = this.title;
+		if (this.keys.length) {
+			el.dataset.citekeys = this.keys.join(',');
+			el.dataset.citedesc = this.title;
+			el.dataset.vscodeContext = CITE_CONTEXT;
+		} else if (this.title) el.title = this.title;
 		if (this.href) {
 			el.dataset.href = this.href;
 			// Offers "Open Link to the Side" in the right-click menu.

@@ -52,6 +52,9 @@ This fork adds:
   - `[@chen2015]` reads *(Chen, 2015)* and `@chen2015` *Chen (2015)*, from the `.bib` that `bibliography:` names, in the `csl:` style (APA or Chicago author-date) and the `lang:` of the project. Hover for the entry.
   - `{#sec-id}` after a heading is hidden, and callout titles stay out of the Outline.
   - A heading or image that Pandoc joins to the line above or below it is flagged. Quarto would print the heading as `## …` and leave the figure unnumbered.
+- **Citations open their paper in Zotero.** Rest the pointer on a citation (`[@key]` in a note or a `.qmd`, `\cite{key}` in LaTeX) for its entry with *Open PDF* (in Zotero's reader, with your annotations) and *Show in Zotero*; or right-click → *Open PDF in Zotero*.
+  - The key is looked up in the running Zotero (its local API, enabled under *Settings → Advanced → Allow other applications on this computer to communicate with Zotero*, or Better BibTeX). When Zotero is closed, the `zotero_key` / `pdf_key` in a vault's `@key` note are used, and the link starts Zotero.
+  - `zotero://` links need Zotero registered as their handler. On Linux with Zotero from the tarball: `xdg-mime default zotero.desktop x-scheme-handler/zotero`, with `~/.local/share/applications/zotero.desktop` linked to the `zotero.desktop` of the current Zotero folder.
 - **Claude Code sees your selection**: the exact Markdown source, its line numbers and the file path. A webview's selection is otherwise invisible to VS Code and to Claude.
   - The file is saved when you select, so the line numbers match the file on disk.
   - Text selected inside a rendered table is sent as the cells' Markdown source.

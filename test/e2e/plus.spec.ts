@@ -239,7 +239,8 @@ test.describe('Quarto citations', () => {
 		await postToWebview(page, project('en'));
 		await expect(page.locator('.cm-line .mlp-qcite')).toHaveText(['(Chen, 2015; Lee & Park, 2019, p. 2)', 'Chen (2015)', '(nosuch?)']);
 		await expect(page.locator('.cm-line .mlp-qcite-missing')).toHaveText('nosuch?');
-		await expect(page.locator('.cm-line .mlp-qcite').first()).toHaveAttribute('title', /^chen2015: Chen\. Online Retail\. 2015\nlee2019:/);
+		await expect(page.locator('.cm-line .mlp-qcite').first()).toHaveAttribute('data-citedesc', /^chen2015: Chen\. Online Retail\. 2015\nlee2019:/);
+		await expect(page.locator('.cm-line .mlp-qcite').first()).toHaveAttribute('data-citekeys', 'chen2015,lee2019');
 	});
 
 	test('a table drawn before the project arrives is redrawn with it', async ({ page }) => {
@@ -259,6 +260,53 @@ test.describe('Quarto citations', () => {
 		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: false } });
 		await expect(page.locator('.cm-line a.mlp-cite')).toHaveCount(3);
 		await expect(page.locator('.mlp-qcite')).toHaveCount(0);
+	});
+});
+
+test.describe('citations open their paper in Zotero', () => {
+	const answerZotero = async (page: Page, links: { pdf: string | null; item: string | null; note: string }) => {
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusZoteroLinks')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'plusZoteroLinks').at(-1)!;
+		await postToWebview(page, { type: 'plusZoteroLinksResult', requestId: req.requestId, links });
+		return req;
+	};
+	const PDF = 'zotero://open-pdf/library/items/WRGRQ66N';
+	const ITEM = 'zotero://select/library/items/3FFMRC3X';
+
+	test('a Quarto citation shows a card with Open PDF and Show in Zotero', async ({ page }) => {
+		await mountEditor(page, '# T\n\nAs shown [@chen2015] here.\n\nEnd.');
+		const bib = { chen2015: { key: 'chen2015', type: 'misc', authorShort: 'Chen', families: ['Chen'], others: false, authors: 'Chen', title: 'Online Retail', year: '2015', venue: '' } };
+		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: { style: 'apa', lang: 'en', bib }, quarto: true } });
+		await page.locator('.cm-line .mlp-qcite').hover();
+		const card = page.locator('.mlp-cite-card');
+		await expect(card.locator('.mlp-cite-desc')).toHaveText('chen2015: Chen. Online Retail. 2015');
+		const req = await answerZotero(page, { pdf: PDF, item: ITEM, note: '' });
+		expect(req.key).toBe('chen2015');
+		await expect(card.locator('.mlp-zotero-btn')).toHaveText(['Open PDF', 'Show in Zotero']);
+		await card.locator('.mlp-zotero-btn', { hasText: 'Open PDF' }).click();
+		expect((await posted(page)).filter((m) => m.type === 'plusDo').at(-1)).toMatchObject({ action: 'openZotero', url: PDF });
+		await expect(card).toHaveCount(0);
+	});
+
+	test('a vault note\'s [@key] gets the Zotero row in its link card', async ({ page }) => {
+		await mountEditor(page, '# T\n\nSee [@smith2020] here.\n\nEnd.\n');
+		await page.locator('.cm-line a.mlp-cite').hover();
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
+		const pre = (await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)!;
+		await postToWebview(page, { type: 'plusPreviewResult', requestId: pre.requestId, preview: { title: '@smith2020', text: 'A note.', status: 'ok', truncated: false } });
+		await answerZotero(page, { pdf: PDF, item: ITEM, note: '' });
+		await expect(page.locator('.mlp-link-preview .mlp-zotero-btn')).toHaveText(['Open PDF', 'Show in Zotero']);
+	});
+
+	test('a key Zotero does not hold says so instead', async ({ page }) => {
+		await mountEditor(page, '# T\n\nSee [@nosuch2020] here.\n\nEnd.\n');
+		await page.locator('.cm-line a.mlp-cite').hover();
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
+		const pre = (await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)!;
+		await postToWebview(page, { type: 'plusPreviewResult', requestId: pre.requestId, preview: { title: '@nosuch2020', text: '', status: 'missing', truncated: false } });
+		await answerZotero(page, { pdf: null, item: null, note: 'nosuch2020 is not in your Zotero library.' });
+		await expect(page.locator('.mlp-link-preview .mlp-zotero-note')).toHaveText('nosuch2020 is not in your Zotero library.');
+		await expect(page.locator('.mlp-link-preview .mlp-zotero-btn')).toHaveCount(0);
 	});
 });
 

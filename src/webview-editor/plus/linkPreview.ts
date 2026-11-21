@@ -1,4 +1,6 @@
 import { type EditorView, ViewPlugin } from '@codemirror/view';
+import { placeCard } from './cm';
+import { zoteroRow } from './zotero';
 import type { Extension } from '@codemirror/state';
 import type { PlusPreview } from '../../shared/messages';
 import { renderInlineInto } from '../tableCellInline';
@@ -201,7 +203,7 @@ export function linkPreviewExtension(onOpen: (href: string) => void): Extension 
 				document.body.appendChild(card);
 				this.card = card;
 				this.shownHref = href;
-				this.place(card, link);
+				placeCard(card, link);
 			}
 
 			private render(href: string, preview: PlusPreview): HTMLElement {
@@ -243,20 +245,11 @@ export function linkPreviewExtension(onOpen: (href: string) => void): Extension 
 					this.hide();
 					onOpen(inner.dataset.href ?? '');
 				});
+				// A citation `[@key]` links to its reference note; the paper itself is in Zotero.
+				if (href.startsWith('wiki:@')) card.appendChild(zoteroRow(href.slice('wiki:@'.length), () => this.hide()));
 				card.addEventListener('mouseenter', () => clearTimeout(this.hideTimer));
 				card.addEventListener('mouseleave', () => this.scheduleHide());
 				return card;
-			}
-
-			private place(card: HTMLElement, link: HTMLElement) {
-				const r = link.getBoundingClientRect();
-				const vw = document.documentElement.clientWidth;
-				const vh = document.documentElement.clientHeight;
-				const w = card.offsetWidth;
-				const h = card.offsetHeight;
-				card.style.left = `${Math.max(8, Math.min(r.left, vw - w - 8))}px`;
-				const below = r.bottom + 6;
-				card.style.top = `${below + h <= vh - 8 || r.top - h - 6 < 8 ? below : r.top - h - 6}px`;
 			}
 
 			destroy() {

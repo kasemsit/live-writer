@@ -1,4 +1,5 @@
 import type { PlusTexContext } from '../../../shared/messages';
+import { CITE_CONTEXT } from '../zotero';
 import { describeBib } from '../../../shared/plusBib';
 import { citeLabel } from '../../../shared/plusCitations';
 import { isLetter, lineEnd, matchBrace, readArgs } from '../../../shared/plusTexScanner';
@@ -297,7 +298,9 @@ function emit(parent: HTMLElement, src: string, from: number, to: number, env: I
 				const opt = args.args[1] ?? args.args[0];
 				const shown = citeText(name, keys, opt ? src.slice(opt.from, opt.to) : null, env.ctx);
 				const el = span(`mlp-tex-chip mlp-tex-cite${shown.missing ? ' mlp-tex-chip-missing' : ''}`, shown.text);
-				el.title = shown.title;
+				el.dataset.citekeys = keys.join(',');
+				el.dataset.citedesc = shown.title;
+				el.dataset.vscodeContext = CITE_CONTEXT;
 				append(el);
 				i = args.end - 1;
 				continue;

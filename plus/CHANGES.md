@@ -2,6 +2,16 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 0.4.15
+
+- **Citations open their paper in Zotero.** Rest the pointer on a citation — `[@key]` in a Markdown note or a Quarto file, `\cite{key}` in LaTeX — for a card with its entry, **Open PDF** (in Zotero's reader, where your annotations are) and **Show in Zotero**. Right-click a citation for **Open PDF in Zotero**.
+  - The key is looked up in the Zotero running on this computer: its local API (Zotero 7 and later, which know each item's citation key), else Better BibTeX.
+  - When Zotero is closed, or a note's key differs from Zotero's, the `zotero_key` / `pdf_key` in the vault's `@key` reference note are used; opening the link starts Zotero.
+  - A key Zotero does not hold, or an item without a PDF, says so on the card.
+  - Only `zotero://open-pdf/…` and `zotero://select/…` links are opened.
+- On Linux, `zotero://` links need Zotero registered as their handler; the README says how.
+- The Quarto and LaTeX citation tooltips became this card.
+
 ## 0.4.14
 
 - **LaTeX Live Preview: TikZ pictures are drawn.** A `tikzpicture` (also `tikzcd`, `pgfpicture`, `circuitikz`, and pgfplots axes inside them) shows as your last build drew it.

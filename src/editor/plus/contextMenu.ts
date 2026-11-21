@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import type { PlusCommand, PlusEditorToHostMessage, PlusHostToEditorMessage } from '../../shared/messages';
 import { linkTexts, NOTE_EXT } from '../../shared/plusLinks';
+import { ZOTERO_LINK } from '../../shared/plusZotero';
 import { listNotes, openWikilink, type PlusSession } from './wikiOpen';
 import { texSessionOf } from './tex';
 
@@ -21,6 +22,7 @@ const WEBVIEW_COMMANDS: Record<string, PlusCommand> = {
 	'mdLivePreview.plus.copyRichText': 'copyRichText',
 	'mdLivePreview.plus.openAsTextHere': 'openAsTextHere',
 	'mdLivePreview.plus.openLinkBeside': 'openLinkBeside',
+	'mdLivePreview.plus.openInZotero': 'openInZotero',
 	'mdLivePreview.plus.copyTex': 'copyTex',
 	'mdLivePreview.plus.searchGoogle': 'searchGoogle',
 	'mdLivePreview.plus.searchScholar': 'searchScholar',
@@ -122,6 +124,9 @@ export async function handlePlusDo(session: PlusSession, message: Extract<PlusEd
 			if (/^https:\/\/(www\.google\.com\/search|scholar\.google\.com\/scholar)\?q=/.test(message.url)) {
 				await vscode.env.openExternal(vscode.Uri.parse(message.url));
 			}
+			return;
+		case 'openZotero':
+			if (ZOTERO_LINK.test(message.url)) await vscode.env.openExternal(vscode.Uri.parse(message.url));
 			return;
 		case 'notify':
 			if (message.error) void vscode.window.showWarningMessage(message.message);

@@ -4,8 +4,9 @@ import { cursorTouchesRange, inlineCursorTouchesRange } from '../cmUtils';
 import { describeBib } from '../../shared/plusBib';
 import { findCiteGroups, findNarrativeCitations, formatCiteGroup, formatNarrative, type CiteFormat, type CitePart } from '../../shared/plusCitations';
 import { findCitations } from '../../shared/plusWikilinks';
-import { linkClass, LINK_CONTEXT, noteIndexChanged } from './wikilinks';
+import { linkClass, noteIndexChanged } from './wikilinks';
 import { inSourceContext, revealChanged } from './cm';
+import { CITE_CONTEXT, CITE_LINK_CONTEXT } from './zotero';
 import { registerInlinePass } from './inlineExtras';
 import { citationFormat, onQuartoProject } from './quartoProject';
 
@@ -32,7 +33,7 @@ function keyDeco(key: string): Decoration {
 	return Decoration.mark({
 		tagName: 'a',
 		class: `${linkClass(`@${key}`)} mlp-cite`,
-		attributes: { 'data-href': `wiki:@${key}`, title: `@${key}`, 'data-vscode-context': LINK_CONTEXT },
+		attributes: { 'data-href': `wiki:@${key}`, title: `@${key}`, 'data-vscode-context': CITE_LINK_CONTEXT, 'data-citekeys': key },
 	});
 }
 
@@ -64,10 +65,14 @@ function citeElement(parts: CitePart[], format: CiteFormat, source: string): HTM
 		const key = document.createElement('span');
 		key.className = part.missing ? 'mlp-qcite-key mlp-qcite-missing' : 'mlp-qcite-key';
 		key.textContent = part.text;
+		key.dataset.citekeys = part.key;
 		span.append(key);
 		titles.push(describeBib(format.bib[part.key], part.key));
 	}
-	span.title = titles.join('\n');
+	// The card (zotero.ts) shows the entries, with links to the papers in Zotero.
+	span.dataset.citekeys = parts.flatMap((p) => (p.key ? [p.key] : [])).join(',');
+	span.dataset.citedesc = titles.join('\n');
+	span.dataset.vscodeContext = CITE_CONTEXT;
 	return span;
 }
 
@@ -220,7 +225,8 @@ function linkVaultCitations(root: HTMLElement): void {
 			a.className = `${linkClass(`@${c.key}`)} mlp-cite`;
 			a.setAttribute('data-href', `wiki:@${c.key}`);
 			a.title = `@${c.key}`;
-			a.dataset.vscodeContext = LINK_CONTEXT;
+			a.dataset.vscodeContext = CITE_LINK_CONTEXT;
+			a.dataset.citekeys = c.key;
 			a.textContent = value.slice(c.from, c.to);
 			append(a);
 			last = c.to;

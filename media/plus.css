@@ -72,6 +72,25 @@
 .mlp-lp-code { margin: 0.4em 0; padding: 0.5em 0.7em; border-radius: 4px; overflow-x: auto; font-size: 0.9em;
 	background: var(--vscode-textCodeBlock-background, rgba(127,127,127,0.1)); }
 .mlp-lp-more { opacity: 0.6; }
+/* Citations: each work's entry and its paper in Zotero (plus/zotero.ts). */
+.mlp-cite-card { padding: 0.5em 0.9em 0.6em; }
+.mlp-cite-entry + .mlp-cite-entry { margin-top: 0.6em; padding-top: 0.6em; border-top: 1px solid rgba(127, 127, 127, 0.25); }
+.mlp-cite-desc { font-size: 0.9em; line-height: 1.4; }
+.mlp-zotero-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4em; margin-top: 0.4em; }
+.mlp-link-preview > .mlp-zotero-row { margin: 0; padding: 0.4em 0.9em 0.6em; border-top: 1px solid rgba(127, 127, 127, 0.25); }
+.mlp-zotero-btn {
+	font: inherit;
+	font-size: 0.85em;
+	padding: 0.15em 0.7em;
+	border-radius: 4px;
+	border: 1px solid var(--vscode-button-border, transparent);
+	color: var(--vscode-button-foreground, #fff);
+	background: var(--vscode-button-background, #0e639c);
+	cursor: pointer;
+}
+.mlp-zotero-btn:hover { background: var(--vscode-button-hoverBackground, #1177bb); }
+.mlp-zotero-btn + .mlp-zotero-btn { color: var(--vscode-button-secondaryForeground, inherit); background: var(--vscode-button-secondaryBackground, rgba(127, 127, 127, 0.2)); }
+.mlp-zotero-note { font-size: 0.8em; opacity: 0.7; }
 
 /* ── HTML comments (<!-- … -->): notes to the writer, shown as a sticky-note
    band (own lines) or an in-line tint, so they never read as body text. ── */

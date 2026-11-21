@@ -16,6 +16,7 @@ import { spacingPlugin } from './spacing';
 import { reapplyTextScale, setTextScale } from './textScale';
 import { beforeExternalUpdate, trackChangesExtension, trackNextUpdate } from './trackChanges';
 import { linkPreviewExtension } from './linkPreview';
+import { citeCardExtension } from './zotero';
 import { selectionReporter } from './selection';
 import { plusCompletion } from './completion';
 import { handlePlusReply, setPlusPoster } from './hostRequests';
@@ -30,6 +31,7 @@ export function plusExtensions(post: (message: EditorToHostMessage) => void): Ex
 	return [
 		wikilinkExtension((href) => post({ type: 'openLink', href })),
 		linkPreviewExtension((href) => post({ type: 'openLink', href })),
+		citeCardExtension,
 		calloutPlugin,
 		quartoExtension,
 		footnotePlugin,

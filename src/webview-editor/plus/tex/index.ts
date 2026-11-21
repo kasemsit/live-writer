@@ -9,6 +9,7 @@ import { texBlockField } from './blocks';
 import { texCompletion, texKeymap } from './commands';
 import { texContextField, texScanField } from './context';
 import { texRenderPlugin } from './render';
+import { citeCardExtension } from '../zotero';
 
 export { handleTexHostMessage } from './context';
 
@@ -25,6 +26,7 @@ export function texExtensions(post: (message: EditorToHostMessage) => void): Ext
 		texContextField,
 		texBlockField,
 		texRenderPlugin,
+		citeCardExtension,
 		texKeymap,
 		texCompletion,
 		// Brackets pair; quotes do not (an apostrophe is not a quote, and LaTeX quotes are `` and '').
