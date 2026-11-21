@@ -1,4 +1,6 @@
-# md-live-preview-plus
+# Live Writer
+
+*Formerly md-live-preview-plus.* Write Markdown, LaTeX and Quarto in their rendered form, with your citations, your Zotero library and Claude beside you.
 
 A fork of [Markdown Live Preview Editor](https://github.com/t-shoot/md-live-preview-editor)
 by t-shoot, for notes written the Obsidian way, with a bridge to Claude Code. It is

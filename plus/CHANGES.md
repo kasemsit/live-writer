@@ -2,6 +2,10 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 0.4.17
+
+- **New name: Live Writer** (formerly md-live-preview-plus), since it now writes Markdown, LaTeX and Quarto, not only previews Markdown. It is the same extension: settings, commands and keybindings keep working, and it updates in place.
+
 ## 0.4.16
 
 - **Paraphrase with Claude**, in the right-click menu on a selection (beside *Ask Claude About the Selection*). Claude Code rewrites the passage — same language, meaning, terms, numbers, citations and LaTeX/Markdown markup — and a card shows the result with **Replace**, **Copy** and **Close**. Replace is one edit, undone with Ctrl+Z.
