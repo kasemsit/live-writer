@@ -23,6 +23,7 @@ const WEBVIEW_COMMANDS: Record<string, PlusCommand> = {
 	'mdLivePreview.plus.openAsTextHere': 'openAsTextHere',
 	'mdLivePreview.plus.openLinkBeside': 'openLinkBeside',
 	'mdLivePreview.plus.openInZotero': 'openInZotero',
+	'mdLivePreview.plus.paraphrase': 'paraphrase',
 	'mdLivePreview.plus.copyTex': 'copyTex',
 	'mdLivePreview.plus.searchGoogle': 'searchGoogle',
 	'mdLivePreview.plus.searchScholar': 'searchScholar',

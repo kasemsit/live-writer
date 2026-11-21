@@ -6,6 +6,7 @@ import { handlePlusDo } from './contextMenu';
 import { texSessionOf } from './tex';
 import { stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
 import { zoteroLinks } from './zotero';
+import { paraphrase } from './paraphrase';
 
 export { takePendingJump } from './wikiOpen';
 
@@ -51,6 +52,9 @@ export function handlePlusMessage(
 				(uri) => post({ type: 'plusEmbedResult', requestId: message.requestId, src: uri ? session.asWebviewUri(uri) : null }),
 				() => post({ type: 'plusEmbedResult', requestId: message.requestId, src: null }),
 			);
+			return true;
+		case 'plusParaphrase':
+			void paraphrase(message.text).then((r) => post({ type: 'plusParaphraseResult', requestId: message.requestId, ...r }));
 			return true;
 		case 'plusZoteroLinks':
 			void zoteroLinks(session.getDocument().uri, message.key).then((links) =>

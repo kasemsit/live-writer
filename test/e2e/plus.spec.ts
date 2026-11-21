@@ -904,6 +904,35 @@ test.describe('spacing', () => {
 	});
 });
 
+test('Paraphrase with Claude: the card offers the rewrite, and Replace puts it in', async ({ page }) => {
+	await mountEditor(page, '# T\n\nAn alternative is to capture displays.\n\nEnd.');
+	const from = '# T\n\n'.length;
+	const to = from + 'An alternative is to capture displays.'.length;
+	await postToWebview(page, { type: 'plusRun', command: 'paraphrase', range: { from, to } });
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusParaphrase')).toBe(true);
+	const req = (await posted(page)).filter((m) => m.type === 'plusParaphrase').at(-1)!;
+	expect(req.text).toBe('An alternative is to capture displays.');
+	await postToWebview(page, { type: 'plusParaphraseResult', requestId: req.requestId, text: 'Another approach photographs the displays.', error: '' });
+	const card = page.locator('.mlp-paraphrase-card');
+	await expect(card.locator('.mlp-paraphrase-text')).toHaveText('Another approach photographs the displays.');
+	await card.locator('.mlp-zotero-btn', { hasText: 'Replace' }).click();
+	await expect(card).toHaveCount(0);
+	await expect(page.locator('.cm-content')).toContainText('Another approach photographs the displays.');
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'edit')).toBe(true);
+});
+
+test('font: the host\'s font family sets the text; code keeps its own', async ({ page }) => {
+	await mountEditor(page, '# T\n\nPlain text with `code` here.\n\n```\nfenced\n```\n\nEnd.');
+	const fontOf = (sel: string) => page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontFamily);
+	const codeBefore = await fontOf('.mlp-line-code');
+	await postToWebview(page, { type: 'plusTextScale', scale: 1, fontFamily: 'Georgia, serif' });
+	await expect.poll(() => fontOf('.mlp-line-paragraph')).toContain('Georgia');
+	expect(await fontOf('.mlp-line-code')).toBe(codeBefore);
+	expect(await fontOf('.mlp-line-paragraph code, .mlp-line-paragraph .mlp-inline-code')).not.toContain('Georgia');
+	await postToWebview(page, { type: 'plusTextScale', scale: 1, fontFamily: '' });
+	await expect.poll(() => fontOf('.mlp-line-paragraph')).not.toContain('Georgia');
+});
+
 test('text size: the host\'s factor scales the reading column, and 1 restores it', async ({ page }) => {
 	await mountEditor(page, '# T\n\nSome text.\n');
 	const size = () => page.locator('.cm-content').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));

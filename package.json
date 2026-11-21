@@ -2,7 +2,7 @@
   "name": "markdown-live-preview-editor-claude",
   "displayName": "Markdown Live Preview Editor (Plus)",
   "description": "md-live-preview-plus: wikilinks with completion, callouts, footnotes, tables in quotes, and Claude Code sees the selected text. Edit the preview itself, Obsidian-style — with Mermaid and draw.io diagrams rendered inline. The only VS Code Markdown editor that draws .drawio files.",
-  "version": "0.4.15",
+  "version": "0.4.16",
   "publisher": "local",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -186,6 +186,11 @@
         "category": "Markdown Live Preview"
       },
       {
+        "command": "mdLivePreview.plus.paraphrase",
+        "title": "Paraphrase with Claude",
+        "category": "Markdown Live Preview"
+      },
+      {
         "command": "mdLivePreview.plus.openAsTextHere",
         "title": "Open as Text at This Line",
         "category": "Markdown Live Preview"
@@ -330,6 +335,10 @@
           "when": "false"
         },
         {
+          "command": "mdLivePreview.plus.paraphrase",
+          "when": "false"
+        },
+        {
           "command": "mdLivePreview.plus.openAsTextHere",
           "when": "activeCustomEditorId == mdLivePreview.editor"
         },
@@ -391,6 +400,11 @@
           "command": "mdLivePreview.plus.askClaude",
           "when": "webviewId == 'mdLivePreview.editor' && mlpHasSelection",
           "group": "1_plus_claude@1"
+        },
+        {
+          "command": "mdLivePreview.plus.paraphrase",
+          "when": "webviewId == 'mdLivePreview.editor' && mlpHasSelection",
+          "group": "1_plus_claude@2"
         },
         {
           "command": "mdLivePreview.plus.copyRichText",
@@ -571,6 +585,11 @@
           "minimum": 0.7,
           "maximum": 2,
           "description": "md-live-preview-plus: text size in the Live Preview, as a factor over the CSS theme's own size (1 = as the theme sets it). Changed by Larger Text / Smaller Text in the right-click menu."
+        },
+        "mdLivePreview.plus.fontFamily": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "md-live-preview-plus: the font of the text in the Live Preview, as CSS `font-family`, e.g. `Sarabun, 'TH Sarabun New', sans-serif`. Empty keeps the CSS theme's font. Code and formulas keep theirs."
         },
         "mdLivePreview.plus.trackExternalChanges": {
           "type": "boolean",

@@ -44,6 +44,7 @@ export type PlusCommand =
 	| 'openAsTextHere'
 	| 'openLinkBeside'
 	| 'openInZotero'
+	| 'paraphrase'
 	| 'copyTex'
 	| 'searchGoogle'
 	| 'searchScholar'
@@ -66,7 +67,8 @@ export type PlusHostToEditorMessage =
 	// Quarto: what the document takes from its project; sent again when a project file changes.
 	| { type: 'plusQuartoProject'; project: PlusQuartoProject }
 	// The reader's text size, a factor over the theme's (setting mdLivePreview.plus.textScale).
-	| { type: 'plusTextScale'; scale: number }
+	// `fontFamily` (setting mdLivePreview.plus.fontFamily) replaces the theme's text font; '' keeps it.
+	| { type: 'plusTextScale'; scale: number; fontFamily?: string }
 	// The next externalUpdate came from disk (Claude, git, …): show it as tracked changes.
 	| { type: 'plusTrackNext' }
 	| { type: 'plusAnchors'; requestId: number; anchors: PlusAnchor[] }
@@ -78,7 +80,8 @@ export type PlusHostToEditorMessage =
 	| { type: 'plusTexContext'; context: PlusTexContext }
 	| { type: 'plusTexAssetResult'; requestId: number; asset: PlusTexAsset }
 	| { type: 'plusTexPictureResult'; requestId: number; picture: PlusTexPicture }
-	| { type: 'plusZoteroLinksResult'; requestId: number; links: PlusZoteroLinks };
+	| { type: 'plusZoteroLinksResult'; requestId: number; links: PlusZoteroLinks }
+	| { type: 'plusParaphraseResult'; requestId: number; text: string; error: string };
 
 /**
  * md-live-preview-plus: what the LaTeX Live Preview needs beyond the file:
@@ -170,4 +173,6 @@ export type PlusEditorToHostMessage =
 	// LaTeX: the last build's drawing of the picture on these lines (1-based) of this file.
 	| { type: 'plusTexPicture'; requestId: number; lines: number[] }
 	// The Zotero links for a citation key.
-	| { type: 'plusZoteroLinks'; requestId: number; key: string };
+	| { type: 'plusZoteroLinks'; requestId: number; key: string }
+	// Paraphrase with Claude: the selected source, rewritten by Claude Code.
+	| { type: 'plusParaphrase'; requestId: number; text: string };

@@ -71,7 +71,11 @@ export function jumpTo(view: EditorView, pos: number): void {
 
 /** Puts a floating card under `anchor`, or above it when there is no room below, inside the window. */
 export function placeCard(card: HTMLElement, anchor: HTMLElement): void {
-	const r = anchor.getBoundingClientRect();
+	placeCardAt(card, anchor.getBoundingClientRect());
+}
+
+/** Puts a floating card under a screen rectangle (an element's, or a position's from coordsAtPos). */
+export function placeCardAt(card: HTMLElement, r: { left: number; top: number; bottom: number }): void {
 	const vw = document.documentElement.clientWidth;
 	const vh = document.documentElement.clientHeight;
 	const w = card.offsetWidth;

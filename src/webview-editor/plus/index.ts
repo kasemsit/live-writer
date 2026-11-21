@@ -60,7 +60,7 @@ export function handlePlusHostMessage(view: EditorView | undefined, message: Hos
 	// Not ours: the editor applies it; tracked changes are worked out once it has.
 	if (message.type === 'externalUpdate') beforeExternalUpdate(view, message.changes);
 	if (message.type === 'plusTextScale') {
-		setTextScale(view, message.scale);
+		setTextScale(view, message.scale, message.fontFamily ?? '');
 		return true;
 	}
 	// Not ours, but a new document or theme changes the size the text scale multiplies.

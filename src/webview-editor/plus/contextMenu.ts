@@ -1,4 +1,5 @@
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { paraphraseSelection } from './paraphrase';
 import { citeKeysOf, openInZotero, zoteroLinks } from './zotero';
 import { BLOCK_ID_LINE, TRAILING_BLOCK_ID } from '../../shared/plusAnchors';
 import type { EditorState } from '@codemirror/state';
@@ -359,6 +360,8 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
 			return void copyRichText(view, range);
 		case 'openAsTextHere':
 			return post({ type: 'plusDo', action: 'openAsText', line: view.state.doc.lineAt(contextPos(view)).number });
+		case 'paraphrase':
+			return paraphraseSelection(view, range);
 		case 'openInZotero': {
 			const cite = contextTarget()?.closest('[data-citekeys]') as HTMLElement | null;
 			const key = cite ? citeKeysOf(cite)[0]?.key : undefined;

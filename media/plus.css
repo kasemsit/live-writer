@@ -635,3 +635,8 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 .mlp-qfig .mlp-q-warning { margin-left: 0; }
 .cm-line.mlp-q-joined { text-decoration: underline wavy rgba(234, 88, 12, 0.7); text-underline-offset: 0.25em; }
 .cm-line.mlp-q-joined .mlp-q-warning { text-decoration: none; }
+/* Paraphrase with Claude (plus/paraphrase.ts). */
+.mlp-paraphrase-card { max-width: min(640px, 90vw); }
+.mlp-paraphrase-text { padding: 0.5em 0.9em; white-space: pre-wrap; line-height: 1.5; }
+.mlp-paraphrase-text.mlp-paraphrase-error { color: var(--vscode-errorForeground, #d1242f); }
+.mlp-paraphrase-card > .mlp-zotero-row { padding: 0 0.9em 0.6em; }

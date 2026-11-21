@@ -5,7 +5,7 @@ import { extensionForMimeType, generateImageFileName } from '../shared/imageAsse
 import { resolveLinkTarget } from '../shared/linkTarget';
 import { isPathInside } from '../shared/pathContainment';
 import { handlePlusMessage, trackSession, takePendingJump } from './plus';
-import { textScale } from './plus/textScale';
+import { textAppearance } from './plus/textScale';
 import { isTrackedChange } from './plus/trackChanges';
 import { changesForEditor, eolMap, tokensForEditor } from './plus/eol';
 import { isTexDocument, registerTexSession, TexSession } from './plus/tex';
@@ -278,7 +278,7 @@ export class DocumentSyncSession {
 		void this.tex?.sendContext();
 		this.lastAppliedVersion = this.document.version;
 		// md-live-preview-plus: the reader's remembered text size.
-		this.post({ type: 'plusTextScale', scale: textScale() });
+		this.post({ type: 'plusTextScale', ...textAppearance() });
 		// md-live-preview-plus: a wikilink with an anchor opened this note.
 		const jump = takePendingJump(this.document.uri);
 		if (jump) setTimeout(() => this.jumpToLine(jump), 250);

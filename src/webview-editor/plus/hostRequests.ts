@@ -96,6 +96,8 @@ function replyOf(message: HostToEditorMessage): { requestId: number; value: unkn
 			return { requestId: message.requestId, value: message.picture };
 		case 'plusZoteroLinksResult':
 			return { requestId: message.requestId, value: message.links };
+		case 'plusParaphraseResult':
+			return { requestId: message.requestId, value: { text: message.text, error: message.error } };
 		default:
 			return null;
 	}

@@ -2,6 +2,12 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 0.4.16
+
+- **Paraphrase with Claude**, in the right-click menu on a selection (beside *Ask Claude About the Selection*). Claude Code rewrites the passage — same language, meaning, terms, numbers, citations and LaTeX/Markdown markup — and a card shows the result with **Replace**, **Copy** and **Close**. Replace is one edit, undone with Ctrl+Z.
+  - It runs `claude -p` with no tools, no saved session and none of your settings or hooks, in a temporary folder; it needs Claude Code installed and signed in.
+- **Font setting:** `mdLivePreview.plus.fontFamily` sets the font of the text (CSS `font-family`, e.g. `Sarabun, sans-serif`); empty keeps the theme's. Code and formulas keep their own.
+
 ## 0.4.15
 
 - **Citations open their paper in Zotero.** Rest the pointer on a citation — `[@key]` in a Markdown note or a Quarto file, `\cite{key}` in LaTeX — for a card with its entry, **Open PDF** (in Zotero's reader, where your annotations are) and **Show in Zotero**. Right-click a citation for **Open PDF in Zotero**.

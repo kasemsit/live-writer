@@ -10,6 +10,10 @@ import { EditorView } from '@codemirror/view';
  */
 
 let scale = 1;
+let font = '';
+
+// Code, formulas and drawn source keep their own fonts.
+const TEXT = '.cm-editor .cm-content, .cm-editor .cm-content :not(code, pre, kbd, .katex, .katex *, .mlp-tex-code, .mlp-tex-code *, .mlp-line-code, .mlp-line-code *), .mlp-link-preview, .mlp-link-preview :not(code, pre, .katex, .katex *)';
 
 function apply(view: EditorView | null): void {
 	let style = document.getElementById('mlp-plus-text-scale') as HTMLStyleElement | null;
@@ -21,15 +25,19 @@ function apply(view: EditorView | null): void {
 	// Measure the theme's own size with the override off, then scale that.
 	style.textContent = '';
 	if (!view) return;
+	const rules: string[] = [];
 	if (scale !== 1) {
 		const base = parseFloat(getComputedStyle(view.contentDOM).fontSize) || 16;
-		style.textContent = `.cm-editor .cm-content.cm-content { font-size: ${(base * scale).toFixed(2)}px !important; }`;
+		rules.push(`.cm-editor .cm-content.cm-content { font-size: ${(base * scale).toFixed(2)}px !important; }`);
 	}
+	if (font) rules.push(`${TEXT} { font-family: ${font} !important; }`);
+	style.textContent = rules.join('\n');
 	view.requestMeasure();
 }
 
-export function setTextScale(view: EditorView | undefined, next: number): void {
+export function setTextScale(view: EditorView | undefined, next: number, fontFamily = ''): void {
 	scale = next;
+	font = fontFamily;
 	apply(view ?? null);
 }
 
