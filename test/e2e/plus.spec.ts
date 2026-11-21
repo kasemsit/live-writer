@@ -904,6 +904,15 @@ test.describe('spacing', () => {
 	});
 });
 
+test('a citation picked in Zotero goes in at the caret', async ({ page }) => {
+	await mountEditor(page, '# T\n\nAs shown here.\n\nEnd.');
+	await page.locator('.cm-content').click({ position: { x: 5, y: 5 } });
+	await page.keyboard.press('Control+End');
+	await postToWebview(page, { type: 'plusInsertText', text: ' [@chen2015]' });
+	await expect(page.locator('.cm-content')).toContainText('End. [@chen2015]');
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'edit')).toBe(true);
+});
+
 test('Paraphrase with Claude: the card offers the rewrite, and Replace puts it in', async ({ page }) => {
 	await mountEditor(page, '# T\n\nAn alternative is to capture displays.\n\nEnd.');
 	const from = '# T\n\n'.length;

@@ -73,6 +73,8 @@ export type PlusHostToEditorMessage =
 	| { type: 'plusTrackNext' }
 	| { type: 'plusAnchors'; requestId: number; anchors: PlusAnchor[] }
 	| { type: 'plusInsertFootnote' }
+	// Text to put in place of the selection (a citation picked in Zotero).
+	| { type: 'plusInsertText'; text: string }
 	// `range` (document offsets) overrides the selection — used by tests and by
 	// callers that already know what to act on.
 	| { type: 'plusRun'; command: PlusCommand; range?: { from: number; to: number } }

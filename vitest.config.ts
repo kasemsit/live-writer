@@ -1,6 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+	// Extension-host code imports `vscode`, which exists only inside VS Code: unit tests get an in-memory stand-in.
+	resolve: { alias: { vscode: fileURLToPath(new URL('./src/test-support/vscode.ts', import.meta.url)) } },
 	test: {
 		environment: 'node',
 		include: ['src/**/*.test.ts'],
@@ -17,6 +20,7 @@ export default defineConfig({
 				'src/**/*.test.ts',
 				'src/webview-editor/testDom.ts',
 				'src/shared/drawioTestXml.ts',
+				'src/test-support/**',
 				// Extension host entry points: activation and VS Code API calls.
 				'src/extension.ts',
 				'src/editor/MarkdownLivePreviewProvider.ts',

@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -273,6 +273,11 @@
         "command": "liveWriter.plus.textReset",
         "title": "Reset Text Size",
         "category": "Markdown Live Preview"
+      },
+      {
+        "command": "liveWriter.plus.insertCitation",
+        "title": "Insert Citation from Zotero",
+        "category": "Live Writer"
       }
     ],
     "menus": {
@@ -391,6 +396,10 @@
         },
         {
           "command": "liveWriter.plus.searchScholar",
+          "when": "activeCustomEditorId == liveWriter.editor"
+        },
+        {
+          "command": "liveWriter.plus.insertCitation",
           "when": "activeCustomEditorId == liveWriter.editor"
         }
       ],
@@ -519,6 +528,11 @@
           "command": "liveWriter.plus.textReset",
           "when": "webviewId == 'liveWriter.editor'",
           "group": "7_plus_view@3"
+        },
+        {
+          "command": "liveWriter.plus.insertCitation",
+          "when": "webviewId == 'liveWriter.editor'",
+          "group": "3_plus_open@3"
         }
       ]
     },
@@ -602,6 +616,12 @@
         "command": "liveWriter.plus.insertFootnote",
         "key": "ctrl+alt+6",
         "mac": "cmd+alt+6",
+        "when": "activeCustomEditorId == liveWriter.editor"
+      },
+      {
+        "command": "liveWriter.plus.insertCitation",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
         "when": "activeCustomEditorId == liveWriter.editor"
       }
     ]

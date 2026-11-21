@@ -69,6 +69,13 @@ export function handlePlusHostMessage(view: EditorView | undefined, message: Hos
 		if (view) runPlusCommand(view, message.command, message.range);
 		return true;
 	}
+	if (message.type === 'plusInsertText') {
+		if (view) {
+			view.dispatch(view.state.replaceSelection(message.text));
+			view.focus();
+		}
+		return true;
+	}
 	if (message.type === 'plusInsertFootnote') {
 		if (view) insertFootnote(view);
 		return true;

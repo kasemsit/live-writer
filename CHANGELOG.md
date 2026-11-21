@@ -2,6 +2,11 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.1.0
+
+- **Insert Citation from Zotero** (Ctrl+Alt+C, Cmd+Alt+C on a Mac, or right-click). Zotero's citation picker opens (Better BibTeX's *cite as you write*); the works you pick go in at the caret as the document's own syntax: `[@a; @b]` in Markdown and Quarto, `\cite{a,b}` in LaTeX. Needs Zotero running with Better BibTeX.
+- The extension-host side now has unit tests, against an in-memory stand-in for VS Code: Zotero lookups and their fallbacks, the Quarto project and its watchers, the settings carried over from the former name, the citation picker, Paraphrase with Claude, and TikZ pictures cut from the build. Each was checked to fail when the behaviour it guards is broken.
+
 ## 1.0.0
 
 **Live Writer, under its own name throughout.** Install this release once by hand (the zip's installer); it replaces the old extension.

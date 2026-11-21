@@ -8,6 +8,7 @@ import { checkForUpdate } from './editor/plus/updateCheck';
 import { initSelectionStatus } from './editor/plus/selectionFile';
 import { registerBacklinks } from './editor/plus/backlinks';
 import { registerContextMenu } from './editor/plus/contextMenu';
+import { registerInsertCitation } from './editor/plus/cite';
 import { registerTextScale } from './editor/plus/textScale';
 import { migrateSettings } from './editor/plus/migrate';
 
@@ -205,6 +206,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	};
 	registerBacklinks(context, activeNote);
 	registerContextMenu(context, (message) => provider.postPlusToActive(message), activeNote);
+	registerInsertCitation(context, (message) => provider.postPlusToActive(message), activeNote);
 	registerTextScale(context, (message) => provider.broadcastPlus(message));
 	// Live Writer: settings made under the former name carry over.
 	void migrateSettings();
