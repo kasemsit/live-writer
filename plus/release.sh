@@ -5,7 +5,7 @@
 #   plus/release.sh --dry-run  # builds and tests only; no tag, no push, no release
 #
 # Before running: bump "version" in package.json and add a "## <version>"
-# section to plus/CHANGES.md (it becomes the release notes), commit both.
+# section to CHANGELOG.md (it becomes the release notes), commit both.
 # The GitHub token comes from `git credential fill` and is never printed.
 # Never publishes to the VS Code Marketplace: that listing is upstream's.
 set -euo pipefail
@@ -15,8 +15,8 @@ DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
 
 VER=$(node -p "require('./package.json').version")
 TAG="v$VER"
-NOTES=$(awk -v v="## $VER" '$0==v{f=1;next} /^## /{f=0} f' plus/CHANGES.md)
-[ -n "$NOTES" ] || { echo "plus/CHANGES.md has no '## $VER' section" >&2; exit 1; }
+NOTES=$(awk -v v="## $VER" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md)
+[ -n "$NOTES" ] || { echo "CHANGELOG.md has no '## $VER' section" >&2; exit 1; }
 if [ $DRY = 0 ]; then
   [ -z "$(git status --porcelain)" ] || { echo "working tree not clean" >&2; exit 1; }
   [ "$(git rev-parse --abbrev-ref HEAD)" = main ] || { echo "not on main" >&2; exit 1; }

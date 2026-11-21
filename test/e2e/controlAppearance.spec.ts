@@ -59,7 +59,7 @@ for (const width of [360, 1000]) {
 		await mountEditor(page, 'Intro\n\n![AWS diagram](showcase.drawio)\n\nAfter\n');
 		await expect.poll(async () => page.evaluate(() => (window as any).__posted.find((m: any) => m.type === 'readDrawioFile')?.requestId)).toBeDefined();
 		const requestId = await page.evaluate(() => (window as any).__posted.find((m: any) => m.type === 'readDrawioFile').requestId);
-		await postToWebview(page, { type: 'drawioFile', requestId, text: readFileSync(join(ROOT, 'sample/showcase.drawio'), 'utf8') });
+		await postToWebview(page, { type: 'drawioFile', requestId, text: readFileSync(join(ROOT, 'test/fixtures/showcase.drawio'), 'utf8') });
 		const wrap = page.locator('.mlp-drawio-wrap');
 		const toolbar = wrap.locator('.mlp-mermaid-toolbar');
 		await expect(wrap.locator('.mlp-mermaid-canvas svg')).toBeVisible();

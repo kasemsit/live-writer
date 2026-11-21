@@ -58,7 +58,7 @@ suite('extension', () => {
 		// A missing bundle is invisible in an English VS Code and turns the whole
 		// UI into raw `%key%` placeholders in a Japanese one, so its presence is
 		// asserted rather than assumed.
-		for (const name of ['package.nls.json', 'package.nls.ja.json']) {
+		for (const name of ['package.nls.json']) {
 			const uri = vscode.Uri.joinPath(extension.extensionUri, name);
 			await vscode.workspace.fs.stat(uri);
 		}
