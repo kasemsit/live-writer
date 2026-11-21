@@ -9,7 +9,7 @@ import { isTexDocument } from './plus/tex';
 import { quartoOutline } from '../shared/plusQuarto';
 
 export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvider {
-	static readonly viewType = 'mdLivePreview.editor';
+	static readonly viewType = 'liveWriter.editor';
 
 	private readonly sessions = new Set<DocumentSyncSession>();
 

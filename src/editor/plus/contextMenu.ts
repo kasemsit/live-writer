@@ -17,26 +17,26 @@ import { texSessionOf } from './tex';
  */
 
 const WEBVIEW_COMMANDS: Record<string, PlusCommand> = {
-	'mdLivePreview.plus.copyBlockLink': 'copyBlockLink',
-	'mdLivePreview.plus.addReviewComment': 'addReviewComment',
-	'mdLivePreview.plus.copyRichText': 'copyRichText',
-	'mdLivePreview.plus.openAsTextHere': 'openAsTextHere',
-	'mdLivePreview.plus.openLinkBeside': 'openLinkBeside',
-	'mdLivePreview.plus.openInZotero': 'openInZotero',
-	'mdLivePreview.plus.paraphrase': 'paraphrase',
-	'mdLivePreview.plus.copyTex': 'copyTex',
-	'mdLivePreview.plus.searchGoogle': 'searchGoogle',
-	'mdLivePreview.plus.searchScholar': 'searchScholar',
-	'mdLivePreview.plus.renumberFootnotes': 'renumberFootnotes',
-	'mdLivePreview.plus.table.insertRowAbove': 'table.insertRowAbove',
-	'mdLivePreview.plus.table.insertRowBelow': 'table.insertRowBelow',
-	'mdLivePreview.plus.table.insertColumnLeft': 'table.insertColumnLeft',
-	'mdLivePreview.plus.table.insertColumnRight': 'table.insertColumnRight',
-	'mdLivePreview.plus.table.deleteRow': 'table.deleteRow',
-	'mdLivePreview.plus.table.deleteColumn': 'table.deleteColumn',
-	'mdLivePreview.plus.table.sortAscending': 'table.sortAscending',
-	'mdLivePreview.plus.table.sortDescending': 'table.sortDescending',
-	'mdLivePreview.plus.table.copyTsv': 'table.copyTsv',
+	'liveWriter.plus.copyBlockLink': 'copyBlockLink',
+	'liveWriter.plus.addReviewComment': 'addReviewComment',
+	'liveWriter.plus.copyRichText': 'copyRichText',
+	'liveWriter.plus.openAsTextHere': 'openAsTextHere',
+	'liveWriter.plus.openLinkBeside': 'openLinkBeside',
+	'liveWriter.plus.openInZotero': 'openInZotero',
+	'liveWriter.plus.paraphrase': 'paraphrase',
+	'liveWriter.plus.copyTex': 'copyTex',
+	'liveWriter.plus.searchGoogle': 'searchGoogle',
+	'liveWriter.plus.searchScholar': 'searchScholar',
+	'liveWriter.plus.renumberFootnotes': 'renumberFootnotes',
+	'liveWriter.plus.table.insertRowAbove': 'table.insertRowAbove',
+	'liveWriter.plus.table.insertRowBelow': 'table.insertRowBelow',
+	'liveWriter.plus.table.insertColumnLeft': 'table.insertColumnLeft',
+	'liveWriter.plus.table.insertColumnRight': 'table.insertColumnRight',
+	'liveWriter.plus.table.deleteRow': 'table.deleteRow',
+	'liveWriter.plus.table.deleteColumn': 'table.deleteColumn',
+	'liveWriter.plus.table.sortAscending': 'table.sortAscending',
+	'liveWriter.plus.table.sortDescending': 'table.sortDescending',
+	'liveWriter.plus.table.copyTsv': 'table.copyTsv',
 };
 
 // Claude Code's own commands, in order of preference: focus its prompt box,
@@ -63,9 +63,9 @@ export function registerContextMenu(
 		);
 	}
 	context.subscriptions.push(
-		vscode.commands.registerCommand('mdLivePreview.plus.askClaude', async () => {
-			if (!vscode.workspace.getConfiguration('mdLivePreview').get('plus.shareSelectionWithClaude', true)) {
-				void vscode.window.showWarningMessage('Sharing the selection with Claude is turned off (mdLivePreview.plus.shareSelectionWithClaude).');
+		vscode.commands.registerCommand('liveWriter.plus.askClaude', async () => {
+			if (!vscode.workspace.getConfiguration('liveWriter').get('plus.shareSelectionWithClaude', true)) {
+				void vscode.window.showWarningMessage('Sharing the selection with Claude is turned off (liveWriter.plus.shareSelectionWithClaude).');
 				return;
 			}
 			const available = new Set(await vscode.commands.getCommands(true));
@@ -76,7 +76,7 @@ export function registerContextMenu(
 			}
 			await vscode.commands.executeCommand(command);
 		}),
-		vscode.commands.registerCommand('mdLivePreview.plus.openInObsidian', async () => {
+		vscode.commands.registerCommand('liveWriter.plus.openInObsidian', async () => {
 			const uri = activeDocument();
 			if (!uri) return;
 			// Obsidian's URI scheme opens a note by absolute path, in whichever vault holds it.
@@ -107,7 +107,7 @@ export async function handlePlusDo(session: PlusSession, message: Extract<PlusEd
 		}
 		case 'openAsText': {
 			const uri = session.getDocument().uri.toString();
-			await vscode.commands.executeCommand('mdLivePreview.openWithSource');
+			await vscode.commands.executeCommand('liveWriter.openWithSource');
 			const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri.toString() === uri);
 			if (!editor) return;
 			const at = new vscode.Position(Math.max(0, message.line - 1), 0);

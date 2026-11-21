@@ -101,7 +101,7 @@ suite('document editing', () => {
 
 	test('the custom editor opens a file that changed on disk', async () => {
 		await vscode.workspace.fs.writeFile(file, new TextEncoder().encode('# Fresh\n'));
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(file));
 		assert.strictEqual(text, '# Fresh\n', 'opening the custom editor rewrote the file');
 	});

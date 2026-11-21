@@ -55,7 +55,7 @@ This fork adds:
   - `{#sec-id}` after a heading is hidden, and callout titles stay out of the Outline.
   - A heading or image that Pandoc joins to the line above or below it is flagged. Quarto would print the heading as `## …` and leave the figure unnumbered.
 - **Paraphrase with Claude** (right-click on a selection): Claude Code rewrites the passage in the same language, keeping terms, numbers, citations and markup; replace it or copy it from the card. Needs Claude Code signed in (`claude -p` is run without tools or your settings).
-- **Font:** the setting `mdLivePreview.plus.fontFamily` (e.g. `Sarabun, sans-serif`) sets the text font; code and formulas keep theirs.
+- **Font:** the setting `liveWriter.plus.fontFamily` (e.g. `Sarabun, sans-serif`) sets the text font; code and formulas keep theirs.
 - **Citations open their paper in Zotero.** Rest the pointer on a citation (`[@key]` in a note or a `.qmd`, `\cite{key}` in LaTeX) for its entry with *Open PDF* (in Zotero's reader, with your annotations) and *Show in Zotero*; or right-click → *Open PDF in Zotero*.
   - The key is looked up in the running Zotero (its local API, enabled under *Settings → Advanced → Allow other applications on this computer to communicate with Zotero*, or Better BibTeX). When Zotero is closed, the `zotero_key` / `pdf_key` in a vault's `@key` note are used, and the link starts Zotero.
   - `zotero://` links need Zotero registered as their handler. On Linux with Zotero from the tarball: `xdg-mime default zotero.desktop x-scheme-handler/zotero`, with `~/.local/share/applications/zotero.desktop` linked to the `zotero.desktop` of the current Zotero folder.
@@ -70,13 +70,14 @@ This fork adds:
 ![Sample note rendered with the Thai/English theme](plus/preview/sample.png)
 
 **Get it from [Releases](../../releases), not from the VS Code Marketplace.** This fork is not
-published there, on purpose: the Marketplace extension is t-shoot's own. It has its own id,
-`local.markdown-live-preview-editor-claude`, so it never collides with upstream. It checks
+published there, on purpose: the Marketplace extension is t-shoot's own. Its id is
+`kasemsit.live-writer` (until 0.4.17 it was `local.markdown-live-preview-editor-claude`; the
+installer removes that one, and settings made under `mdLivePreview.*` carry over to `liveWriter.*`). It checks
 GitHub once a day and tells you when a newer release is out.
 
 ## Install (Windows, macOS, Linux)
 
-Download `md-live-preview-plus.zip` from [Releases](../../releases), unzip it, and run the
+Download `live-writer.zip` from [Releases](../../releases), unzip it, and run the
 installer from that folder:
 
 - **Windows:** `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`
@@ -95,7 +96,7 @@ Next:
 To check that the bridge works, select some text and ask Claude what you selected.
 
 Only want the extension, without the Claude bridge? Install the `.vsix` on its own:
-`code --install-extension markdown-live-preview-editor-claude-<version>.vsix`.
+`code --install-extension live-writer-<version>.vsix`.
 
 The reading theme `thai-readable.css` ships inside the `.vsix`. On first run it is added to
 the **CSS Themes** view and switched on, unless you have already chosen another theme.
@@ -105,11 +106,11 @@ Later releases update it.
 
 | setting | default | what it does |
 |---|---|---|
-| `mdLivePreview.plus.shareSelectionWithClaude` | `true` | Writes the selection to `~/.claude/live-preview-selection.json`, only if `~/.claude` exists. |
-| `mdLivePreview.plus.checkForUpdates` | `true` | Once a day, asks `api.github.com` for the latest release. |
+| `liveWriter.plus.shareSelectionWithClaude` | `true` | Writes the selection to `~/.claude/live-preview-selection.json`, only if `~/.claude` exists. |
+| `liveWriter.plus.checkForUpdates` | `true` | Once a day, asks `api.github.com` for the latest release. |
 
 The keybinding for **Insert Footnote** can be changed in *Keyboard Shortcuts*. Search for
-`mdLivePreview.plus.insertFootnote`.
+`liveWriter.plus.insertFootnote`.
 
 ## How the Claude bridge works
 
@@ -138,7 +139,7 @@ npm run compile          # bundles, typechecks, builds the theme
 npm test                 # unit tests (vitest)
 npx playwright install chromium
 npm run test:e2e         # the real webview in headless Chromium
-npx vsce package         # → markdown-live-preview-editor-claude-<version>.vsix
+npx vsce package         # → live-writer-<version>.vsix
 ```
 
 `plus/release.sh` builds, tests, tags and publishes a GitHub release with the `.vsix` and

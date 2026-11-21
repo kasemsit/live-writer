@@ -3,12 +3,12 @@ import type { PlusHostToEditorMessage } from '../../shared/messages';
 
 /**
  * Larger Text / Smaller Text / Reset Text Size for the Live Preview. The size
- * is the setting `mdLivePreview.plus.textScale`, a factor over the theme's own
+ * is the setting `liveWriter.plus.textScale`, a factor over the theme's own
  * size, so it is remembered across sessions (and synced with Settings Sync)
  * and applies to every open preview at once.
  */
 
-const SECTION = 'mdLivePreview';
+const SECTION = 'liveWriter';
 const KEY = 'plus.textScale';
 const STEPS = [0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.45, 1.6, 1.8, 2];
 
@@ -34,15 +34,15 @@ async function setScale(next: number): Promise<void> {
 
 export function registerTextScale(context: vscode.ExtensionContext, broadcast: (message: PlusHostToEditorMessage) => void): void {
 	context.subscriptions.push(
-		vscode.commands.registerCommand('mdLivePreview.plus.textLarger', () => {
+		vscode.commands.registerCommand('liveWriter.plus.textLarger', () => {
 			const current = textScale();
 			return setScale(STEPS.find((s) => s > current + 1e-9) ?? STEPS[STEPS.length - 1]);
 		}),
-		vscode.commands.registerCommand('mdLivePreview.plus.textSmaller', () => {
+		vscode.commands.registerCommand('liveWriter.plus.textSmaller', () => {
 			const current = textScale();
 			return setScale([...STEPS].reverse().find((s) => s < current - 1e-9) ?? STEPS[0]);
 		}),
-		vscode.commands.registerCommand('mdLivePreview.plus.textReset', () => setScale(1)),
+		vscode.commands.registerCommand('liveWriter.plus.textReset', () => setScale(1)),
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration(`${SECTION}.${KEY}`) || e.affectsConfiguration(`${SECTION}.plus.fontFamily`)) {
 				broadcast({ type: 'plusTextScale', ...textAppearance() });

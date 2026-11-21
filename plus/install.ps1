@@ -1,4 +1,4 @@
-# md-live-preview-plus installer for Windows. Run from the unzipped release folder:
+# Live Writer installer for Windows. Run from the unzipped release folder:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 # 1. installs the .vsix (the CSS theme ships inside it and switches on by itself)
 # 2. copies the Claude Code hook to %USERPROFILE%\.claude\hooks\
@@ -7,12 +7,12 @@ $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # 1. extension
-$vsix = Get-ChildItem -Path $here -Filter 'markdown-live-preview-editor-claude-*.vsix' | Select-Object -First 1
+$vsix = Get-ChildItem -Path $here -Filter 'live-writer-*.vsix' | Select-Object -First 1
 if (-not $vsix) { throw "No .vsix next to install.ps1" }
 $code = Get-Command code -ErrorAction SilentlyContinue
 if (-not $code) { $code = Get-Command code.cmd -ErrorAction SilentlyContinue }
 if ($code) {
-  & $code.Source --uninstall-extension t-shoot.markdown-live-preview-editor 2>$null | Out-Null
+  foreach ($old in 't-shoot.markdown-live-preview-editor', 'local.markdown-live-preview-editor-claude') { & $code.Source --uninstall-extension $old 2>$null | Out-Null }
   & $code.Source --install-extension $vsix.FullName --force
 } else {
   Write-Warning "VS Code 'code' command not found. Install $($vsix.Name) by hand: Extensions > ... > Install from VSIX."

@@ -20,7 +20,7 @@ import type { PlusEditorToHostMessage } from '../../shared/messages';
  */
 
 const MAX_AGE_MS = 30 * 60 * 1000; // the hook ignores older selections
-const CLEAR_COMMAND = 'mdLivePreview.plus.clearClaudeSelection';
+const CLEAR_COMMAND = 'liveWriter.plus.clearClaudeSelection';
 
 const dir = () => path.join(os.homedir(), '.claude');
 const file = () => path.join(dir(), 'live-preview-selection.json');
@@ -68,7 +68,7 @@ export async function clearSelection(): Promise<void> {
 }
 
 export function initSelectionStatus(context: vscode.ExtensionContext): void {
-	status = vscode.window.createStatusBarItem('mdLivePreview.plus.claudeSelection', vscode.StatusBarAlignment.Right, 100);
+	status = vscode.window.createStatusBarItem('liveWriter.plus.claudeSelection', vscode.StatusBarAlignment.Right, 100);
 	status.name = 'Live Preview selection for Claude';
 	status.command = CLEAR_COMMAND;
 	context.subscriptions.push(
@@ -87,7 +87,7 @@ export async function writeSelection(
 	document: vscode.TextDocument,
 	message: Extract<PlusEditorToHostMessage, { type: 'plusSelection' }>,
 ): Promise<void> {
-	if (!vscode.workspace.getConfiguration('mdLivePreview').get('plus.shareSelectionWithClaude', true)) return;
+	if (!vscode.workspace.getConfiguration('liveWriter').get('plus.shareSelectionWithClaude', true)) return;
 	if (!fs.existsSync(dir())) return;
 	if (message.text && document.isDirty) {
 		try {

@@ -6,7 +6,7 @@ import { escapeAttribute } from '../shared/i18n';
 const REFRESH_DEBOUNCE_MS = 150;
 
 export class OutlineViewProvider implements vscode.WebviewViewProvider {
-	static readonly viewType = 'mdLivePreview.outline';
+	static readonly viewType = 'liveWriter.outline';
 
 	private view: vscode.WebviewView | undefined;
 	private refreshTimer: ReturnType<typeof setTimeout> | undefined;

@@ -66,8 +66,8 @@ export type PlusHostToEditorMessage =
 	| { type: 'plusEmbedResult'; requestId: number; src: string | null }
 	// Quarto: what the document takes from its project; sent again when a project file changes.
 	| { type: 'plusQuartoProject'; project: PlusQuartoProject }
-	// The reader's text size, a factor over the theme's (setting mdLivePreview.plus.textScale).
-	// `fontFamily` (setting mdLivePreview.plus.fontFamily) replaces the theme's text font; '' keeps it.
+	// The reader's text size, a factor over the theme's (setting liveWriter.plus.textScale).
+	// `fontFamily` (setting liveWriter.plus.fontFamily) replaces the theme's text font; '' keeps it.
 	| { type: 'plusTextScale'; scale: number; fontFamily?: string }
 	// The next externalUpdate came from disk (Claude, git, …): show it as tracked changes.
 	| { type: 'plusTrackNext' }

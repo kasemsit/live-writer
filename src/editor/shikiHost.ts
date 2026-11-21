@@ -115,7 +115,7 @@ function normalizeLang(lang: string): string {
 }
 
 export function pickCodeTheme(): string {
-	const configured = vscode.workspace.getConfiguration('mdLivePreview').get<string>('codeTheme', 'auto');
+	const configured = vscode.workspace.getConfiguration('liveWriter').get<string>('codeTheme', 'auto');
 	if (configured && configured !== 'auto') {
 		return configured;
 	}

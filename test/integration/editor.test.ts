@@ -35,13 +35,13 @@ suite('custom editor', () => {
 	});
 
 	test('opens a .md file in the live preview editor', async () => {
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		// The custom editor is a webview, so there is no TextEditor to inspect —
 		// what is observable is that the command resolved and the tab is ours.
 		const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
 		assert.ok(tab, 'no tab is active');
 		const input = tab.input as { viewType?: string };
-		assert.strictEqual(input.viewType, 'mdLivePreview.editor');
+		assert.strictEqual(input.viewType, 'liveWriter.editor');
 	});
 
 	test('opens the same file in the normal text editor', async () => {
@@ -52,7 +52,7 @@ suite('custom editor', () => {
 	});
 
 	test('leaves the file on disk as plain Markdown', async () => {
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		const bytes = await vscode.workspace.fs.readFile(file);
 		const text = new TextDecoder().decode(bytes);
 		// The selling point of the extension: opening a document in the rendered
@@ -62,8 +62,8 @@ suite('custom editor', () => {
 	});
 
 	test('the open-source command returns to the text editor', async () => {
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
-		await vscode.commands.executeCommand('mdLivePreview.openWithSource');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
+		await vscode.commands.executeCommand('liveWriter.openWithSource');
 		assert.strictEqual(vscode.window.activeTextEditor?.document.uri.toString(), file.toString());
 	});
 });

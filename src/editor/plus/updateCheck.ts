@@ -3,16 +3,16 @@ import { isNewer, parseReleaseTag } from '../../shared/plusVersion';
 
 /**
  * This build is distributed through GitHub Releases, not the Marketplace, so
- * nothing updates it. Once a day (unless `mdLivePreview.plus.checkForUpdates`
+ * nothing updates it. Once a day (unless `liveWriter.plus.checkForUpdates`
  * is off) ask GitHub for the latest release and offer its page when it is newer.
  */
 
-const RELEASES = 'https://api.github.com/repos/kasemsit/md-live-preview-plus/releases/latest';
-const LAST_CHECK_KEY = 'mdLivePreview.plusLastUpdateCheck';
+const RELEASES = 'https://api.github.com/repos/kasemsit/live-writer/releases/latest';
+const LAST_CHECK_KEY = 'liveWriter.plusLastUpdateCheck';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function checkForUpdate(context: vscode.ExtensionContext): Promise<void> {
-	const config = vscode.workspace.getConfiguration('mdLivePreview');
+	const config = vscode.workspace.getConfiguration('liveWriter');
 	if (!config.get('plus.checkForUpdates', true)) return;
 	if (Date.now() - context.globalState.get<number>(LAST_CHECK_KEY, 0) < DAY_MS) return;
 	await context.globalState.update(LAST_CHECK_KEY, Date.now());

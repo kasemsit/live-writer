@@ -27,7 +27,7 @@ import { exists, readText } from './files';
  * Nothing here compiles: the numbers are the user's own last build.
  */
 
-const VIEW_TYPE = 'mdLivePreview.editor';
+const VIEW_TYPE = 'liveWriter.editor';
 const IMAGE_EXTS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp'];
 const GRAPHIC_EXTS = ['', '.pdf', '.png', '.jpg', '.jpeg', '.svg', '.eps', '.gif', '.webp'];
 

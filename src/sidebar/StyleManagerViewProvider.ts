@@ -4,10 +4,10 @@ import { StyleStore } from './styleStore';
 import { StylePreviewController } from './StylePreviewController';
 import { escapeAttribute } from '../shared/i18n';
 
-const CONFIG_SECTION = 'mdLivePreview';
+const CONFIG_SECTION = 'liveWriter';
 
 export class StyleManagerViewProvider implements vscode.WebviewViewProvider {
-	static readonly viewType = 'mdLivePreview.styleManager';
+	static readonly viewType = 'liveWriter.styleManager';
 
 	private view: vscode.WebviewView | undefined;
 	private readonly preview: StylePreviewController;

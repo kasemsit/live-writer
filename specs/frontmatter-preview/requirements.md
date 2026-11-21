@@ -52,7 +52,7 @@ YAML ソースを編集可能な状態で提示できる(本アプリは編集�
 
 **REQ-8 (Ubiquitous)**
 システムは常に、フロントマターテーブルの配色を、既存の CSS テーマ機構
-(`mdLivePreview.enabledStyles` で選択中のテーマ、および VS Code のライト/ダーク/
+(`liveWriter.enabledStyles` で選択中のテーマ、および VS Code のライト/ダーク/
 ハイコントラストテーマ)と整合する形で描画しなければならない。
 
 ## 受け入れ基準

@@ -2,6 +2,15 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.0.0
+
+**Live Writer, under its own name throughout.** Install this release once by hand (the zip's installer); it replaces the old extension.
+
+- The extension id is now `kasemsit.live-writer` (it was `local.markdown-live-preview-editor-claude`). The installer removes the old one.
+- Settings are `liveWriter.*` (they were `mdLivePreview.*`), and so are the commands. Settings you made under the old names are copied over the first time Live Writer starts. Keybindings you bound to old command ids need the new ids.
+- The repository is github.com/kasemsit/live-writer; the old address redirects there, and the update check follows it.
+- Nothing else changes in how it works.
+
 ## 0.4.17
 
 - **New name: Live Writer** (formerly md-live-preview-plus), since it now writes Markdown, LaTeX and Quarto, not only previews Markdown. It is the same extension: settings, commands and keybindings keep working, and it updates in place.

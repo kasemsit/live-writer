@@ -31,7 +31,7 @@ suite('md-live-preview-plus context menu', () => {
 
 	async function openPreview(text: string): Promise<vscode.TextDocument> {
 		await vscode.workspace.fs.writeFile(file, new TextEncoder().encode(text));
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		// The webview has to load and receive its document before it can act.
 		await new Promise((resolve) => setTimeout(resolve, 2500));
 		return vscode.workspace.openTextDocument(file);
@@ -51,7 +51,7 @@ suite('md-live-preview-plus context menu', () => {
 		const text = '# Title\n\nA **bold** [[Note|link]] and $x^2$.\n\n<!-- REVIEW: hidden -->\n';
 		await openPreview(text);
 		await vscode.env.clipboard.writeText('unchanged');
-		await vscode.commands.executeCommand('mdLivePreview.plus.copyRichText', { from: text.indexOf('A **'), to: text.length });
+		await vscode.commands.executeCommand('liveWriter.plus.copyRichText', { from: text.indexOf('A **'), to: text.length });
 		const copied = await until(() => vscode.env.clipboard.readText(), (t) => t !== 'unchanged');
 		assert.strictEqual(copied, 'A bold link and $x^2$.');
 	});
@@ -60,7 +60,7 @@ suite('md-live-preview-plus context menu', () => {
 		await openPreview('# Title\n\nBody.\n');
 		await vscode.env.clipboard.writeText('unchanged');
 		// From the palette the caret decides; a fresh document has it on the heading.
-		await vscode.commands.executeCommand('mdLivePreview.plus.copyBlockLink');
+		await vscode.commands.executeCommand('liveWriter.plus.copyBlockLink');
 		const copied = await until(() => vscode.env.clipboard.readText(), (t) => t !== 'unchanged');
 		const name = file.path.split('/').pop()!.replace(/\.md$/, '');
 		assert.strictEqual(copied, `[[${name}#Title]]`);
@@ -68,7 +68,7 @@ suite('md-live-preview-plus context menu', () => {
 
 	test('Renumber Footnotes edits the document', async () => {
 		const document = await openPreview('# T\n\nA[^9] b[^4].\n\n[^4]: Four.\n[^9]: Nine.\n');
-		await vscode.commands.executeCommand('mdLivePreview.plus.renumberFootnotes');
+		await vscode.commands.executeCommand('liveWriter.plus.renumberFootnotes');
 		const text = await until(() => document.getText(), (t) => t.includes('A[^1]'));
 		assert.strictEqual(text, '# T\n\nA[^1] b[^2].\n\n[^2]: Four.\n[^1]: Nine.\n');
 	});
@@ -83,20 +83,20 @@ suite('md-live-preview-plus context menu', () => {
 });
 
 suite('md-live-preview-plus text size', () => {
-	const config = () => vscode.workspace.getConfiguration('mdLivePreview');
+	const config = () => vscode.workspace.getConfiguration('liveWriter');
 	teardown(async () => {
 		await config().update('plus.textScale', undefined, vscode.ConfigurationTarget.Global);
 	});
 
 	test('Larger, Smaller and Reset step the remembered setting', async () => {
 		await config().update('plus.textScale', undefined, vscode.ConfigurationTarget.Global);
-		await vscode.commands.executeCommand('mdLivePreview.plus.textLarger');
+		await vscode.commands.executeCommand('liveWriter.plus.textLarger');
 		assert.strictEqual(config().get('plus.textScale'), 1.1);
-		await vscode.commands.executeCommand('mdLivePreview.plus.textLarger');
+		await vscode.commands.executeCommand('liveWriter.plus.textLarger');
 		assert.strictEqual(config().get('plus.textScale'), 1.2);
-		await vscode.commands.executeCommand('mdLivePreview.plus.textSmaller');
+		await vscode.commands.executeCommand('liveWriter.plus.textSmaller');
 		assert.strictEqual(config().get('plus.textScale'), 1.1);
-		await vscode.commands.executeCommand('mdLivePreview.plus.textReset');
+		await vscode.commands.executeCommand('liveWriter.plus.textReset');
 		assert.strictEqual(config().get('plus.textScale'), 1);
 	});
 });
@@ -130,7 +130,7 @@ suite('md-live-preview-plus tracked changes', () => {
 	}
 
 	test('a write to disk arrives as a change with no reason and a clean document', async () => {
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		await new Promise((resolve) => setTimeout(resolve, 1500));
 		const event = nextChange();
 		await vscode.workspace.fs.writeFile(file, new TextEncoder().encode('# T\n\nThe quick red fox.\n'));
@@ -179,11 +179,11 @@ suite('md-live-preview-plus CRLF files', () => {
 	test('an edit made in the preview lands in the right place in a CRLF file', async () => {
 		const lines = ['# T', '', 'Line one with A[^9].', 'Line two.', 'Line three with B[^4].', '', '[^4]: Four.', '[^9]: Nine.', ''];
 		await vscode.workspace.fs.writeFile(file, new TextEncoder().encode(lines.join('\r\n')));
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		await new Promise((r) => setTimeout(r, 2500));
 		const document = await vscode.workspace.openTextDocument(file);
 		assert.strictEqual(document.eol, vscode.EndOfLine.CRLF);
-		await vscode.commands.executeCommand('mdLivePreview.plus.renumberFootnotes');
+		await vscode.commands.executeCommand('liveWriter.plus.renumberFootnotes');
 		const text = await until(() => document.getText(), (t) => t.includes('A[^1]'));
 		const expected = ['# T', '', 'Line one with A[^1].', 'Line two.', 'Line three with B[^2].', '', '[^2]: Four.', '[^1]: Nine.', ''].join('\r\n');
 		assert.strictEqual(text, expected);
@@ -192,7 +192,7 @@ suite('md-live-preview-plus CRLF files', () => {
 	test('a change from disk reaches the preview at the right place in a CRLF file', async () => {
 		const before = ['# T', '', 'Alpha.', 'Beta[^8].', '', '[^8]: Eight.', ''].join('\r\n');
 		await vscode.workspace.fs.writeFile(file, new TextEncoder().encode(before));
-		await vscode.commands.executeCommand('vscode.openWith', file, 'mdLivePreview.editor');
+		await vscode.commands.executeCommand('vscode.openWith', file, 'liveWriter.editor');
 		await new Promise((r) => setTimeout(r, 2500));
 		const document = await vscode.workspace.openTextDocument(file);
 		// Changed on disk below line 1, so the preview must place it by CRLF-aware offsets…
@@ -200,7 +200,7 @@ suite('md-live-preview-plus CRLF files', () => {
 		await until(() => document.getText(), (t) => t.includes('Alpha changed.'));
 		await new Promise((r) => setTimeout(r, 500));
 		// …which the next preview edit then proves: it lands where it should.
-		await vscode.commands.executeCommand('mdLivePreview.plus.renumberFootnotes');
+		await vscode.commands.executeCommand('liveWriter.plus.renumberFootnotes');
 		const text = await until(() => document.getText(), (t) => t.includes('Beta[^1]'));
 		assert.strictEqual(text, ['# T', '', 'Alpha changed.', 'Beta[^1].', '', '[^1]: Eight.', ''].join('\r\n'));
 	});

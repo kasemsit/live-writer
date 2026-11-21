@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
  * things only the host can answer, and both were manual checklist steps.
  */
 suite('settings and views', () => {
-	const config = () => vscode.workspace.getConfiguration('mdLivePreview');
+	const config = () => vscode.workspace.getConfiguration('liveWriter');
 	let original: string | undefined;
 
 	suiteSetup(() => {
@@ -44,26 +44,26 @@ suite('settings and views', () => {
 			string,
 			Array<{ id: string; type?: string }>
 		>;
-		const ids = (views.mdLivePreview ?? []).map((v) => v.id);
-		assert.ok(ids.includes('mdLivePreview.outline'), 'the outline view is not contributed');
-		assert.ok(ids.includes('mdLivePreview.styleManager'), 'the theme view is not contributed');
+		const ids = (views.liveWriter ?? []).map((v) => v.id);
+		assert.ok(ids.includes('liveWriter.outline'), 'the outline view is not contributed');
+		assert.ok(ids.includes('liveWriter.styleManager'), 'the theme view is not contributed');
 	});
 
 	test('the outline view can be revealed', async () => {
 		// A view that throws on open is invisible in every other test, since
 		// nothing else instantiates its provider.
-		await vscode.commands.executeCommand('mdLivePreview.outline.focus');
+		await vscode.commands.executeCommand('liveWriter.outline.focus');
 	});
 
 	test('the CSS themes view can be revealed', async () => {
-		await vscode.commands.executeCommand('mdLivePreview.styleManager.focus');
+		await vscode.commands.executeCommand('liveWriter.styleManager.focus');
 	});
 
 	test('the new-style command runs without a document open', async () => {
 		// It creates a file rather than acting on the active editor, so it must not
 		// depend on one being there.
 		const before = await listStyles();
-		await vscode.commands.executeCommand('mdLivePreview.newStyle');
+		await vscode.commands.executeCommand('liveWriter.newStyle');
 		const after = await listStyles();
 		assert.ok(after.length >= before.length, 'the command removed a style');
 	});

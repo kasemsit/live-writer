@@ -14,9 +14,9 @@ import { EXCLUDE, openAtLine } from './wikiOpen';
  * reflects what is saved on disk.
  */
 
-const VIEW_ID = 'mdLivePreview.plus.backlinks';
-const OPEN_COMMAND = 'mdLivePreview.plus.openAt';
-const REFRESH_COMMAND = 'mdLivePreview.plus.refreshBacklinks';
+const VIEW_ID = 'liveWriter.plus.backlinks';
+const OPEN_COMMAND = 'liveWriter.plus.openAt';
+const REFRESH_COMMAND = 'liveWriter.plus.refreshBacklinks';
 const IGNORED = /[\\/](node_modules|\.git|\.obsidian|\.trash)[\\/]/;
 
 class LinkIndex {

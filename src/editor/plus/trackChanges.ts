@@ -9,6 +9,6 @@ import * as vscode from 'vscode';
  * carry a reason, and are not marked.
  */
 export function isTrackedChange(event: vscode.TextDocumentChangeEvent): boolean {
-	if (!vscode.workspace.getConfiguration('mdLivePreview').get('plus.trackExternalChanges', true)) return false;
+	if (!vscode.workspace.getConfiguration('liveWriter').get('plus.trackExternalChanges', true)) return false;
 	return event.reason === undefined && !event.document.isDirty;
 }

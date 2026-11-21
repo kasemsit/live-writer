@@ -76,7 +76,7 @@ export class StylePreviewController {
 			return;
 		}
 		this.panel = vscode.window.createWebviewPanel(
-			'mdLivePreview.stylePreview',
+			'liveWriter.stylePreview',
 			title,
 			{ viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
 			{

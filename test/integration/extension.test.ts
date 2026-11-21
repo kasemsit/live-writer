@@ -22,16 +22,16 @@ suite('extension', () => {
 	test('registers its commands', async () => {
 		const commands = await vscode.commands.getCommands(true);
 		for (const id of [
-			'mdLivePreview.openWithLivePreview',
-			'mdLivePreview.openWithSource',
-			'mdLivePreview.newStyle',
+			'liveWriter.openWithLivePreview',
+			'liveWriter.openWithSource',
+			'liveWriter.newStyle',
 		]) {
 			assert.ok(commands.includes(id), `command ${id} is not registered`);
 		}
 	});
 
 	test('contributes its settings with the documented defaults', () => {
-		const config = vscode.workspace.getConfiguration('mdLivePreview');
+		const config = vscode.workspace.getConfiguration('liveWriter');
 		assert.strictEqual(config.get('codeTheme'), 'auto');
 		assert.strictEqual(config.get('defaultEditor'), 'prompt');
 		// `enabledStyles` is application-scoped, so a real installation's value
@@ -46,7 +46,7 @@ suite('extension', () => {
 			viewType: string;
 			selector: Array<{ filenamePattern: string }>;
 		}>;
-		const editor = editors.find((e) => e.viewType === 'mdLivePreview.editor');
+		const editor = editors.find((e) => e.viewType === 'liveWriter.editor');
 		assert.ok(editor, 'the custom editor is not contributed');
 		const patterns = editor.selector.map((s) => s.filenamePattern);
 		assert.deepStrictEqual(patterns, ['*.md', '*.markdown', '*.qmd']);

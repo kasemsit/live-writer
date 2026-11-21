@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto';
  * chose another theme keeps it.
  */
 const THEME = 'thai-readable.css';
-const VERSION_KEY = 'mdLivePreview.plusThemeVersion';
+const VERSION_KEY = 'liveWriter.plusThemeVersion';
 
 export async function seedPlusTheme(context: vscode.ExtensionContext, stylesUri: vscode.Uri): Promise<void> {
 	try {
@@ -24,7 +24,7 @@ export async function seedPlusTheme(context: vscode.ExtensionContext, stylesUri:
 			// exists
 		}
 		await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(stylesUri, THEME), bundled);
-		const config = vscode.workspace.getConfiguration('mdLivePreview');
+		const config = vscode.workspace.getConfiguration('liveWriter');
 		const enabled = config.get<string[]>('enabledStyles', []);
 		if (enabled.length === 0 || (enabled.length === 1 && enabled[0] === 'vscode.css')) {
 			await config.update('enabledStyles', [THEME], vscode.ConfigurationTarget.Global);

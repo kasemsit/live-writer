@@ -78,7 +78,7 @@ async function readLines(uri: vscode.Uri): Promise<string[]> {
 export async function openAtLine(uri: vscode.Uri, line: number, beside = false): Promise<void> {
 	const key = uri.toString();
 	if (line) pendingJumps.set(key, line);
-	await vscode.commands.executeCommand('vscode.openWith', uri, 'mdLivePreview.editor', beside ? vscode.ViewColumn.Beside : undefined);
+	await vscode.commands.executeCommand('vscode.openWith', uri, 'liveWriter.editor', beside ? vscode.ViewColumn.Beside : undefined);
 	if (!line) return;
 	// Already open: no `ready` will come, so jump in the existing editor.
 	setTimeout(() => {

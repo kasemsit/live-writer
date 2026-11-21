@@ -9,6 +9,7 @@ import { initSelectionStatus } from './editor/plus/selectionFile';
 import { registerBacklinks } from './editor/plus/backlinks';
 import { registerContextMenu } from './editor/plus/contextMenu';
 import { registerTextScale } from './editor/plus/textScale';
+import { migrateSettings } from './editor/plus/migrate';
 
 function getActiveMarkdownUri(): vscode.Uri | undefined {
 	const editor = vscode.window.activeTextEditor;
@@ -76,11 +77,11 @@ const REOPEN_RETRY_DELAYS_MS = [150, 500, 1500];
  * used by many extensions — including AI chat panels — to open a referenced
  * file) bypass `workbench.editorAssociations` entirely and always land in the
  * plain text editor. This watches every tab as it opens/changes and reopens
- * any such file in Live Preview when `mdLivePreview.defaultEditor` is set to
+ * any such file in Live Preview when `liveWriter.defaultEditor` is set to
  * always use it, reusing the same tab/column so no split is created.
  */
 async function maybeReopenAsLivePreview(tab: vscode.Tab, attempt = 0): Promise<void> {
-	const mode = vscode.workspace.getConfiguration('mdLivePreview').get<string>('defaultEditor', 'prompt');
+	const mode = vscode.workspace.getConfiguration('liveWriter').get<string>('defaultEditor', 'prompt');
 	if (mode !== 'livePreview') return;
 
 	const input = tab.input;
@@ -131,7 +132,7 @@ async function maybeReopenAsLivePreview(tab: vscode.Tab, attempt = 0): Promise<v
 }
 
 async function syncDefaultEditorAssociation(): Promise<void> {
-	const mode = vscode.workspace.getConfiguration('mdLivePreview').get<string>('defaultEditor', 'prompt');
+	const mode = vscode.workspace.getConfiguration('liveWriter').get<string>('defaultEditor', 'prompt');
 	const rootConfig = vscode.workspace.getConfiguration();
 	const associations = {
 		...(rootConfig.get<Record<string, string>>('workbench.editorAssociations') ?? {}),
@@ -172,24 +173,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	context.subscriptions.push(vscode.window.registerWebviewViewProvider(OutlineViewProvider.viewType, outlineProvider));
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('mdLivePreview.openWithLivePreview', async () => {
+		vscode.commands.registerCommand('liveWriter.openWithLivePreview', async () => {
 			const uri = getActiveMarkdownUri();
 			if (!uri) return;
 			sourceOverrideUris.delete(uri.toString());
 			const viewColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
 			await vscode.commands.executeCommand('vscode.openWith', uri, MarkdownLivePreviewProvider.viewType, viewColumn);
 		}),
-		vscode.commands.registerCommand('mdLivePreview.openWithSource', async () => {
+		vscode.commands.registerCommand('liveWriter.openWithSource', async () => {
 			const uri = getActiveCustomEditorUri();
 			if (!uri) return;
 			sourceOverrideUris.add(uri.toString());
 			const viewColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
 			await vscode.commands.executeCommand('vscode.openWith', uri, 'default', viewColumn);
 		}),
-		vscode.commands.registerCommand('mdLivePreview.newStyle', async () => {
+		vscode.commands.registerCommand('liveWriter.newStyle', async () => {
 			await styleManagerProvider.createNewStyle();
 		}),
-		vscode.commands.registerCommand('mdLivePreview.plus.insertFootnote', () => provider.insertFootnoteInActive()),
+		vscode.commands.registerCommand('liveWriter.plus.insertFootnote', () => provider.insertFootnoteInActive()),
 	);
 
 	// md-live-preview-plus: not on the Marketplace, so it checks GitHub Releases itself.
@@ -205,6 +206,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	registerBacklinks(context, activeNote);
 	registerContextMenu(context, (message) => provider.postPlusToActive(message), activeNote);
 	registerTextScale(context, (message) => provider.broadcastPlus(message));
+	// Live Writer: settings made under the former name carry over.
+	void migrateSettings();
 
 	context.subscriptions.push(
 		vscode.workspace.onDidCloseTextDocument((doc) => {
@@ -219,7 +222,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration('mdLivePreview.defaultEditor')) {
+			if (e.affectsConfiguration('liveWriter.defaultEditor')) {
 				void syncDefaultEditorAssociation();
 			}
 		}),

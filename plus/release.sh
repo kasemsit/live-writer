@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build, test, tag and publish a GitHub release of md-live-preview-plus.
+# Build, test, tag and publish a GitHub release of Live Writer.
 #
 #   plus/release.sh            # releases the version in package.json
 #   plus/release.sh --dry-run  # builds and tests only; no tag, no push, no release
@@ -10,7 +10,7 @@
 # Never publishes to the VS Code Marketplace: that listing is upstream's.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-REPO=kasemsit/md-live-preview-plus
+REPO=kasemsit/live-writer
 DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
 
 VER=$(node -p "require('./package.json').version")
@@ -28,25 +28,25 @@ npm test
 npx playwright test
 
 OUT=build/release
-rm -rf "$OUT"; mkdir -p "$OUT/md-live-preview-plus/hooks"
+rm -rf "$OUT"; mkdir -p "$OUT/live-writer/hooks"
 npx vsce package -o "$OUT/"
-VSIX="$OUT/markdown-live-preview-editor-claude-$VER.vsix"
-cp "$VSIX" plus/install.sh plus/install.ps1 "$OUT/md-live-preview-plus/"
-cp plus/hooks/* "$OUT/md-live-preview-plus/hooks/"
-(cd "$OUT" && zip -qr md-live-preview-plus.zip md-live-preview-plus)
-echo "built $VSIX and $OUT/md-live-preview-plus.zip"
+VSIX="$OUT/live-writer-$VER.vsix"
+cp "$VSIX" plus/install.sh plus/install.ps1 "$OUT/live-writer/"
+cp plus/hooks/* "$OUT/live-writer/hooks/"
+(cd "$OUT" && zip -qr live-writer.zip live-writer)
+echo "built $VSIX and $OUT/live-writer.zip"
 [ $DRY = 1 ] && { echo "dry run: stopping before tag/push/release"; exit 0; }
 
-git tag -a "$TAG" -m "md-live-preview-plus $VER"
+git tag -a "$TAG" -m "Live Writer $VER"
 git push origin main "$TAG"
 
 TOKEN=$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill | sed -n 's/^password=//p')
 [ -n "$TOKEN" ] || { echo "no GitHub credential; tag pushed, create the release by hand" >&2; exit 1; }
 api() { curl -sS -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
 
-BODY=$(TAG="$TAG" NOTES="$NOTES" node -e 'process.stdout.write(JSON.stringify({tag_name:process.env.TAG,name:"md-live-preview-plus "+process.env.TAG,body:process.env.NOTES}))')
+BODY=$(TAG="$TAG" NOTES="$NOTES" node -e 'process.stdout.write(JSON.stringify({tag_name:process.env.TAG,name:"Live Writer "+process.env.TAG,body:process.env.NOTES}))')
 ID=$(api -X POST "https://api.github.com/repos/$REPO/releases" -d "$BODY" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);if(!j.id){console.error(j.message||s);process.exit(1)}console.log(j.id)})')
-for f in "$VSIX" "$OUT/md-live-preview-plus.zip"; do
+for f in "$VSIX" "$OUT/live-writer.zip"; do
   api -X POST -H "Content-Type: application/octet-stream" --data-binary @"$f" \
     "https://uploads.github.com/repos/$REPO/releases/$ID/assets?name=$(basename "$f")" >/dev/null
   echo "uploaded $(basename "$f")"

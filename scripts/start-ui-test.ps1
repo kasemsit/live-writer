@@ -17,7 +17,7 @@ New-Item -ItemType Directory -Path $testWorkspace -Force | Out-Null
 Copy-Item -LiteralPath "$repoRoot/sample" -Destination $testWorkspace -Recurse
 $settingsDir = Join-Path $testWorkspace '.vscode'
 New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null
-'{"mdLivePreview.defaultEditor":"livePreview","files.autoSave":"off","window.title":"MDLP UI Test - ${activeEditorShort}"}' | Set-Content -LiteralPath "$settingsDir/settings.json" -Encoding utf8
+'{"liveWriter.defaultEditor":"livePreview","files.autoSave":"off","window.title":"MDLP UI Test - ${activeEditorShort}"}' | Set-Content -LiteralPath "$settingsDir/settings.json" -Encoding utf8
 $codeArgs = @(
     '--new-window', '--disable-extensions',
     "--extensionDevelopmentPath=$repoRoot",

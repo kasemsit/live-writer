@@ -2,14 +2,14 @@ import * as vscode from 'vscode';
 import type { StyleEntry } from '../shared/messages';
 import { seedPlusTheme } from '../editor/plus/themeSeed';
 
-const CONFIG_SECTION = 'mdLivePreview';
+const CONFIG_SECTION = 'liveWriter';
 const ENABLED_STYLES_KEY = 'enabledStyles';
 
 // Bumped whenever the bundled sample set changes; drives a one-time (re)seed so
 // existing installs pick up new templates without re-creating ones the user
 // later deleted.
 const SAMPLES_VERSION = 5;
-const SAMPLES_VERSION_KEY = 'mdLivePreview.samplesVersion';
+const SAMPLES_VERSION_KEY = 'liveWriter.samplesVersion';
 // Bundled samples that were shipped before but are no longer wanted, deleted
 // during migration: the old `.mlp-*`-selector themes that stopped working, plus
 // DADS-light (dropped by request), the old hand-written GitHub.css (superseded

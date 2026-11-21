@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# md-live-preview-plus installer for Linux and macOS. Run from the unzipped release folder:
+# Live Writer installer for Linux and macOS. Run from the unzipped release folder:
 #   ./install.sh
 # 1. installs the .vsix (the CSS theme ships inside it and switches on by itself)
 # 2. copies the Claude Code hook to ~/.claude/hooks/
 # 3. registers the hook in ~/.claude/settings.json (other settings kept)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-VSIX="$(ls "$HERE"/markdown-live-preview-editor-claude-*.vsix 2>/dev/null | head -1)"
+VSIX="$(ls "$HERE"/live-writer-*.vsix 2>/dev/null | head -1)"
 [ -n "$VSIX" ] || { echo "No .vsix next to install.sh" >&2; exit 1; }
 
 if command -v code >/dev/null; then
-  code --uninstall-extension t-shoot.markdown-live-preview-editor >/dev/null 2>&1 || true
+  # Earlier names of this extension, and the upstream it forks: one Live Writer only.
+  for old in t-shoot.markdown-live-preview-editor local.markdown-live-preview-editor-claude; do
+    code --uninstall-extension "$old" >/dev/null 2>&1 || true
+  done
   code --install-extension "$VSIX" --force
 else
   echo "VS Code 'code' command not found: install $(basename "$VSIX") by hand (Extensions > ... > Install from VSIX)." >&2
