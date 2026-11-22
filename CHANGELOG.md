@@ -2,6 +2,14 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.3.0
+
+Two features taken from t-shoot's Markdown Live Preview Editor (0.5.0 and 0.6.0, MIT), fitted to Live Writer.
+
+- **Fold heading sections.** A chevron appears beside a heading under the pointer; it folds the section, nested headings included, and a `…` stands in its place to expand it. Ctrl+Shift+[ and Ctrl+Shift+] fold and unfold at the caret. Search and Outline jumps open a folded section; the file is never changed. Callouts keep their own folding beside it.
+- **The Outline follows the caret.** The heading you are under is marked in the Outline view and kept in sight, in Markdown, Quarto and LaTeX alike.
+- Not taken: t-shoot's newer table-cell editing (it would replace Live Writer's own tables, with wikilinks, quotes and math in cells) and his CRLF rework (Live Writer has its own, tested).
+
 ## 1.2.1
 
 Housekeeping; nothing changes in how Live Writer works.

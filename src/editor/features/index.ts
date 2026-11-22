@@ -6,6 +6,7 @@ import { handleHostAction } from './contextMenu';
 import { texSessionOf } from './tex';
 import { stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
 import { zoteroLinks } from './zotero';
+import { reportCursorLine } from './cursorLine';
 import { paraphrase } from './paraphrase';
 import { isRewriteMode } from '../../shared/rewrite';
 
@@ -61,6 +62,9 @@ export function handleFeatureMessage(
 			void zoteroLinks(session.getDocument().uri, message.key).then((links) =>
 				post({ type: 'zoteroLinksResult', requestId: message.requestId, links }),
 			);
+			return true;
+		case 'cursorLine':
+			reportCursorLine(session.getDocument().uri, message.line);
 			return true;
 		case 'quartoWatch':
 			watchQuartoProject(session, post);

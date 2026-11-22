@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import type { HostToOutlineMessage, OutlineToHostMessage } from '../shared/messages';
 import type { MarkdownLivePreviewProvider } from '../editor/MarkdownLivePreviewProvider';
 import { escapeAttribute } from '../shared/i18n';
+import { onCursorLine } from '../editor/features/cursorLine';
 
 const REFRESH_DEBOUNCE_MS = 150;
 
@@ -10,6 +11,7 @@ export class OutlineViewProvider implements vscode.WebviewViewProvider {
 
 	private view: vscode.WebviewView | undefined;
 	private refreshTimer: ReturnType<typeof setTimeout> | undefined;
+	private activeLine = 0;
 
 	constructor(
 		private readonly context: vscode.ExtensionContext,
@@ -18,6 +20,12 @@ export class OutlineViewProvider implements vscode.WebviewViewProvider {
 		this.context.subscriptions.push(
 			vscode.window.tabGroups.onDidChangeTabs(() => this.scheduleRefresh()),
 			vscode.workspace.onDidChangeTextDocument(() => this.scheduleRefresh()),
+			// Live Writer: the heading the caret is under, marked in the outline.
+			onCursorLine(({ uri, line }) => {
+				if (uri.toString() !== this.editorProvider.getActiveDocumentUri()?.toString()) return;
+				this.activeLine = line;
+				void this.view?.webview.postMessage({ type: 'activeLine', line } satisfies HostToOutlineMessage);
+			}),
 		);
 	}
 
@@ -63,6 +71,7 @@ export class OutlineViewProvider implements vscode.WebviewViewProvider {
 		const headings = this.editorProvider.getActiveHeadings();
 		const message: HostToOutlineMessage = headings ? { type: 'update', headings } : { type: 'noDocument' };
 		void this.view.webview.postMessage(message);
+		if (this.activeLine) void this.view.webview.postMessage({ type: 'activeLine', line: this.activeLine } satisfies HostToOutlineMessage);
 	}
 
 	private buildHtml(webview: vscode.Webview): string {

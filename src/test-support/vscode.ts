@@ -41,6 +41,17 @@ export class Disposable {
 	}
 }
 
+export class EventEmitter<T> {
+	private listeners: ((value: T) => void)[] = [];
+	event = (listener: (value: T) => void): Disposable => {
+		this.listeners.push(listener);
+		return new Disposable(() => (this.listeners = this.listeners.filter((l) => l !== listener)));
+	};
+	fire(value: T): void {
+		this.listeners.forEach((l) => l(value));
+	}
+}
+
 export class RelativePattern {
 	constructor(
 		readonly base: Uri,

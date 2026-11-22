@@ -1,6 +1,6 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import type { EditorState, Extension, Range } from '@codemirror/state';
-import { syntaxTree, codeFolding, foldEffect, unfoldEffect, foldedRanges } from '@codemirror/language';
+import { syntaxTree, foldEffect, unfoldEffect, foldedRanges } from '@codemirror/language';
 import { cursorTouchesRange } from '../cmUtils';
 import { revealChanged } from './cm';
 import { blockReplacedLines } from '../livePreviewPlugin';
@@ -258,12 +258,5 @@ const calloutDecorations = ViewPlugin.fromClass(
 	{ decorations: (v) => v.decorations },
 );
 
-const foldPlaceholder = codeFolding({
-	placeholderDOM: () => {
-		const span = document.createElement('span');
-		span.className = 'mlp-callout-fold-placeholder';
-		return span;
-	},
-});
-
-export const calloutPlugin: Extension = [foldPlaceholder, calloutDecorations];
+// The fold placeholder is folding.ts's, shared with heading sections.
+export const calloutPlugin: Extension = [calloutDecorations];

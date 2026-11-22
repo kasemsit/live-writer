@@ -102,7 +102,9 @@ export type HostToOutlineMessage =
 	| { type: 'update'; headings: HeadingItem[] }
 	// No Markdown Live Preview panel is currently active (none open, or focus
 	// moved away from any of them).
-	| { type: 'noDocument' };
+	| { type: 'noDocument' }
+	// The line (1-based) the caret is on in the active editor: the outline marks its heading.
+	| { type: 'activeLine'; line: number };
 
 export type OutlineToHostMessage = { type: 'ready' } | { type: 'jumpToHeading'; line: number };
 
@@ -266,6 +268,8 @@ export type FeatureEditorToHostMessage =
 	| { type: 'resolveEmbed'; requestId: number; target: string }
 	// Quarto: send this document's project (quartoProject) now and on every change.
 	| { type: 'quartoWatch' }
+	// The caret's line (1-based), for the outline's current heading.
+	| { type: 'cursorLine'; line: number }
 	// What a context-menu command needs the host for: the clipboard, opening
 	// files, telling the user something.
 	| { type: 'hostAction'; action: 'copy'; text: string; notice: string }

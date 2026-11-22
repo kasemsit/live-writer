@@ -56,6 +56,7 @@ What Live Writer adds:
   - A heading or image that Pandoc joins to the line above or below it is flagged. Quarto would print the heading as `## …` and leave the figure unnumbered.
 - **Rewrite with Claude** (right-click on a selection): *Paraphrase*, *Tighten*, *More Formal*, *Translate to English*, *Translate to Thai*. Meaning, terms, numbers, citations and markup are kept; replace the passage or copy the result from the card. The model is `liveWriter.plus.claudeModel`. Needs Claude Code signed in (`claude -p` is run without tools or your settings).
 - **Font:** the setting `liveWriter.plus.fontFamily` (e.g. `Sarabun, sans-serif`) sets the text font; code and formulas keep theirs.
+- **Fold sections and follow the Outline:** a chevron beside each heading folds its section; the Outline view marks the heading the caret is under.
 - **Insert Citation from Zotero** (Ctrl+Alt+C): pick works in Zotero's citation picker; they go in at the caret as `[@key]` or `\cite{key}`. Needs Better BibTeX.
 - **Citations open their paper in Zotero.** Rest the pointer on a citation (`[@key]` in a note or a `.qmd`, `\cite{key}` in LaTeX) for its entry with *Open PDF* (in Zotero's reader, with your annotations) and *Show in Zotero*; or right-click → *Open PDF in Zotero*.
   - The key is looked up in the running Zotero (its local API, enabled under *Settings → Advanced → Allow other applications on this computer to communicate with Zotero*, or Better BibTeX). When Zotero is closed, the `zotero_key` / `pdf_key` in a vault's `@key` note are used, and the link starts Zotero.

@@ -19,6 +19,8 @@ const en = {
 	'code.copy.aria': 'Copy code block',
 
 	'zoom.in': 'Zoom in (Ctrl+wheel also works)',
+	'heading.fold': 'Collapse section: {0}',
+	'heading.unfold': 'Expand section: {0}',
 	'zoom.out': 'Zoom out',
 	'zoom.reset': 'Reset the view (fit to width)',
 	'zoom.toActual': 'Switch to actual size (drag to pan, Ctrl+wheel to zoom)',
@@ -130,6 +132,8 @@ const ja: Record<MessageKey, string> = {
 	'code.copy.aria': 'コードブロックをコピー',
 
 	'zoom.in': '拡大 (Ctrl+ホイールでも可)',
+	'heading.fold': '項目をたたむ: {0}',
+	'heading.unfold': '項目を開く: {0}',
 	'zoom.out': '縮小',
 	'zoom.reset': '元の表示に戻す（縮小表示）',
 	'zoom.toActual': '原寸大表示に切り替え（ドラッグでパン、Ctrl+ホイールでズームできます）',

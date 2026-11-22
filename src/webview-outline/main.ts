@@ -21,8 +21,19 @@ function renderEmpty(text: string): void {
 	root.appendChild(p);
 }
 
+let shown: Array<{ line: number; item: HTMLElement }> = [];
+
+/** Marks the heading the caret is under — the last one at or above its line — and keeps it in view. */
+function markActive(line: number): void {
+	let active: HTMLElement | undefined;
+	for (const h of shown) if (h.line <= line) active = h.item;
+	for (const h of shown) h.item.classList.toggle('mlp-outline-active', h.item === active);
+	active?.scrollIntoView({ block: 'nearest' });
+}
+
 function renderHeadings(headings: Array<{ level: number; text: string; line: number }>): void {
 	root.replaceChildren();
+	shown = [];
 	if (headings.length === 0) {
 		renderEmpty(t('outline.empty'));
 		return;
@@ -43,6 +54,7 @@ function renderHeadings(headings: Array<{ level: number; text: string; line: num
 			}
 		});
 		list.appendChild(item);
+		shown.push({ line: heading.line, item });
 	}
 	root.appendChild(list);
 }
@@ -54,7 +66,11 @@ window.addEventListener('message', (event: MessageEvent<HostToOutlineMessage>) =
 			renderHeadings(message.headings);
 			break;
 		case 'noDocument':
+			shown = [];
 			renderEmpty(t('outline.noDocument'));
+			break;
+		case 'activeLine':
+			markActive(message.line);
 			break;
 	}
 });

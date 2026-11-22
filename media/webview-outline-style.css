@@ -43,3 +43,9 @@ body {
 .mlp-outline-level-4 { padding-left: 42px; opacity: 0.9; }
 .mlp-outline-level-5 { padding-left: 54px; opacity: 0.85; }
 .mlp-outline-level-6 { padding-left: 66px; opacity: 0.8; }
+
+/* The heading the caret is under (Live Writer). */
+.mlp-outline-item.mlp-outline-active {
+	background: var(--vscode-list-inactiveSelectionBackground, rgba(127, 127, 127, 0.16));
+	color: var(--vscode-list-inactiveSelectionForeground, var(--vscode-foreground));
+}

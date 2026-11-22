@@ -3,6 +3,8 @@ import type { EditorView } from '@codemirror/view';
 import type { EditorToHostMessage, HostToEditorMessage } from '../../shared/messages';
 import { wikilinkExtension } from './wikilinks';
 import { calloutPlugin } from './callouts';
+import { foldingConfig } from './folding';
+import { headingFoldExtension } from './headingFold';
 import { quartoExtension } from './quarto';
 import { handleQuartoHostMessage } from './quartoProject';
 import { footnotePlugin, insertFootnote } from './footnotes';
@@ -17,6 +19,7 @@ import { reapplyTextScale, setTextScale } from './textScale';
 import { beforeExternalUpdate, trackChangesExtension, trackNextUpdate } from './trackChanges';
 import { linkPreviewExtension } from './linkPreview';
 import { citeCardExtension } from './zotero';
+import { cursorLineReporter } from './cursorLine';
 import { selectionReporter } from './selection';
 import { featureCompletion } from './completion';
 import { handleHostReply, setHostPoster } from './hostRequests';
@@ -32,6 +35,9 @@ export function featureExtensions(post: (message: EditorToHostMessage) => void):
 		wikilinkExtension((href) => post({ type: 'openLink', href })),
 		linkPreviewExtension((href) => post({ type: 'openLink', href })),
 		citeCardExtension,
+		cursorLineReporter,
+		foldingConfig,
+		headingFoldExtension,
 		calloutPlugin,
 		quartoExtension,
 		footnotePlugin,

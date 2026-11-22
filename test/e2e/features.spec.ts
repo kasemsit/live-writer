@@ -939,6 +939,12 @@ test('Rewrite with Claude: a mode from the submenu goes to the host, and titles 
 	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Translate to English with Claude');
 });
 
+test('the editor tells the host which line the caret is on', async ({ page }) => {
+	await mountEditor(page, '# T\n\nOne.\n\n## Two\n\nThree.');
+	await page.locator('.cm-line', { hasText: 'Three.' }).click();
+	await expect.poll(async () => (await posted(page)).filter((m) => m.type === 'cursorLine').at(-1)?.line).toBe(7);
+});
+
 test('font: the host\'s font family sets the text; code keeps its own', async ({ page }) => {
 	await mountEditor(page, '# T\n\nPlain text with `code` here.\n\n```\nfenced\n```\n\nEnd.');
 	const fontOf = (sel: string) => page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontFamily);
