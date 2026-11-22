@@ -141,6 +141,8 @@ export const fake = {
 	groupListeners: [] as Handler<unknown>[],
 	selectionListeners: [] as Handler<unknown>[],
 	warnings: [] as string[],
+	quickPick: undefined as string | undefined,
+	quickPickItems: [] as unknown[],
 	reset(): void {
 		this.files.clear();
 		this.settings.clear();
@@ -159,6 +161,8 @@ export const fake = {
 		this.selectionListeners.length = 0;
 		window.activeTextEditor = undefined;
 		this.warnings = [];
+		this.quickPick = undefined;
+		this.quickPickItems = [];
 		workspace.workspaceFolders = [];
 		workspace.textDocuments = [];
 	},
@@ -266,15 +270,21 @@ export const window = {
 		onDidChangeTabGroups: event(fake.groupListeners),
 		async close(tabs: unknown): Promise<boolean> {
 			fake.closed.push(tabs);
+			fake.tabs = fake.tabs.filter((t) => ![tabs].flat().includes(t));
 			return true;
 		},
 	},
 	onDidChangeTextEditorSelection: event(fake.selectionListeners),
 	async showTextDocument(document: FakeDocument, options: unknown) {
 		fake.shown.push({ path: document.uri.path, options });
+		if (!fake.tabs.some((t) => t.input instanceof TabInputText && t.input.uri.path === document.uri.path)) fake.tabs.push({ input: new TabInputText(document.uri) });
 		const editor = { document };
 		window.activeTextEditor = editor;
 		return editor;
+	},
+	async showQuickPick(items: { label: string }[]) {
+		fake.quickPickItems = items;
+		return items.find((i) => i.label === fake.quickPick);
 	},
 	async showWarningMessage(message: string): Promise<undefined> {
 		fake.warnings.push(message);

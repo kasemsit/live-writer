@@ -24,6 +24,7 @@ import { caywUrl, pickCitation } from './cite';
 import { paraphrase } from './paraphrase';
 import { TexSession } from './tex';
 import { showInPdf } from './showInPdf';
+import { buildLatex, buildWithRecipe, viewPdf } from './build';
 import { registerInverseSearch } from './inverseSearch';
 
 const folder = (path: string) => ({ uri: vscode.Uri.file(path), name: 'ws', index: 0 });
@@ -289,13 +290,83 @@ describe('Show in PDF', () => {
 		const doc = fake.document('/ws/sections/intro.tex', 'a\nb\nc', 'latex');
 		await showInPdf(doc as never, 3);
 		expect(fake.shown[0]).toMatchObject({ path: '/ws/sections/intro.tex', options: { viewColumn: 1, preview: true } });
-		expect(fake.executed).toEqual([['latex-workshop.synctexto', 2, '/ws/sections/intro.tex'], ['workbench.action.closeActiveEditor']]);
+		expect(fake.executed).toEqual([['latex-workshop.synctexto', 2, '/ws/sections/intro.tex']]);
+		expect(fake.tabs).toHaveLength(0);
+	});
+
+	it('leaves a text tab the file already had', async () => {
+		fake.commandList = ['latex-workshop.synctexto'];
+		const doc = fake.document('/ws/a.tex', 'x', 'latex');
+		fake.tabs = [{ input: new vscode.TabInputText(doc.uri as never) }];
+		await showInPdf(doc as never, 1);
+		expect(fake.closed).toHaveLength(0);
+		expect(fake.tabs).toHaveLength(1);
 	});
 
 	it('says LaTeX Workshop is needed when it is not installed', async () => {
 		await showInPdf(fake.document('/ws/a.tex', 'x', 'latex') as never, 1);
 		expect(fake.shown).toHaveLength(0);
 		expect(fake.warnings[0]).toMatch(/LaTeX Workshop/);
+	});
+});
+
+describe('building LaTeX from Live Writer', () => {
+	const doc = () => fake.document('/ws/paper/main.tex', '\\documentclass{article}', 'latex');
+	const recipes = (list: unknown) => fake.settings.set(`${vscode.ConfigurationTarget.Global}:latex-workshop.latex.recipes`, list);
+
+	it('starts LaTeX Workshop\'s build from a momentary text tab, and closes it without waiting for the build', async () => {
+		fake.commandList = ['latex-workshop.build'];
+		let finish = () => {};
+		const execute = vscode.commands.executeCommand;
+		const spy = vi.spyOn(vscode.commands, 'executeCommand').mockImplementation(async (...args: unknown[]) => {
+			await (execute as (...a: unknown[]) => Promise<unknown>)(...args);
+			if (args[0] === 'latex-workshop.build') await new Promise<void>((resolve) => (finish = resolve));
+			return undefined;
+		});
+		vi.useFakeTimers();
+		try {
+			const done = buildLatex(doc() as never);
+			await vi.advanceTimersByTimeAsync(1000);
+			await done;
+		} finally {
+			vi.useRealTimers();
+			spy.mockRestore();
+		}
+		expect(fake.shown[0]).toMatchObject({ path: '/ws/paper/main.tex', options: { preview: true } });
+		expect(fake.executed).toEqual([['latex-workshop.build']]);
+		expect(fake.tabs).toHaveLength(0);
+		finish();
+	});
+
+	it('asks which recipe, from LaTeX Workshop\'s settings, and builds with it', async () => {
+		fake.commandList = ['latex-workshop.build'];
+		recipes([
+			{ name: 'xelatex', tools: ['xelatex'] },
+			{ name: 'latexmk', tools: [{ name: 'latexmk' }] },
+		]);
+		fake.quickPick = 'xelatex';
+		await buildWithRecipe(doc() as never);
+		expect(fake.quickPickItems).toEqual([
+			{ label: 'xelatex', description: 'xelatex' },
+			{ label: 'latexmk', description: 'latexmk' },
+		]);
+		expect(fake.executed).toEqual([['latex-workshop.recipes', 'xelatex']]);
+	});
+
+	it('does nothing when no recipe is picked, and warns without LaTeX Workshop', async () => {
+		recipes([{ name: 'xelatex' }]);
+		await buildWithRecipe(doc() as never);
+		expect(fake.executed).toHaveLength(0);
+		await buildLatex(doc() as never);
+		expect(fake.warnings[0]).toMatch(/LaTeX Workshop/);
+		expect(fake.shown).toHaveLength(0);
+	});
+
+	it('opens the PDF in LaTeX Workshop\'s viewer', async () => {
+		fake.commandList = ['latex-workshop.view'];
+		await viewPdf(doc() as never);
+		expect(fake.executed).toEqual([['latex-workshop.view']]);
+		expect(fake.tabs).toHaveLength(0);
 	});
 });
 
@@ -337,5 +408,22 @@ describe('inverse search into Live Writer', () => {
 		select(7);
 		expect(reveals).toEqual([['/ws/sections/intro.tex', 8]]);
 		expect(fake.closed).toHaveLength(0);
+	});
+	it('ignores the text tab Live Writer opens for a build started right after a click in the PDF', async () => {
+		const reveals = setup();
+		fake.activeTab = pdfTab;
+		fake.groupListeners.forEach((l) => l({}));
+		fake.commandList = ['latex-workshop.view'];
+		const execute = vscode.commands.executeCommand;
+		const spy = vi.spyOn(vscode.commands, 'executeCommand').mockImplementation(async (...args: unknown[]) => {
+			select(0);
+			return (execute as (...a: unknown[]) => Promise<undefined>)(...args);
+		});
+		try {
+			await viewPdf(fake.document(tex.path, 'x', 'latex') as never);
+		} finally {
+			spy.mockRestore();
+		}
+		expect(reveals).toHaveLength(0);
 	});
 });

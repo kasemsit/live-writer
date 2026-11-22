@@ -2,6 +2,11 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.6.0
+
+- **LaTeX: build from Live Writer.** A ▶ button on the editor's title bar, **Ctrl+Alt+B** (Cmd+Alt+B on a Mac) or right-click → *Build LaTeX* builds with LaTeX Workshop's default recipe (`latex-workshop.latex.recipe.default`, e.g. the last one used). The button beside it, **Ctrl+Alt+Shift+B** or *Build LaTeX with Recipe…* asks which recipe (xelatex, pdflatex, latexmk …, as your LaTeX Workshop settings list them). **Ctrl+Alt+V** or *View PDF* (in the title bar's `…` menu) opens the PDF in its viewer. The build is LaTeX Workshop's own, with its problems list and viewer refresh; the file shows as text for a moment while it starts, as with Show in PDF.
+- A text tab Live Writer opens for a moment is never taken for a jump back from the PDF.
+
 ## 1.5.1
 
 One Markdown reader instead of two: the link preview card and Copy as Rich Text now read blocks with the same code (`src/shared/markdownBlocks.ts`) and only draw them differently. On 248 notes from the vault, each produces what it did before, except:

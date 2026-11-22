@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { isMomentary } from './momentary';
 
 /**
  * Inverse search into Live Writer: a Ctrl+click in LaTeX Workshop's PDF viewer
@@ -36,7 +37,8 @@ export function registerInverseSearch(context: vscode.ExtensionContext, revealLi
 		vscode.window.tabGroups.onDidChangeTabGroups(track),
 		vscode.window.onDidChangeTextEditorSelection((e) => {
 			const doc = e.textEditor.document;
-			if (!/\.tex$/i.test(doc.uri.path) || Date.now() - pdfAt > WINDOW_MS) return;
+			// A text tab Live Writer itself opened for a moment (build, Show in PDF) is not a jump from the PDF.
+			if (!/\.tex$/i.test(doc.uri.path) || Date.now() - pdfAt > WINDOW_MS || isMomentary(doc.uri)) return;
 			if (!vscode.workspace.getConfiguration('liveWriter').get('plus.inverseSearch', true)) return;
 			const line = e.selections[0].active.line + 1;
 			const key = doc.uri.toString();

@@ -10,6 +10,7 @@ import { registerBacklinks } from './editor/features/backlinks';
 import { registerContextMenu } from './editor/features/contextMenu';
 import { registerInsertCitation } from './editor/features/cite';
 import { registerInverseSearch } from './editor/features/inverseSearch';
+import { registerBuild } from './editor/features/build';
 import { registerTextScale } from './editor/features/textScale';
 import { migrateSettings } from './editor/features/migrate';
 
@@ -208,6 +209,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	registerBacklinks(context, activeNote);
 	registerContextMenu(context, (message) => provider.postToActiveEditor(message), activeNote);
 	registerInverseSearch(context, (uri, line) => provider.revealLine(uri, line));
+	registerBuild(context, activeNote);
 	registerInsertCitation(context, (message) => provider.postToActiveEditor(message), activeNote);
 	registerTextScale(context, (message) => provider.broadcastToEditors(message));
 	// Live Writer: settings made under the former name carry over.

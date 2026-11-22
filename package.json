@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -303,6 +303,24 @@
         "command": "liveWriter.plus.showInPdf",
         "title": "Show in PDF",
         "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.build",
+        "title": "Build LaTeX",
+        "category": "Live Writer",
+        "icon": "$(play)"
+      },
+      {
+        "command": "liveWriter.plus.buildWithRecipe",
+        "title": "Build LaTeX with Recipe…",
+        "category": "Live Writer",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "liveWriter.plus.viewPdf",
+        "title": "View PDF",
+        "category": "Live Writer",
+        "icon": "$(open-preview)"
       }
     ],
     "menus": {
@@ -316,6 +334,21 @@
           "command": "liveWriter.openWithSource",
           "when": "activeCustomEditorId == liveWriter.editor",
           "group": "navigation"
+        },
+        {
+          "command": "liveWriter.plus.build",
+          "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex",
+          "group": "navigation@-2"
+        },
+        {
+          "command": "liveWriter.plus.buildWithRecipe",
+          "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex",
+          "group": "navigation@-1"
+        },
+        {
+          "command": "liveWriter.plus.viewPdf",
+          "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex",
+          "group": "1_latex@1"
         }
       ],
       "view/title": [
@@ -446,6 +479,18 @@
         {
           "command": "liveWriter.plus.showInPdf",
           "when": "activeCustomEditorId == liveWriter.editor"
+        },
+        {
+          "command": "liveWriter.plus.build",
+          "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex"
+        },
+        {
+          "command": "liveWriter.plus.buildWithRecipe",
+          "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex"
+        },
+        {
+          "command": "liveWriter.plus.viewPdf",
+          "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex"
         }
       ],
       "webview/context": [
@@ -583,6 +628,16 @@
           "command": "liveWriter.plus.showInPdf",
           "when": "webviewId == 'liveWriter.editor' && mlpTex",
           "group": "3_plus_open@0"
+        },
+        {
+          "command": "liveWriter.plus.build",
+          "when": "webviewId == 'liveWriter.editor' && mlpTex",
+          "group": "3_plus_open@1"
+        },
+        {
+          "command": "liveWriter.plus.buildWithRecipe",
+          "when": "webviewId == 'liveWriter.editor' && mlpTex",
+          "group": "3_plus_open@2"
         }
       ],
       "liveWriter.rewrite": [
@@ -716,6 +771,24 @@
         "key": "ctrl+alt+j",
         "mac": "cmd+alt+j",
         "when": "activeCustomEditorId == liveWriter.editor"
+      },
+      {
+        "command": "liveWriter.plus.build",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
+        "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex"
+      },
+      {
+        "command": "liveWriter.plus.buildWithRecipe",
+        "key": "ctrl+alt+shift+b",
+        "mac": "cmd+alt+shift+b",
+        "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex"
+      },
+      {
+        "command": "liveWriter.plus.viewPdf",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "activeCustomEditorId == liveWriter.editor && resourceExtname == .tex"
       }
     ],
     "submenus": [
