@@ -7,6 +7,8 @@ for (const theme of ['github-like', 'vscode']) {
 	test(`first diff row stays the same height as the next row with ${theme} CSS`, async ({ page }) => {
 		await mountEditor(page, 'Intro\n\n```diff\n-古い説明\n+新しい説明\n\n そのままの説明\n```\n');
 		await postToWebview(page, { type: 'applyCss', css: readFileSync(join(__dirname, '../../media/sample-styles', `${theme}.css`), 'utf8') });
+		await page.evaluate(() => document.fonts.ready);
+		await expect.poll(async () => Math.round((await page.locator('.mlp-diff-removed').boundingBox())?.height ?? 0)).toBe(Math.round((await page.locator('.mlp-diff-added').boundingBox())?.height ?? -1));
 		const removed = (await page.locator('.mlp-diff-removed').boundingBox())!;
 		const added = (await page.locator('.mlp-diff-added').boundingBox())!;
 		expect(removed.height).toBeCloseTo(added.height, 0);
@@ -25,6 +27,10 @@ for (const mode of ['light', 'dark']) {
 		}, mode);
 		const toolbar = page.locator('.mlp-code-toolbar-line');
 		const first = page.locator('.mlp-diff-removed');
+		// CodeMirror lays out asynchronously (fonts, measure cycles): measure once the layout has settled.
+		await page.evaluate(() => document.fonts.ready);
+		await expect.poll(async () => (await toolbar.boundingBox())?.height).toBe(28);
+		await expect.poll(async () => Math.round((await first.boundingBox())?.y ?? 0)).toBe(Math.round(((await toolbar.boundingBox())?.y ?? 0) + 28));
 		const bar = (await toolbar.boundingBox())!;
 		const row = (await first.boundingBox())!;
 		// Retain space around the restored 20px button frame.

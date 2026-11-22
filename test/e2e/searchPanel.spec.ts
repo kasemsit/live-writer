@@ -116,6 +116,8 @@ test.describe('find panel', () => {
 
 	test('Escape closes it', async ({ page }) => {
 		await openSearch(page);
+		// Under load the panel can open a moment before its field takes focus; Escape needs the focus.
+		await expect(page.locator('.cm-search input[name="search"]')).toBeFocused();
 		await page.keyboard.press('Escape');
 		await expect(page.locator('.cm-search')).toHaveCount(0);
 	});
