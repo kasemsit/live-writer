@@ -370,6 +370,8 @@ export function runMenuCommand(view: EditorView, command: MenuCommand, range?: {
 			return paraphraseSelection(view, range, 'toEnglish');
 		case 'rewrite.toThai':
 			return paraphraseSelection(view, range, 'toThai');
+		case 'showInPdf':
+			return post({ type: 'hostAction', action: 'showInPdf', line: view.state.doc.lineAt(range?.from ?? contextPos(view)).number });
 		case 'openInZotero': {
 			const cite = contextTarget()?.closest('[data-citekeys]') as HTMLElement | null;
 			const key = cite ? citeKeysOf(cite)[0]?.key : undefined;

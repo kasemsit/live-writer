@@ -165,6 +165,15 @@ test.describe('LaTeX Live Preview', () => {
 		await expect(page.locator('.mlp-tex-graphic img')).toHaveAttribute('src', pixel);
 	});
 
+	test('Show in PDF asks the host for the line under the caret', async ({ page }) => {
+		await mountTex(page, 'First.\nSecond line.\nThird.');
+		const from = 'First.\n'.length;
+		await postToWebview(page, { type: 'runCommand', command: 'showInPdf', range: { from, to: from } });
+		await expect
+			.poll(async () => (await page.evaluate(() => (window as unknown as { __posted: { type: string; action?: string; line?: number }[] }).__posted)).find((m) => m.action === 'showInPdf')?.line)
+			.toBe(2);
+	});
+
 	test.describe('TikZ pictures', () => {
 		const DOC = 'Text -- here.\n\\begin{tikzpicture}\n\\draw (a) -- (b) node {\\textbf{x}};\n\\end{tikzpicture}\nEnd.';
 		const pictureRequest = async (page: Page) => {

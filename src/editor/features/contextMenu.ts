@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import type { MenuCommand, FeatureEditorToHostMessage, FeatureHostToEditorMessage } from '../../shared/messages';
 import { linkTexts, NOTE_EXT } from '../../shared/links';
 import { ZOTERO_LINK } from '../../shared/zotero';
+import { showInPdf } from './showInPdf';
 import { listNotes, openWikilink, type EditorSession } from './wikiOpen';
 import { texSessionOf } from './tex';
 
@@ -23,6 +24,7 @@ const WEBVIEW_COMMANDS: Record<string, MenuCommand> = {
 	'liveWriter.plus.openAsTextHere': 'openAsTextHere',
 	'liveWriter.plus.openLinkBeside': 'openLinkBeside',
 	'liveWriter.plus.openInZotero': 'openInZotero',
+	'liveWriter.plus.showInPdf': 'showInPdf',
 	'liveWriter.plus.paraphrase': 'paraphrase',
 	'liveWriter.plus.rewriteTighten': 'rewrite.tighten',
 	'liveWriter.plus.rewriteFormal': 'rewrite.formal',
@@ -129,6 +131,9 @@ export async function handleHostAction(session: EditorSession, message: Extract<
 			if (/^https:\/\/(www\.google\.com\/search|scholar\.google\.com\/scholar)\?q=/.test(message.url)) {
 				await vscode.env.openExternal(vscode.Uri.parse(message.url));
 			}
+			return;
+		case 'showInPdf':
+			await showInPdf(session.getDocument(), message.line);
 			return;
 		case 'openZotero':
 			if (ZOTERO_LINK.test(message.url)) await vscode.env.openExternal(vscode.Uri.parse(message.url));

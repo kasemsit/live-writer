@@ -23,6 +23,7 @@ import { migrateSettings } from './migrate';
 import { caywUrl, pickCitation } from './cite';
 import { paraphrase } from './paraphrase';
 import { TexSession } from './tex';
+import { showInPdf } from './showInPdf';
 
 const folder = (path: string) => ({ uri: vscode.Uri.file(path), name: 'ws', index: 0 });
 const json = (body: unknown, ok = true) => ({ ok, status: ok ? 200 : 403, json: async () => body, text: async () => String(body) });
@@ -233,5 +234,21 @@ describe('TikZ pictures from the last build', () => {
 		const s = session();
 		(s as unknown as { auxFile: vscode.Uri }).auxFile = vscode.Uri.file('/ws/main.aux');
 		expect((await s.resolvePicture([2])).stale).toBe(true);
+	});
+});
+
+describe('Show in PDF', () => {
+	it('starts LaTeX Workshop\'s SyncTeX search from the line, then closes the momentary text tab', async () => {
+		fake.commandList = ['latex-workshop.synctexto'];
+		const doc = fake.document('/ws/sections/intro.tex', 'a\nb\nc', 'latex');
+		await showInPdf(doc as never, 3);
+		expect(fake.shown[0]).toMatchObject({ path: '/ws/sections/intro.tex', options: { viewColumn: 1, preview: true } });
+		expect(fake.executed).toEqual([['latex-workshop.synctexto', 2, '/ws/sections/intro.tex'], ['workbench.action.closeActiveEditor']]);
+	});
+
+	it('says LaTeX Workshop is needed when it is not installed', async () => {
+		await showInPdf(fake.document('/ws/a.tex', 'x', 'latex') as never, 1);
+		expect(fake.shown).toHaveLength(0);
+		expect(fake.warnings[0]).toMatch(/LaTeX Workshop/);
 	});
 });

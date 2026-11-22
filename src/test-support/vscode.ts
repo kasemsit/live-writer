@@ -52,6 +52,20 @@ export class EventEmitter<T> {
 	}
 }
 
+export class Position {
+	constructor(
+		readonly line: number,
+		readonly character: number,
+	) {}
+}
+
+export class Range {
+	constructor(
+		readonly start: Position,
+		readonly end: Position,
+	) {}
+}
+
 export class RelativePattern {
 	constructor(
 		readonly base: Uri,
@@ -96,6 +110,9 @@ export const fake = {
 	watchers: [] as FakeWatcher[],
 	saveListeners: [] as ((doc: FakeDocument) => void)[],
 	opened: [] as string[],
+	executed: [] as unknown[][],
+	shown: [] as { path: string; options: unknown }[],
+	commandList: [] as string[],
 	warnings: [] as string[],
 	reset(): void {
 		this.files.clear();
@@ -103,6 +120,10 @@ export const fake = {
 		this.watchers = [];
 		this.saveListeners = [];
 		this.opened = [];
+		this.executed = [];
+		this.shown = [];
+		this.commandList = [];
+		window.activeTextEditor = undefined;
 		this.warnings = [];
 		workspace.workspaceFolders = [];
 		workspace.textDocuments = [];
@@ -196,6 +217,14 @@ export const workspace = {
 };
 
 export const window = {
+	activeTextEditor: undefined as unknown,
+	tabGroups: { activeTabGroup: { viewColumn: 1 } },
+	async showTextDocument(document: FakeDocument, options: unknown) {
+		fake.shown.push({ path: document.uri.path, options });
+		const editor = { document };
+		window.activeTextEditor = editor;
+		return editor;
+	},
 	async showWarningMessage(message: string): Promise<undefined> {
 		fake.warnings.push(message);
 		return undefined;
@@ -221,10 +250,12 @@ export const commands = {
 		commands.registered.set(id, fn);
 		return new Disposable(() => commands.registered.delete(id));
 	},
-	async executeCommand(): Promise<undefined> {
+	async executeCommand(...args: unknown[]): Promise<undefined> {
+		fake.executed.push(args);
+		if (args[0] === 'workbench.action.closeActiveEditor') window.activeTextEditor = undefined;
 		return undefined;
 	},
 	async getCommands(): Promise<string[]> {
-		return [];
+		return fake.commandList;
 	},
 };

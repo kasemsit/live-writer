@@ -148,6 +148,7 @@ export type MenuCommand =
 	| 'openAsTextHere'
 	| 'openLinkBeside'
 	| 'openInZotero'
+	| 'showInPdf'
 	| 'paraphrase'
 	| 'rewrite.tighten'
 	| 'rewrite.formal'
@@ -279,6 +280,8 @@ export type FeatureEditorToHostMessage =
 	| { type: 'hostAction'; action: 'openUrl'; url: string }
 	// A zotero:// link (shared/zotero.ts ZOTERO_LINK): a PDF in Zotero's reader or an item in the library.
 	| { type: 'hostAction'; action: 'openZotero'; url: string }
+	// LaTeX: this line (1-based) of the document, shown in the build's PDF.
+	| { type: 'hostAction'; action: 'showInPdf'; line: number }
 	| { type: 'hostAction'; action: 'notify'; message: string; error?: boolean }
 	// LaTeX: find the file an `\includegraphics{path}` means.
 	| { type: 'texAsset'; requestId: number; path: string }

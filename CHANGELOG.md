@@ -2,6 +2,10 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.4.0
+
+- **LaTeX: Show in PDF** (Ctrl+Alt+J, Cmd+Alt+J on a Mac, or right-click). The line under the caret, or the one you right-clicked, is shown in the build's PDF by LaTeX Workshop's viewer through SyncTeX, the same forward search it does from its own editor. LaTeX Workshop starts that search only from a text editor, so the file shows as text for a moment in the same tab group before Live Writer comes back. Needs LaTeX Workshop and a build with SyncTeX (its default).
+
 ## 1.3.0
 
 Two features taken from t-shoot's Markdown Live Preview Editor (0.5.0 and 0.6.0, MIT), fitted to Live Writer.
