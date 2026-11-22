@@ -216,7 +216,7 @@ export class TexPictureWidget extends WidgetType {
 		wrap.appendChild(code);
 		// The host's context, which says which build there is, comes right after the text: ask then.
 		if (this.build === NO_BUILD_YET) return this.finish(view, wrap);
-		void resolveTexPicture(this.lines, this.build).then((picture) => {
+		void resolveTexPicture(this.lines, this.build, this.source).then((picture) => {
 			if (picture.status === 'image' && picture.src) {
 				const img = document.createElement('img');
 				img.className = 'mlp-tex-picture-img';

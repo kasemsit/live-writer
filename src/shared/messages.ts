@@ -222,7 +222,7 @@ export interface QuartoProject {
 	 * How `[@key]` reads in a `.qmd` with a bibliography. Null otherwise: a
 	 * citation then links to the `@key` note, as in a notes vault.
 	 */
-	citations: { style: CiteStyle; lang: string; bib: Record<string, BibEntry> } | null;
+	citations: { style: CiteStyle; lang: string; bib: Record<string, BibEntry>; nocite?: string[] } | null;
 	/**
 	 * The document is a `.qmd`, so Pandoc's rules hold: a heading needs a blank
 	 * line before it. A Markdown note follows CommonMark, where it does not.
@@ -286,7 +286,7 @@ export type FeatureEditorToHostMessage =
 	// LaTeX: find the file an `\includegraphics{path}` means.
 	| { type: 'texAsset'; requestId: number; path: string }
 	// LaTeX: the last build's drawing of the picture on these lines (1-based) of this file.
-	| { type: 'texPicture'; requestId: number; lines: number[] }
+	| { type: 'texPicture'; requestId: number; lines: number[]; source?: string }
 	// The Zotero links for a citation key.
 	| { type: 'zoteroLinks'; requestId: number; key: string }
 	// Paraphrase with Claude: the selected source, rewritten by Claude Code.

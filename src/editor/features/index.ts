@@ -84,7 +84,7 @@ export function handleFeatureMessage(
 		case 'texPicture': {
 			const tex = texSessionOf(session);
 			const missing = { status: 'missing' as const, src: null, note: 'Not a LaTeX document.', stale: false };
-			void (tex ? tex.resolvePicture(message.lines) : Promise.resolve(missing)).then(
+			void (tex ? tex.resolvePicture(message.lines, message.source) : Promise.resolve(missing)).then(
 				(picture) => post({ type: 'texPictureResult', requestId: message.requestId, picture }),
 				() => post({ type: 'texPictureResult', requestId: message.requestId, picture: missing }),
 			);

@@ -256,6 +256,34 @@ test.describe('Quarto citations', () => {
 		await expect(page.locator('.cm-content')).toContainText('and by @chen2015, not');
 	});
 
+	test('::: {#refs} lists the cited entries as the book prints them', async ({ page }) => {
+		const full = (key: string, family: string, given: string, year: string, title: string, fields: Record<string, string>) => ({
+			...entry(key, [family], year, title),
+			type: 'article',
+			names: [{ family, given }],
+			rawTitle: title,
+			fields,
+		});
+		const bib = {
+			chen2015: { ...full('chen2015', 'Chen', 'Daqing', '2015', 'Online Retail [Data set]', { howpublished: 'UCI Machine Learning Repository', doi: '10.24432/C5BW33' }), type: 'misc' },
+			anscombe1973: full('anscombe1973', 'Anscombe', 'Francis J.', '1973', 'Graphs in Statistical Analysis', { journal: 'The American Statistician', volume: '27', number: '1', pages: '17--21' }),
+			unused: full('unused', 'Zed', 'A.', '2001', 'Not Cited', {}),
+		};
+		const send = (nocite: string[]) =>
+			postToWebview(page, { type: 'quartoProject', project: { labels: {}, citations: { style: 'apa', lang: 'en', bib, nocite }, quarto: true } });
+		await mountEditor(page, '# T\n\nSee @anscombe1973 and [@chen2015].\n\n## References\n\n::: {#refs}\n:::\n');
+		await send([]);
+		const refs = page.locator('.mlp-qref');
+		await expect(refs).toHaveText([
+			'Anscombe, F. J. (1973). Graphs in statistical analysis. The American Statistician, 27(1), 17–21.',
+			'Chen, D. (2015). Online retail [data set]. UCI Machine Learning Repository. https://doi.org/10.24432/C5BW33',
+		]);
+		await expect(refs.first().locator('em')).toHaveText(['The American Statistician', '27']);
+		await expect(refs.nth(1).locator('a')).toHaveAttribute('href', 'https://doi.org/10.24432/C5BW33');
+		await send(['*']);
+		await expect(refs).toHaveCount(3);
+	});
+
 	test('without a bibliography, [@key] still links to the @key note', async ({ page }) => {
 		await postToWebview(page, { type: 'quartoProject', project: { labels: {}, citations: null, quarto: false } });
 		await expect(page.locator('.cm-line a.mlp-cite')).toHaveCount(3);

@@ -56,7 +56,7 @@ function quartoProject(docPath) {
 		const file = path.join(base, name);
 		if (fs.existsSync(file)) Object.assign(bib, parseBib(fs.readFileSync(file, 'utf8')));
 	}
-	return { labels, citations: { style: plan.style, lang: plan.lang, bib }, quarto: true };
+	return { labels, citations: { style: plan.style, lang: plan.lang, bib, nocite: plan.nocite }, quarto: true };
 }
 const css = option('--css') ? fs.readFileSync(option('--css'), 'utf8') : '';
 
@@ -113,6 +113,7 @@ window.mlpKatexChunkUri='https://render.invalid/katex-chunk.js';window.mlpKatexB
 				xrefs: q('.mlp-xref').map((x) => x.textContent),
 				missingXrefs: q('.mlp-xref-missing').map((x) => `${x.textContent} — ${x.title}`),
 				warnings: q('.mlp-q-warning').map((w) => w.textContent),
+				references: q('.mlp-qref').map((r) => r.textContent),
 			},
 			citations: q('.mlp-qcite').map((c) => c.textContent).slice(0, 40),
 			missingCitations: q('.mlp-qcite-missing').map((c) => c.textContent),

@@ -10,6 +10,7 @@ import { extractMacros } from '../../shared/texMacros';
 import { bibFilesOf, graphicsPathOf, inputsOf, magicRoot, outermostFolders } from '../../shared/texProject';
 import { scanTex } from '../../shared/texScanner';
 import { isPathInside } from '../../shared/pathContainment';
+import { standaloneEngine, standaloneSource } from '../../shared/texStandalone';
 import { exists, readText } from './files';
 
 /**
@@ -24,7 +25,9 @@ import { exists, readText } from './files';
  *   figure's first page to PNG with `pdftoppm` when it is installed.
  * - Opens the files `\input` names, in the Live Preview.
  *
- * Nothing here compiles: the numbers are the user's own last build.
+ * Nothing here compiles the document: the numbers are the user's own last
+ * build. Only a `tikzpicture` the build has not drawn yet is compiled, on its
+ * own (`liveWriter.plus.tikzCompile`).
  */
 
 const VIEW_TYPE = 'liveWriter.editor';
@@ -116,8 +119,8 @@ async function readAux(root: vscode.Uri): Promise<{ data: AuxData; file: vscode.
 }
 
 /** Runs a command; its output, or null when it is missing or fails. */
-function run(command: string, args: string[], timeout: number): Promise<string | null> {
-	return new Promise((resolve) => execFile(command, args, { timeout, maxBuffer: 1 << 20 }, (err, stdout) => resolve(err ? null : String(stdout))));
+function run(command: string, args: string[], timeout: number, cwd?: string): Promise<string | null> {
+	return new Promise((resolve) => execFile(command, args, { timeout, maxBuffer: 1 << 20, cwd }, (err, stdout) => resolve(err ? null : String(stdout))));
 }
 
 export class TexSession implements vscode.Disposable {
@@ -129,6 +132,10 @@ export class TexSession implements vscode.Disposable {
 	private watchedDirs = '';
 	private timer: ReturnType<typeof setTimeout> | undefined;
 	private disposed = false;
+	/** The root's preamble and the preamble files it \input s: what a picture drawn on its own needs. */
+	private preamble = '';
+	/** One standalone compile at a time. */
+	private drawing: Promise<unknown> = Promise.resolve();
 	/** Counts sendContext's runs, so that a run a newer one has overtaken can tell, and stop. */
 	private runs = 0;
 
@@ -195,11 +202,16 @@ export class TexSession implements vscode.Disposable {
 		// Macros: the root's preamble, and local files it \input s there.
 		const preamble = rootScan.hasPreamble ? rootText.slice(0, rootScan.bodyFrom) : '';
 		let macros = extractMacros(preamble);
+		let fullPreamble = preamble;
 		for (const input of inputsOf(preamble).slice(0, 10)) {
 			const file = /\.\w+$/.test(input) ? input : `${input}.tex`;
 			const text = await readText(vscode.Uri.joinPath(rootDir, file));
-			if (text) macros = { ...extractMacros(text), ...macros };
+			if (text) {
+				macros = { ...extractMacros(text), ...macros };
+				fullPreamble += `\n${text}`;
+			}
 		}
+		this.preamble = fullPreamble;
 
 		const context: TexContext = {
 			labels: data.labels,
@@ -276,11 +288,57 @@ export class TexSession implements vscode.Disposable {
 	}
 
 	/**
-	 * A `tikzpicture` (on `lines` of this file, 1-based) as the last build drew
-	 * it: SyncTeX says where those lines landed in the PDF, and pdftoppm cuts
-	 * that box out (cached by PDF time and box). Nothing is compiled.
+	 * A `tikzpicture` (on `lines` of this file, 1-based; its text is `source`):
+	 * the last build's drawing while it is current, else the picture compiled
+	 * on its own, else the older drawing marked as such.
 	 */
-	async resolvePicture(lines: number[]): Promise<TexPicture> {
+	async resolvePicture(lines: number[], source = ''): Promise<TexPicture> {
+		const fromBuild = await this.pictureFromBuild(lines);
+		if ((fromBuild.status === 'image' && !fromBuild.stale) || !source.trim()) return fromBuild;
+		if (!vscode.workspace.getConfiguration('liveWriter.plus', this.document.uri).get<boolean>('tikzCompile', true)) return fromBuild;
+		const own = (this.drawing = this.drawing.then(
+			() => this.drawOnItsOwn(source, fromBuild.status === 'image'),
+			() => this.drawOnItsOwn(source, fromBuild.status === 'image'),
+		)) as Promise<TexPicture | string>;
+		const result = await own;
+		if (typeof result !== 'string') return result;
+		return fromBuild.status === 'image' ? fromBuild : { ...fromBuild, note: `${fromBuild.note} ${result}` };
+	}
+
+	/**
+	 * Compiles the picture alone (standalone class, the preamble's packages and
+	 * macros), cached by engine, preamble and text. A string says why it failed.
+	 */
+	private async drawOnItsOwn(source: string, hasOlder: boolean): Promise<TexPicture | string> {
+		if (this.document.uri.scheme !== 'file' || this.figureCache.scheme !== 'file') return 'Pictures are drawn on their own only for local files.';
+		const engine = standaloneEngine(this.preamble);
+		const text = standaloneSource(this.preamble, source);
+		const key = createHash('sha1').update(`${engine}|${text}`).digest('hex').slice(0, 16);
+		const out = vscode.Uri.joinPath(this.figureCache, `tikz-own-${key}.png`);
+		const why = hasOlder ? 'the last build is older than the text' : 'no build has it';
+		const picture: TexPicture = { status: 'image', src: this.asWebviewUri(out), note: `Drawn on its own with ${engine}: ${why}.`, stale: false };
+		if (await exists(out)) return picture;
+		const dir = vscode.Uri.joinPath(this.figureCache, 'standalone');
+		await vscode.workspace.fs.createDirectory(dir);
+		const tex = vscode.Uri.joinPath(dir, `${key}.tex`);
+		await vscode.workspace.fs.writeFile(tex, new TextEncoder().encode(text));
+		const args = ['-interaction=nonstopmode', '-halt-on-error', `-output-directory=${dir.fsPath}`, tex.fsPath];
+		// Run beside the root, so that \input and images name the files the document does.
+		if ((await run(engine, args, 60_000, this.rootDir().fsPath)) === null) {
+			return `Drawing it on its own with ${engine} failed (log: ${vscode.workspace.asRelativePath(vscode.Uri.joinPath(dir, `${key}.log`), false)}).`;
+		}
+		const pdf = vscode.Uri.joinPath(dir, `${key}.pdf`);
+		if ((await run('pdftoppm', ['-png', '-r', '144', '-f', '1', '-l', '1', '-singlefile', pdf.fsPath, out.fsPath.replace(/\.png$/, '')], 20_000)) === null || !(await exists(out))) {
+			return 'pdftoppm (poppler) is needed to show pictures.';
+		}
+		return picture;
+	}
+
+	/**
+	 * The picture as the last build drew it: SyncTeX says where `lines` landed
+	 * in the PDF, and pdftoppm cuts that box out (cached by PDF time and box).
+	 */
+	private async pictureFromBuild(lines: number[]): Promise<TexPicture> {
 		const none = (status: TexPicture['status'], note: string): TexPicture => ({ status, src: null, note, stale: false });
 		const aux = this.auxFile;
 		if (!aux || aux.scheme !== 'file' || this.document.uri.scheme !== 'file') return none('missing', 'No build of this document found (its .aux and .pdf).');

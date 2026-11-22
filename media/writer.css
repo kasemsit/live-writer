@@ -708,3 +708,8 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 .mlp-heading-fold-placeholder:focus-visible {
 	outline: 1px solid var(--vscode-focusBorder);
 }
+
+/* The reference list at ::: {#refs} (features/quarto.ts). */
+.mlp-qrefs { display: block; white-space: normal; }
+.mlp-qref { padding-left: 2em; text-indent: -2em; margin: 0.35em 0; line-height: 1.5; }
+.mlp-qref a { word-break: break-all; }

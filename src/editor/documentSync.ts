@@ -371,6 +371,12 @@ export class DocumentSyncSession {
 		return this.document;
 	}
 
+	/** Live Writer: brings this editor's panel to the front and moves to `line` (1-based). */
+	revealAt(line: number): void {
+		this.webviewPanel.reveal(undefined, false);
+		setTimeout(() => this.jumpToLine(line), 60);
+	}
+
 	jumpToLine(line: number): void {
 		this.post({ type: 'jumpToLine', line });
 	}

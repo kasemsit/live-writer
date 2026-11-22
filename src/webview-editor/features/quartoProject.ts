@@ -23,6 +23,11 @@ export function quartoLabel(key: string): string | undefined {
 	return project.labels[key] ?? QUARTO_LABELS[key];
 }
 
+/** `nocite:` keys of the project and document; `*` lists every entry. */
+export function nocite(): string[] {
+	return project.citations?.nocite ?? [];
+}
+
 /** True for a `.qmd`: Pandoc's paragraph rules hold (see QuartoProject.quarto). */
 export function isQuartoDocument(): boolean {
 	return project.quarto;

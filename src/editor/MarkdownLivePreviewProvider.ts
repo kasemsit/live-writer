@@ -124,6 +124,13 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 	}
 
 	/** Asks the currently active Markdown Live Preview panel to move its cursor to the given line. */
+	/** Live Writer: shows `line` of `uri` in its open Live Writer editor; false when none is open. */
+	revealLine(uri: vscode.Uri, line: number): boolean {
+		const session = [...this.sessions].find((s) => s.getDocument().uri.toString() === uri.toString());
+		session?.revealAt(line);
+		return !!session;
+	}
+
 	jumpToActiveHeading(line: number): void {
 		this.findActiveSession()?.jumpToLine(line);
 	}

@@ -24,6 +24,7 @@ import { caywUrl, pickCitation } from './cite';
 import { paraphrase } from './paraphrase';
 import { TexSession } from './tex';
 import { showInPdf } from './showInPdf';
+import { registerInverseSearch } from './inverseSearch';
 
 const folder = (path: string) => ({ uri: vscode.Uri.file(path), name: 'ws', index: 0 });
 const json = (body: unknown, ok = true) => ({ ok, status: ok ? 200 : 403, json: async () => body, text: async () => String(body) });
@@ -237,6 +238,51 @@ describe('TikZ pictures from the last build', () => {
 	});
 });
 
+describe('TikZ pictures drawn on their own', () => {
+	const PIC = '\\begin{tikzpicture}\n\\draw;\n\\end{tikzpicture}';
+	function session() {
+		workspaceWith('/ws');
+		const doc = fake.document('/ws/fig.tex', PIC, 'latex');
+		const s = new TexSession(doc as never, () => undefined, (u) => `webview:${u.path}`, vscode.Uri.file('/cache'));
+		(s as unknown as { preamble: string }).preamble = '\\usepackage{tikz}\n\\usetikzlibrary{calc}\n\\usepackage{geometry}';
+		return s;
+	}
+
+	it('compiles the picture alone when there is no build, once per text', async () => {
+		const calls: string[][] = [];
+		proc.execFile = (cmd, args) => {
+			calls.push([cmd, ...args]);
+			if (cmd === 'pdftoppm') fake.file(`${args[args.length - 1]}.png`, 'png');
+			return { err: null, stdout: '' };
+		};
+		const s = session();
+		const picture = await s.resolvePicture([2], PIC);
+		expect(picture).toMatchObject({ status: 'image', stale: false, note: 'Drawn on its own with pdflatex: no build has it.' });
+		expect(picture.src).toMatch(/^webview:\/cache\/tikz-own-[0-9a-f]{16}\.png$/);
+		expect(calls.map((c) => c[0])).toEqual(['pdflatex', 'pdftoppm']);
+		const tex = [...fake.files.entries()].find(([p]) => p.startsWith('/cache/standalone/') && p.endsWith('.tex'))![1].text;
+		expect(tex).toContain('\\usetikzlibrary{calc}');
+		expect(tex).not.toContain('geometry');
+		expect(tex).toContain(PIC);
+		await s.resolvePicture([2], PIC);
+		expect(calls).toHaveLength(2);
+	});
+
+	it('keeps the older drawing when the compile fails, and says why when there is none', async () => {
+		proc.execFile = (cmd) => ({ err: cmd === 'pdflatex' ? new Error('exit 1') : null, stdout: '' });
+		const s = session();
+		expect(await s.resolvePicture([2], PIC)).toMatchObject({ status: 'missing', note: expect.stringMatching(/pdflatex failed \(log: .*\.log\)/) });
+	});
+
+	it('does nothing when the setting is off', async () => {
+		await vscode.workspace.getConfiguration('liveWriter.plus').update('tikzCompile', false, vscode.ConfigurationTarget.Global);
+		proc.execFile = () => {
+			throw new Error('should not run');
+		};
+		expect((await session().resolvePicture([2], PIC)).status).toBe('missing');
+	});
+});
+
 describe('Show in PDF', () => {
 	it('starts LaTeX Workshop\'s SyncTeX search from the line, then closes the momentary text tab', async () => {
 		fake.commandList = ['latex-workshop.synctexto'];
@@ -250,5 +296,46 @@ describe('Show in PDF', () => {
 		await showInPdf(fake.document('/ws/a.tex', 'x', 'latex') as never, 1);
 		expect(fake.shown).toHaveLength(0);
 		expect(fake.warnings[0]).toMatch(/LaTeX Workshop/);
+	});
+});
+
+describe('inverse search into Live Writer', () => {
+	const tex = vscode.Uri.file('/ws/sections/intro.tex');
+	const pdfTab = { input: new vscode.TabInputWebview('mainThreadWebview-latex-workshop-pdf') };
+	function setup() {
+		const reveals: [string, number][] = [];
+		registerInverseSearch({ subscriptions: [] } as never, (uri, line) => {
+			reveals.push([uri.path, line]);
+			return true;
+		});
+		return reveals;
+	}
+	const select = (line: number) =>
+		fake.selectionListeners.forEach((l) => l({ textEditor: { document: { uri: tex } }, selections: [{ active: { line } }] }));
+
+	it('a Ctrl+click in the PDF viewer shows the line in Live Writer and closes the text tab opened for it', () => {
+		const reveals = setup();
+		fake.activeTab = pdfTab;
+		fake.tabListeners.forEach((l) => l({ opened: [], closed: [], changed: [pdfTab] }));
+		const textTab = { input: new vscode.TabInputText(tex) };
+		fake.tabs = [textTab];
+		fake.activeTab = textTab;
+		fake.tabListeners.forEach((l) => l({ opened: [textTab], closed: [], changed: [] }));
+		select(41);
+		expect(reveals).toEqual([['/ws/sections/intro.tex', 42]]);
+		expect(fake.closed).toEqual([[textTab]]);
+	});
+
+	it('leaves a text tab that was already open, and ignores ordinary selections', () => {
+		const reveals = setup();
+		const textTab = { input: new vscode.TabInputText(tex) };
+		fake.tabs = [textTab];
+		select(3);
+		expect(reveals).toHaveLength(0);
+		fake.activeTab = pdfTab;
+		fake.groupListeners.forEach((l) => l({}));
+		select(7);
+		expect(reveals).toEqual([['/ws/sections/intro.tex', 8]]);
+		expect(fake.closed).toHaveLength(0);
 	});
 });

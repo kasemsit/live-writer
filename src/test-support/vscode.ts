@@ -66,6 +66,27 @@ export class Range {
 	) {}
 }
 
+export class TabInputText {
+	constructor(readonly uri: Uri) {}
+}
+export class TabInputWebview {
+	constructor(readonly viewType: string) {}
+}
+export class TabInputCustom {
+	constructor(
+		readonly uri: Uri,
+		readonly viewType: string,
+	) {}
+}
+
+type Handler<T> = (value: T) => void;
+function event<T>(list: Handler<T>[]) {
+	return (h: Handler<T>) => {
+		list.push(h);
+		return new Disposable(() => list.splice(list.indexOf(h), 1));
+	};
+}
+
 export class RelativePattern {
 	constructor(
 		readonly base: Uri,
@@ -113,6 +134,12 @@ export const fake = {
 	executed: [] as unknown[][],
 	shown: [] as { path: string; options: unknown }[],
 	commandList: [] as string[],
+	tabs: [] as { input: unknown; group?: unknown }[],
+	activeTab: undefined as { input: unknown } | undefined,
+	closed: [] as unknown[],
+	tabListeners: [] as Handler<{ opened: unknown[]; closed: unknown[]; changed: unknown[] }>[],
+	groupListeners: [] as Handler<unknown>[],
+	selectionListeners: [] as Handler<unknown>[],
 	warnings: [] as string[],
 	reset(): void {
 		this.files.clear();
@@ -123,6 +150,13 @@ export const fake = {
 		this.executed = [];
 		this.shown = [];
 		this.commandList = [];
+		this.tabs = [];
+		this.activeTab = undefined;
+		this.closed = [];
+		// Emptied in place: the events hold on to these arrays.
+		this.tabListeners.length = 0;
+		this.groupListeners.length = 0;
+		this.selectionListeners.length = 0;
 		window.activeTextEditor = undefined;
 		this.warnings = [];
 		workspace.workspaceFolders = [];
@@ -182,6 +216,9 @@ export const workspace = {
 			return [...names].map((n) => [n, FileType.File]);
 		},
 		async createDirectory(): Promise<void> {},
+		async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
+			fake.files.set(uri.path, { text: new TextDecoder().decode(content), mtime: Date.now() });
+		},
 	},
 	getConfiguration(section: string) {
 		return {
@@ -218,7 +255,21 @@ export const workspace = {
 
 export const window = {
 	activeTextEditor: undefined as unknown,
-	tabGroups: { activeTabGroup: { viewColumn: 1 } },
+	tabGroups: {
+		get activeTabGroup() {
+			return { viewColumn: 1, activeTab: fake.activeTab, tabs: fake.tabs };
+		},
+		get all() {
+			return [{ viewColumn: 1, tabs: fake.tabs }];
+		},
+		onDidChangeTabs: event(fake.tabListeners),
+		onDidChangeTabGroups: event(fake.groupListeners),
+		async close(tabs: unknown): Promise<boolean> {
+			fake.closed.push(tabs);
+			return true;
+		},
+	},
+	onDidChangeTextEditorSelection: event(fake.selectionListeners),
 	async showTextDocument(document: FakeDocument, options: unknown) {
 		fake.shown.push({ path: document.uri.path, options });
 		const editor = { document };

@@ -2,6 +2,12 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.5.0
+
+- **LaTeX: back from the PDF.** Ctrl+click in LaTeX Workshop's PDF viewer (its inverse search) now shows the line in the Live Writer tab of that file instead of opening the file as text; a text tab opened only for the jump is closed. Turn off with `liveWriter.plus.inverseSearch`.
+- **LaTeX: TikZ pictures without a build.** A picture no current build has drawn (a new one, or one edited since) is compiled on its own: the `standalone` class with the root preamble's packages, TikZ libraries, colours, styles and macros (page layout, hyperref and the bibliography left out), by pdflatex, or xelatex when the preamble loads fontspec. Each version is compiled once and cached. If the compile fails, the last build's drawing stays, marked *last build*, and the note names the log. Turn off with `liveWriter.plus.tikzCompile`.
+- **Quarto: the reference list.** `::: {#refs}` shows the bibliography as the book prints it, in APA: hanging indent, italic titles and journals, linked DOIs. It lists every entry with `nocite: '@*'`, otherwise the entries the file cites plus any `nocite:` names. On the 269382 book, all 48 entries match Quarto's own HTML, in order and character for character.
+
 ## 1.4.0
 
 - **LaTeX: Show in PDF** (Ctrl+Alt+J, Cmd+Alt+J on a Mac, or right-click). The line under the caret, or the one you right-clicked, is shown in the build's PDF by LaTeX Workshop's viewer through SyncTeX, the same forward search it does from its own editor. LaTeX Workshop starts that search only from a text editor, so the file shows as text for a moment in the same tab group before Live Writer comes back. Needs LaTeX Workshop and a build with SyncTeX (its default).

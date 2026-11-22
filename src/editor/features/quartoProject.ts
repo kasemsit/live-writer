@@ -58,7 +58,7 @@ export async function readQuartoProject(document: vscode.TextDocument): Promise<
 		const text = await readText(uri);
 		if (text) Object.assign(bib, parseBib(text));
 	}
-	return { project: { labels, citations: { style: plan.style, lang: plan.lang, bib }, quarto: true }, watched };
+	return { project: { labels, citations: { style: plan.style, lang: plan.lang, bib, nocite: plan.nocite }, quarto: true }, watched };
 }
 
 const watching = new WeakMap<EditorSession, vscode.Disposable>();

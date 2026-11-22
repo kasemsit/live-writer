@@ -82,15 +82,16 @@ export function resolveTexAsset(path: string): Promise<TexAsset> {
 const pictures = new Map<string, Promise<TexPicture>>();
 
 /**
- * The last build's drawing of the picture on `lines` (1-based), cut from its
- * PDF by the host. Cached until the next context, which a rebuild sends.
+ * The picture on `lines` (1-based): the last build's drawing, cut from its
+ * PDF by the host, or the picture compiled on its own when the build is older. Cached until the next context, which a rebuild sends.
  */
-export function resolveTexPicture(lines: number[], build: string): Promise<TexPicture> {
-	const key = `${build}|${lines.join(',')}`;
+export function resolveTexPicture(lines: number[], build: string, source = ''): Promise<TexPicture> {
+	// The source is part of the key: an edited picture is drawn again (on its own when the build is older).
+	const key = `${build}|${lines.join(',')}|${source}`;
 	let found = pictures.get(key);
 	if (!found) {
 		const none: TexPicture = { status: 'missing', src: null, note: 'The host did not answer.', stale: false };
-		found = request<TexPicture>((requestId) => ({ type: 'texPicture', requestId, lines }), none, 20_000);
+		found = request<TexPicture>((requestId) => ({ type: 'texPicture', requestId, lines, source }), none, 60_000);
 		pictures.set(key, found);
 	}
 	return found;

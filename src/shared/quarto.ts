@@ -60,6 +60,8 @@ export interface QuartoSettings {
 	bibliography: string[];
 	csl?: string;
 	lang?: string;
+	/** `nocite:` keys, without `@`; `*` lists every entry. */
+	nocite: string[];
 }
 
 /** The citation settings in YAML text (`bibliography:` one file or a list, `csl:`, `lang:`). */
@@ -68,14 +70,15 @@ export function quartoSettings(yaml: string): QuartoSettings {
 	try {
 		data = parseYaml(yaml);
 	} catch {
-		return { bibliography: [] };
+		return { bibliography: [], nocite: [] };
 	}
-	if (!data || typeof data !== 'object' || Array.isArray(data)) return { bibliography: [] };
+	if (!data || typeof data !== 'object' || Array.isArray(data)) return { bibliography: [], nocite: [] };
 	const d = data as Record<string, unknown>;
 	const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
 	const bib = d.bibliography;
 	const list = Array.isArray(bib) ? bib : [bib];
-	return { bibliography: list.map(text).filter((b): b is string => !!b), csl: text(d.csl), lang: text(d.lang) };
+	const nocite = [...String(typeof d.nocite === 'string' ? d.nocite : '').matchAll(/@([^\s,;]+)/g)].map((m) => m[1]);
+	return { bibliography: list.map(text).filter((b): b is string => !!b), csl: text(d.csl), lang: text(d.lang), nocite };
 }
 
 /** The YAML between a document's opening `---` and its closing `---` or `...`; null when there is none. */
@@ -91,6 +94,8 @@ export interface QuartoCitationPlan {
 	base: 'project' | 'document';
 	style: CiteStyle;
 	lang: string;
+	/** Entries listed though not cited (`nocite:`); `*` for all. */
+	nocite: string[];
 }
 
 /**
@@ -105,7 +110,7 @@ export function quartoCitationPlan(projectYaml: string, documentText: string): Q
 	const [names, base] = own.bibliography.length ? [own.bibliography, 'document' as const] : [project.bibliography, 'project' as const];
 	const files = names.filter((n) => /\.bib$/i.test(n));
 	if (!files.length) return null;
-	return { files, base, style: citeStyleOf(own.csl ?? project.csl), lang: own.lang ?? project.lang ?? 'en' };
+	return { files, base, style: citeStyleOf(own.csl ?? project.csl), lang: own.lang ?? project.lang ?? 'en', nocite: [...project.nocite, ...own.nocite] };
 }
 
 /** An attribute block ending a line, e.g. after a heading: `{#sec-x}`. Offsets cover the leading space. */

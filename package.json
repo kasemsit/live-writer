@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -685,6 +685,16 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Live Writer: the Claude model for *Rewrite with Claude* (a name or an alias such as `sonnet` or `opus`). Empty uses Claude Code's default."
+        },
+        "liveWriter.plus.tikzCompile": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "LaTeX: when no current build has drawn a `tikzpicture`, compile the picture on its own (the `standalone` class with the root preamble's packages and macros, via pdflatex, or xelatex for fontspec) to show it."
+        },
+        "liveWriter.plus.inverseSearch": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Live Writer: when a Ctrl+click in LaTeX Workshop's PDF viewer opens a `.tex` file that is open in Live Writer, show the line in Live Writer instead of a text editor."
         }
       }
     },

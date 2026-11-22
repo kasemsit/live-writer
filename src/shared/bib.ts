@@ -44,6 +44,24 @@ export interface BibEntry {
 	title: string;
 	year: string;
 	venue: string;
+	/** Each person's family name (particle kept) and given names, plain, for a reference list. */
+	names: { family: string; given: string }[];
+	/** The title as written, braces kept: braces protect words from case changes. */
+	rawTitle: string;
+	/** The other fields a reference list prints, plain: journal, volume, number, pages, publisher, doi, url, … */
+	fields: Record<string, string>;
+}
+
+const REFERENCE_FIELDS = ['journal', 'journaltitle', 'booktitle', 'volume', 'number', 'pages', 'publisher', 'howpublished', 'school', 'institution', 'organization', 'edition', 'doi', 'url'];
+
+/** A person's family and given names: "Last, First", "First von Last" or "{Organisation}". */
+function splitPerson(name: string): { family: string; given: string } {
+	const trimmed = name.trim();
+	if (/^\{.*\}$/.test(trimmed)) return { family: texToPlain(trimmed), given: '' };
+	const comma = trimmed.indexOf(',');
+	if (comma >= 0) return { family: texToPlain(trimmed.slice(0, comma)), given: texToPlain(trimmed.slice(comma + 1).trim()) };
+	const family = familyName(trimmed);
+	return { family, given: texToPlain(trimmed.slice(0, Math.max(0, trimmed.length - family.length)).trim()) };
 }
 
 /** Splits a BibTeX name list on top-level " and ". */
@@ -172,6 +190,9 @@ export function parseBib(text: string): Record<string, BibEntry> {
 			title: texToPlain(fields.title ?? ''),
 			year: texToPlain(year),
 			venue: texToPlain(fields.journal ?? fields.journaltitle ?? fields.booktitle ?? fields.publisher ?? fields.howpublished ?? fields.school ?? ''),
+			names: people.map(splitPerson),
+			rawTitle: fields.title ?? '',
+			fields: Object.fromEntries(REFERENCE_FIELDS.filter((f) => fields[f]).map((f) => [f, f === 'url' || f === 'doi' ? fields[f].trim() : texToPlain(fields[f])])),
 		};
 	}
 	return entries;

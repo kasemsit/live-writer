@@ -134,12 +134,19 @@ describe('quartoCitationPlan', () => {
 	const PROJECT = 'project:\n  type: book\nlang: th\nbibliography: references.bib\ncsl: apa.csl\n';
 
 	it('takes the bibliography, style and language from _quarto.yml', () => {
-		expect(quartoCitationPlan(PROJECT, '# Chapter\n')).toEqual({ files: ['references.bib'], base: 'project', style: 'apa', lang: 'th' });
+		expect(quartoCitationPlan(PROJECT, '# Chapter\n')).toEqual({ files: ['references.bib'], base: 'project', style: 'apa', lang: 'th', nocite: [] });
 	});
 
 	it('front matter overrides the project, and names files beside the document', () => {
 		const doc = '---\ntitle: x\nbibliography:\n  - a.bib\n  - b.bib\nlang: en\n---\n\nText';
-		expect(quartoCitationPlan(PROJECT, doc)).toEqual({ files: ['a.bib', 'b.bib'], base: 'document', style: 'apa', lang: 'en' });
+		expect(quartoCitationPlan(PROJECT, doc)).toEqual({ files: ['a.bib', 'b.bib'], base: 'document', style: 'apa', lang: 'en', nocite: [] });
+	});
+
+	it('collects nocite keys from the project and the document', () => {
+		const project = `${PROJECT}\nnocite: |\n  @*\n`;
+		expect(quartoCitationPlan(project, '# C\n')?.nocite).toEqual(['*']);
+		const doc = '---\nnocite: |\n  @a, @b\n---\n# C\n';
+		expect(quartoCitationPlan(PROJECT, doc)?.nocite).toEqual(['a', 'b']);
 	});
 
 	it('Quarto’s default style is Chicago author-date; no .bib means no plan', () => {

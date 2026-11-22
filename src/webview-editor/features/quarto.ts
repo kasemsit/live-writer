@@ -6,7 +6,9 @@ import { cursorTouchesRange, inlineCursorTouchesRange } from '../cmUtils';
 import { blockReplacedLines, cellInlineHooks } from '../livePreviewPlugin';
 import { renderInlineInto } from '../tableCellInline';
 import { calloutIcon } from './callouts';
-import { isQuartoDocument, quartoLabel as label, watchQuartoProject } from './quartoProject';
+import { citationFormat, isQuartoDocument, nocite, quartoLabel as label, watchQuartoProject } from './quartoProject';
+import { findCiteGroups, findNarrativeCitations } from '../../shared/citations';
+import { formatReference, sortReferences, type RefPart } from '../../shared/references';
 import { inSourceContext, jumpTo, revealChanged } from './cm';
 import {
 	LEADING_ATTRS,
@@ -135,7 +137,10 @@ function decorateDiv(state: EditorState, div: FencedDiv, titleLine: number | nul
 				n === div.open ? (openShown ? 'mlp-qdiv-src' : 'mlp-qdiv-fence') : n === div.close ? (closeShown ? 'mlp-qdiv-src' : 'mlp-qdiv-fence') : align;
 			if (cls) out.push(Decoration.line({ class: cls }).range(doc.line(n + 1).from));
 		}
-		if (!openShown) out.push(hidden.range(open.from, open.to));
+		if (!openShown) {
+			const refs = div.attrs.id === 'refs' ? referenceList(state) : null;
+			out.push(refs ? Decoration.replace({ widget: new ReferencesWidget(refs) }).range(open.from, open.to) : hidden.range(open.from, open.to));
+		}
 		return;
 	}
 
@@ -162,6 +167,61 @@ function decorateDiv(state: EditorState, div: FencedDiv, titleLine: number | nul
 		out.push(title !== null ? Decoration.replace({ widget: new CalloutHeadWidget(icon, title) }).range(open.from, open.to) : hidden.range(open.from, open.to));
 	}
 	if (titleLine !== null && icon) out.push(Decoration.widget({ widget: new CalloutIconWidget(icon), side: -1 }).range(doc.line(titleLine + 1).from));
+}
+
+// ── The reference list: `::: {#refs}` ───────────────────────────────────────
+
+/** What the book prints at `::: {#refs}`: every entry with `nocite: @*`, else those this file cites. */
+function referenceList(state: EditorState): RefPart[][] | null {
+	const format = citationFormat();
+	if (!format) return null;
+	const listed = nocite();
+	let keys: string[];
+	if (listed.includes('*')) keys = Object.keys(format.bib);
+	else {
+		keys = [...listed];
+		for (const line of state.doc.iterLines()) {
+			if (!line.includes('@')) continue;
+			for (const g of findCiteGroups(line)) keys.push(...g.items.map((i) => i.key));
+			for (const c of findNarrativeCitations(line, (k) => k in format.bib)) keys.push(c.key);
+		}
+	}
+	return sortReferences(keys, format.bib).map((k) => formatReference(format.bib[k]));
+}
+
+class ReferencesWidget extends WidgetType {
+	private readonly signature: string;
+	constructor(private readonly entries: RefPart[][]) {
+		super();
+		this.signature = JSON.stringify(entries);
+	}
+	eq(other: ReferencesWidget): boolean {
+		return other.signature === this.signature;
+	}
+	toDOM(): HTMLElement {
+		const list = document.createElement('div');
+		list.className = 'mlp-qrefs';
+		for (const entry of this.entries) {
+			const item = document.createElement('div');
+			item.className = 'mlp-qref';
+			for (const part of entry) {
+				const el = part.href ? document.createElement('a') : part.italic ? document.createElement('em') : document.createElement('span');
+				el.textContent = part.text;
+				if (part.href) {
+					el.setAttribute('href', part.href);
+					el.className = 'mlp-link';
+					el.dataset.href = part.href;
+				}
+				item.appendChild(el);
+			}
+			list.appendChild(item);
+		}
+		if (!this.entries.length) list.textContent = 'No citations in this file to list.';
+		return list;
+	}
+	ignoreEvent(): boolean {
+		return false;
+	}
 }
 
 // ── Cross-references ─────────────────────────────────────────────────────────
