@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import type { EditorToHostMessage, HostToEditorMessage } from '../../shared/messages';
-import { hasSessionFor, listAnchors, listNotes, openWikilink, previewWikilink, resolveWikiTarget, trackSession as trackWikiSession, type PlusSession } from './wikiOpen';
+import { hasSessionFor, listAnchors, listNotes, openWikilink, previewWikilink, resolveWikiTarget, trackSession as trackWikiSession, type EditorSession } from './wikiOpen';
 import { forgetSelectionOf, writeSelection } from './selectionFile';
-import { handlePlusDo } from './contextMenu';
+import { handleHostAction } from './contextMenu';
 import { texSessionOf } from './tex';
 import { stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
 import { zoteroLinks } from './zotero';
@@ -12,7 +12,7 @@ import { isRewriteMode } from '../../shared/rewrite';
 export { takePendingJump } from './wikiOpen';
 
 /** Registers an open editor; when the last one on a document closes, its selection stops going to Claude. */
-export function trackSession(session: PlusSession): vscode.Disposable {
+export function trackSession(session: EditorSession): vscode.Disposable {
 	const tracked = trackWikiSession(session);
 	return new vscode.Disposable(() => {
 		tracked.dispose();
@@ -23,66 +23,66 @@ export function trackSession(session: PlusSession): vscode.Disposable {
 }
 
 /**
- * Host side of md-live-preview-plus for one editor session: the messages the
- * plus webview modules send. Returns true when the message was one of them.
+ * The host side of Live Writer's features for one editor session: the messages
+ * the feature modules in the webview send. Returns true when the message was one of them.
  */
-export function handlePlusMessage(
-	session: PlusSession,
+export function handleFeatureMessage(
+	session: EditorSession,
 	post: (message: HostToEditorMessage) => void,
 	message: EditorToHostMessage,
 ): boolean {
 	switch (message.type) {
-		case 'plusSelection':
+		case 'selection':
 			void writeSelection(session.getDocument(), message);
 			return true;
-		case 'plusListNotes':
-			void listNotes().then((notes) => post({ type: 'plusNotes', requestId: message.requestId, notes }));
+		case 'listNotes':
+			void listNotes().then((notes) => post({ type: 'notes', requestId: message.requestId, notes }));
 			return true;
-		case 'plusListAnchors':
+		case 'listAnchors':
 			void listAnchors(session, message.target).then((anchors) =>
-				post({ type: 'plusAnchors', requestId: message.requestId, anchors }),
+				post({ type: 'anchors', requestId: message.requestId, anchors }),
 			);
 			return true;
-		case 'plusPreview':
+		case 'linkPreview':
 			void previewWikilink(session, message.target).then((preview) =>
-				post({ type: 'plusPreviewResult', requestId: message.requestId, preview }),
+				post({ type: 'linkPreviewResult', requestId: message.requestId, preview }),
 			);
 			return true;
-		case 'plusResolveEmbed':
+		case 'resolveEmbed':
 			void resolveWikiTarget(session.getDocument().uri, message.target.trim()).then(
-				(uri) => post({ type: 'plusEmbedResult', requestId: message.requestId, src: uri ? session.asWebviewUri(uri) : null }),
-				() => post({ type: 'plusEmbedResult', requestId: message.requestId, src: null }),
+				(uri) => post({ type: 'embedResult', requestId: message.requestId, src: uri ? session.asWebviewUri(uri) : null }),
+				() => post({ type: 'embedResult', requestId: message.requestId, src: null }),
 			);
 			return true;
-		case 'plusParaphrase':
-			void paraphrase(message.text, isRewriteMode(message.mode) ? message.mode : 'polish').then((r) => post({ type: 'plusParaphraseResult', requestId: message.requestId, ...r }));
+		case 'rewrite':
+			void paraphrase(message.text, isRewriteMode(message.mode) ? message.mode : 'polish').then((r) => post({ type: 'rewriteResult', requestId: message.requestId, ...r }));
 			return true;
-		case 'plusZoteroLinks':
+		case 'zoteroLinks':
 			void zoteroLinks(session.getDocument().uri, message.key).then((links) =>
-				post({ type: 'plusZoteroLinksResult', requestId: message.requestId, links }),
+				post({ type: 'zoteroLinksResult', requestId: message.requestId, links }),
 			);
 			return true;
-		case 'plusQuartoWatch':
+		case 'quartoWatch':
 			watchQuartoProject(session, post);
 			return true;
-		case 'plusDo':
-			void handlePlusDo(session, message);
+		case 'hostAction':
+			void handleHostAction(session, message);
 			return true;
-		case 'plusTexAsset': {
+		case 'texAsset': {
 			const tex = texSessionOf(session);
 			const missing = { status: 'missing' as const, src: null, name: message.path };
 			void (tex ? tex.resolveAsset(message.path) : Promise.resolve(missing)).then(
-				(asset) => post({ type: 'plusTexAssetResult', requestId: message.requestId, asset }),
-				() => post({ type: 'plusTexAssetResult', requestId: message.requestId, asset: missing }),
+				(asset) => post({ type: 'texAssetResult', requestId: message.requestId, asset }),
+				() => post({ type: 'texAssetResult', requestId: message.requestId, asset: missing }),
 			);
 			return true;
 		}
-		case 'plusTexPicture': {
+		case 'texPicture': {
 			const tex = texSessionOf(session);
 			const missing = { status: 'missing' as const, src: null, note: 'Not a LaTeX document.', stale: false };
 			void (tex ? tex.resolvePicture(message.lines) : Promise.resolve(missing)).then(
-				(picture) => post({ type: 'plusTexPictureResult', requestId: message.requestId, picture }),
-				() => post({ type: 'plusTexPictureResult', requestId: message.requestId, picture: missing }),
+				(picture) => post({ type: 'texPictureResult', requestId: message.requestId, picture }),
+				() => post({ type: 'texPictureResult', requestId: message.requestId, picture: missing }),
 			);
 			return true;
 		}

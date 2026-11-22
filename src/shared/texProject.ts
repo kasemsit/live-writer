@@ -2,7 +2,7 @@ import { isPathInside } from './pathContainment';
 import { readArgs, scanTex, type TexScan } from './texScanner';
 
 /**
- * md-live-preview-plus: what a LaTeX file says about the project around it —
+ * What a LaTeX file says about the project around it —
  * the root it names, the files it pulls in, its bibliographies and graphics
  * folders — for the host, which finds the root file and its build from them
  * (and watches the build's folders).

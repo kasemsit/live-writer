@@ -1,11 +1,11 @@
 import { type EditorState, StateEffect, StateField } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import type { HostToEditorMessage, PlusTexAsset, PlusTexContext, PlusTexPicture } from '../../../shared/messages';
+import type { HostToEditorMessage, TexAsset, TexContext, TexPicture } from '../../../shared/messages';
 import { readArgs, scanTex, type TexScan } from '../../../shared/texScanner';
 import { request } from '../hostRequests';
 
 /**
- * md-live-preview-plus: what the LaTeX Live Preview knows beyond the file
+ * What the LaTeX Live Preview knows beyond the file
  * itself, sent by the host (src/editor/features/tex.ts): the numbers the last
  * build gave labels and citations, the bibliography, the root file's macros.
  * Kept in editor state so a new context redraws whatever depends on it.
@@ -14,11 +14,11 @@ import { request } from '../hostRequests';
 /** The `build` of the context in place before the host's first one: nothing has been read yet. */
 export const NO_BUILD_YET = 'waiting';
 
-export const EMPTY_CONTEXT: PlusTexContext = { labels: {}, cites: {}, bib: {}, macros: {}, root: '', build: NO_BUILD_YET };
+export const EMPTY_CONTEXT: TexContext = { labels: {}, cites: {}, bib: {}, macros: {}, root: '', build: NO_BUILD_YET };
 
-export const setTexContext = StateEffect.define<PlusTexContext>();
+export const setTexContext = StateEffect.define<TexContext>();
 
-export const texContextField = StateField.define<PlusTexContext>({
+export const texContextField = StateField.define<TexContext>({
 	create: () => EMPTY_CONTEXT,
 	update(value, tr) {
 		for (const e of tr.effects) if (e.is(setTexContext)) return e.value;
@@ -59,38 +59,38 @@ export function fileLabels(state: EditorState): Set<string> {
 
 // ── Requests to the host ────────────────────────────────────────────────────
 
-const assets = new Map<string, Promise<PlusTexAsset>>();
+const assets = new Map<string, Promise<TexAsset>>();
 
-const MISSING = (path: string): PlusTexAsset => ({ status: 'missing', src: null, name: path });
+const MISSING = (path: string): TexAsset => ({ status: 'missing', src: null, name: path });
 
 /**
  * A loadable URI for `\includegraphics{path}`, resolved by the host the way
  * LaTeX would (beside the root file, `\graphicspath`, the usual extensions).
  * Cached until the next context, which a rebuild sends.
  */
-export function resolveTexAsset(path: string): Promise<PlusTexAsset> {
+export function resolveTexAsset(path: string): Promise<TexAsset> {
 	let found = assets.get(path);
 	if (!found) {
 		// A PDF figure is converted to PNG first, which can take a while.
-		found = request<PlusTexAsset>((requestId) => ({ type: 'plusTexAsset', requestId, path }), MISSING(path), 20_000);
+		found = request<TexAsset>((requestId) => ({ type: 'texAsset', requestId, path }), MISSING(path), 20_000);
 		assets.set(path, found);
 		void found.then((asset) => asset.status === 'missing' && assets.delete(path));
 	}
 	return found;
 }
 
-const pictures = new Map<string, Promise<PlusTexPicture>>();
+const pictures = new Map<string, Promise<TexPicture>>();
 
 /**
  * The last build's drawing of the picture on `lines` (1-based), cut from its
  * PDF by the host. Cached until the next context, which a rebuild sends.
  */
-export function resolveTexPicture(lines: number[], build: string): Promise<PlusTexPicture> {
+export function resolveTexPicture(lines: number[], build: string): Promise<TexPicture> {
 	const key = `${build}|${lines.join(',')}`;
 	let found = pictures.get(key);
 	if (!found) {
-		const none: PlusTexPicture = { status: 'missing', src: null, note: 'The host did not answer.', stale: false };
-		found = request<PlusTexPicture>((requestId) => ({ type: 'plusTexPicture', requestId, lines }), none, 20_000);
+		const none: TexPicture = { status: 'missing', src: null, note: 'The host did not answer.', stale: false };
+		found = request<TexPicture>((requestId) => ({ type: 'texPicture', requestId, lines }), none, 20_000);
 		pictures.set(key, found);
 	}
 	return found;
@@ -98,7 +98,7 @@ export function resolveTexPicture(lines: number[], build: string): Promise<PlusT
 
 /** Handles the host's LaTeX context. Returns true when the message was one. (Replies go through hostRequests.) */
 export function handleTexHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
-	if (message.type === 'plusTexContext') {
+	if (message.type === 'texContext') {
 		assets.clear();
 		pictures.clear();
 		view?.dispatch({ effects: setTexContext.of(message.context) });

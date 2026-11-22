@@ -1,6 +1,6 @@
 import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, type WidgetType } from '@codemirror/view';
 import type { EditorState, Range } from '@codemirror/state';
-import type { PlusTexContext } from '../../../shared/messages';
+import type { TexContext } from '../../../shared/messages';
 import { SECTION_LEVELS } from '../../../shared/texHeadings';
 import { type TexCommand, type TexEnv, type TexScan, envAt, isLetter, rangeAt, readArgs } from '../../../shared/texScanner';
 import { ACCENTS, CONTROL_SYMBOLS, TEXT_SYMBOLS, readAccent } from '../../../shared/texText';
@@ -32,7 +32,7 @@ import {
 import { TexChipWidget, TexImageWidget, TexMathWidget, TexTextWidget } from './widgets';
 
 /**
- * md-live-preview-plus: the LaTeX Live Preview's inline drawing — what
+ * The LaTeX Live Preview's inline drawing — what
  * Overleaf's Visual Editor shows, in this editor's manner: markup is hidden
  * and its effect drawn until the caret enters it, then the source is back.
  *
@@ -136,7 +136,7 @@ class Builder {
 		readonly state: EditorState,
 		readonly text: string,
 		readonly scan: TexScan,
-		readonly ctx: PlusTexContext,
+		readonly ctx: TexContext,
 		readonly blocks: TexBlock[],
 		readonly macros: Record<string, string>,
 	) {}

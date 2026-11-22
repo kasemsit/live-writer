@@ -1,4 +1,4 @@
-import type { PlusTexContext } from '../../../shared/messages';
+import type { TexContext } from '../../../shared/messages';
 import { CITE_CONTEXT } from '../zotero';
 import { describeBib } from '../../../shared/bib';
 import { citeLabel } from '../../../shared/citations';
@@ -9,14 +9,14 @@ import { resolveTexAsset } from './context';
 import { CITE_COMMANDS, REF_COMMANDS, STYLE_CLASS } from './vocabulary';
 
 /**
- * md-live-preview-plus: a LaTeX fragment drawn as DOM — for the cells of a
+ * A LaTeX fragment drawn as DOM — for the cells of a
  * rendered `tabular`, which are one widget and so cannot use the editor's
  * own decorations. Covers what table cells hold in practice: text styles,
  * math, references and citations, symbols; anything else shows its text.
  */
 
 export interface InlineEnv {
-	ctx: PlusTexContext;
+	ctx: TexContext;
 	macros: Record<string, string>;
 }
 
@@ -98,7 +98,7 @@ export function splitKeys(text: string): string[] {
 }
 
 /** The label a `\cite`-family command shows, and its hover text. */
-export function citeText(command: string, keys: string[], post: string | null, ctx: PlusTexContext): { text: string; title: string; missing: boolean } {
+export function citeText(command: string, keys: string[], post: string | null, ctx: TexContext): { text: string; title: string; missing: boolean } {
 	const title = keys.map((k) => describeBib(ctx.bib[k], k)).join('\n');
 	const missing = keys.some((k) => !(k in ctx.cites) && !(k in ctx.bib));
 	if (command === 'nocite') return { text: `nocite: ${keys.join(', ')}`, title, missing: false };

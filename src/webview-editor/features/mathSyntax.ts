@@ -31,7 +31,7 @@ function opensBlock(text: string, pos: number): boolean {
 
 const closesBlock = (text: string) => /\$\$\s*$/.test(text);
 
-export const PlusMath: MarkdownConfig = {
+export const MathSyntax: MarkdownConfig = {
 	defineNodes: ['InlineMath', 'InlineMathMark', { name: 'BlockMath', block: true }],
 	parseInline: [
 		{

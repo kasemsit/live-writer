@@ -3,7 +3,7 @@ import { DocumentSyncSession } from './documentSync';
 import { extractHeadings } from '../shared/headings';
 import type { HeadingItem } from '../shared/headings';
 import { escapeAttribute } from '../shared/i18n';
-import type { PlusHostToEditorMessage } from '../shared/messages';
+import type { FeatureHostToEditorMessage } from '../shared/messages';
 import { extractTexHeadings } from '../shared/texScan';
 import { isTexDocument } from './features/tex';
 import { quartoOutline } from '../shared/quarto';
@@ -40,11 +40,11 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 				// `![](assets/foo.png)`, including ones this extension's own
 				// paste/drop feature inserts) resolve relative to here.
 				vscode.Uri.joinPath(document.uri, '..'),
-				// md-live-preview-plus: `![[image.png]]` embeds resolve by name
+				// `![[image.png]]` embeds resolve by name
 				// anywhere in the workspace (Obsidian keeps them in an attachments
 				// folder), so the workspace itself must be loadable.
 				...(vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri),
-				// md-live-preview-plus: PDF figures of LaTeX documents, converted to PNG.
+				// PDF figures of LaTeX documents, converted to PNG.
 				this.figureCache(),
 			],
 		};
@@ -59,7 +59,7 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 		});
 	}
 
-	/** md-live-preview-plus: where the LaTeX preview keeps PNGs of PDF figures. */
+	/** Where the LaTeX preview keeps PNGs of PDF figures. */
 	private figureCache(): vscode.Uri {
 		return vscode.Uri.joinPath(this.context.globalStorageUri, 'tex-figures');
 	}
@@ -94,31 +94,31 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 		const session = this.findActiveSession();
 		if (!session) return undefined;
 		const document = session.getDocument();
-		// md-live-preview-plus: a LaTeX document's outline is its sectioning commands.
+		// A LaTeX document's outline is its sectioning commands.
 		if (isTexDocument(document)) return extractTexHeadings(document.getText());
-		// md-live-preview-plus: callout titles are not sections; `{#sec-id}` is not a name.
+		// Callout titles are not sections; `{#sec-id}` is not a name.
 		const text = document.getText();
 		return quartoOutline(extractHeadings(text), text);
 	}
 
-	/** md-live-preview-plus: the document of the active Live Preview panel, if any. */
+	/** The document of the active Live Preview panel, if any. */
 	getActiveDocumentUri(): vscode.Uri | undefined {
 		return this.findActiveSession()?.getDocument().uri;
 	}
 
-	/** md-live-preview-plus: sends a plus message to every open Live Preview panel. */
-	broadcastPlus(message: PlusHostToEditorMessage): void {
-		for (const session of this.sessions) session.postPlus(message);
+	/** Sends a feature message to every open Live Preview panel. */
+	broadcastToEditors(message: FeatureHostToEditorMessage): void {
+		for (const session of this.sessions) session.sendToHost(message);
 	}
 
-	/** md-live-preview-plus: sends a plus message to the active Live Preview panel; false when there is none. */
-	postPlusToActive(message: PlusHostToEditorMessage): boolean {
+	/** Sends a feature message to the active Live Preview panel; false when there is none. */
+	postToActiveEditor(message: FeatureHostToEditorMessage): boolean {
 		const session = this.findActiveSession();
-		session?.postPlus(message);
+		session?.sendToHost(message);
 		return !!session;
 	}
 
-	/** md-live-preview-plus: inserts a footnote in the active Live Preview panel, if any. */
+	/** Inserts a footnote in the active Live Preview panel, if any. */
 	insertFootnoteInActive(): void {
 		this.findActiveSession()?.insertFootnote();
 	}
@@ -138,8 +138,8 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 		const styleUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(this.context.extensionUri, 'media', 'webview-editor-theme.css'),
 		);
-		// md-live-preview-plus: callouts, footnotes, wikilinks, completion.
-		const plusStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'writer.css'));
+		// Callouts, footnotes, wikilinks, completion.
+		const writerStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'writer.css'));
 		// Mermaid ships as its own bundle, loaded only once a document actually
 		// contains a diagram (see webview-editor/mermaidLoader.ts). The webview
 		// can't build this URI itself — `asWebviewUri` is host-side API — so it's
@@ -153,7 +153,7 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 		const awsShapesUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'aws4-shapes.json'),
 		);
-		// md-live-preview-plus: KaTeX, fetched by the webview only when a document has math.
+		// KaTeX, fetched by the webview only when a document has math.
 		const katexChunkUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'katex-chunk.js'));
 		const katexBase = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'katex'));
 		const nonce = getNonce();
@@ -165,7 +165,7 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src ${webview.cspSource}; font-src ${webview.cspSource} data:;" />
 	<link rel="stylesheet" href="${uiStyleUri}" />
 	<link rel="stylesheet" href="${styleUri}" />
-	<link rel="stylesheet" href="${plusStyleUri}" />
+	<link rel="stylesheet" href="${writerStyleUri}" />
 	<title>Markdown Live Preview</title>
 </head>
 <body>

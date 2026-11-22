@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { PlusHostToEditorMessage } from '../../shared/messages';
+import type { FeatureHostToEditorMessage } from '../../shared/messages';
 
 /**
  * Live Writer: Insert Citation from Zotero. Better BibTeX's "cite as you write"
@@ -25,7 +25,7 @@ export async function pickCitation(document: vscode.Uri): Promise<string> {
 
 export function registerInsertCitation(
 	context: vscode.ExtensionContext,
-	postToActive: (message: PlusHostToEditorMessage) => boolean,
+	postToActive: (message: FeatureHostToEditorMessage) => boolean,
 	activeDocument: () => vscode.Uri | undefined,
 ): void {
 	context.subscriptions.push(
@@ -45,7 +45,7 @@ export function registerInsertCitation(
 				void vscode.window.showWarningMessage('Zotero with Better BibTeX is not running, so no citation can be picked.');
 				return;
 			}
-			if (text) postToActive({ type: 'plusInsertText', text });
+			if (text) postToActive({ type: 'insertText', text });
 		}),
 	);
 }

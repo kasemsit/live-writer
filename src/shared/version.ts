@@ -1,4 +1,4 @@
-// md-live-preview-plus: release-version comparison for the update check (src/editor/features/updateCheck.ts).
+// Release-version comparison for the update check (src/editor/features/updateCheck.ts).
 
 /** Release tag → [major, minor, patch]. The early `v0.4.0-plus.N` tags read as 0.4.N. */
 export function parseReleaseTag(tag: string): number[] | null {

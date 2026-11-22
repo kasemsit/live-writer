@@ -1,5 +1,5 @@
 /**
- * md-live-preview-plus: where a source line landed in the last build's PDF,
+ * Where a source line landed in the last build's PDF,
  * from `synctex view` — how the LaTeX Live Preview shows a `tikzpicture` as
  * the build drew it, without compiling anything (src/editor/features/tex.ts).
  */

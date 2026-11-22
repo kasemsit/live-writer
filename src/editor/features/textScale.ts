@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { PlusHostToEditorMessage } from '../../shared/messages';
+import type { FeatureHostToEditorMessage } from '../../shared/messages';
 
 /**
  * Larger Text / Smaller Text / Reset Text Size for the Live Preview. The size
@@ -17,7 +17,7 @@ export function fontFamily(): string {
 	return String(vscode.workspace.getConfiguration(SECTION).get('plus.fontFamily', '') ?? '').replace(/[{}<>;\\]/g, '').trim();
 }
 
-/** What the plusTextScale message carries: the size factor and the font. */
+/** What the textScale message carries: the size factor and the font. */
 export function textAppearance(): { scale: number; fontFamily: string } {
 	return { scale: textScale(), fontFamily: fontFamily() };
 }
@@ -32,7 +32,7 @@ async function setScale(next: number): Promise<void> {
 	vscode.window.setStatusBarMessage(`Live Preview text size ${Math.round(next * 100)}%`, 3000);
 }
 
-export function registerTextScale(context: vscode.ExtensionContext, broadcast: (message: PlusHostToEditorMessage) => void): void {
+export function registerTextScale(context: vscode.ExtensionContext, broadcast: (message: FeatureHostToEditorMessage) => void): void {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('liveWriter.plus.textLarger', () => {
 			const current = textScale();
@@ -45,7 +45,7 @@ export function registerTextScale(context: vscode.ExtensionContext, broadcast: (
 		vscode.commands.registerCommand('liveWriter.plus.textReset', () => setScale(1)),
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration(`${SECTION}.${KEY}`) || e.affectsConfiguration(`${SECTION}.plus.fontFamily`)) {
-				broadcast({ type: 'plusTextScale', ...textAppearance() });
+				broadcast({ type: 'textScale', ...textAppearance() });
 			}
 		}),
 	);

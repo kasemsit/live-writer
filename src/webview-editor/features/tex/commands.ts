@@ -6,7 +6,7 @@ import { fileLabels, texContextField, texScanField } from './context';
 import { REF_COMMANDS } from './vocabulary';
 
 /**
- * md-live-preview-plus: editing commands of the LaTeX Live Preview, as in
+ * Editing commands of the LaTeX Live Preview, as in
  * Overleaf — Ctrl/Cmd+B and +I wrap the selection in `\textbf{}` and
  * `\textit{}` (or unwrap it), Ctrl/Cmd+/ comments lines out, Enter on an
  * `\item` starts the next one — and completion of labels, citation keys,

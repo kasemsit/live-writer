@@ -1,5 +1,5 @@
 /**
- * md-live-preview-plus: fenced code blocks found line by line, for the scans
+ * Fenced code blocks found line by line, for the scans
  * that read the text rather than the syntax tree — footnotes, Quarto divs and
  * cross-references. Text inside a fence is code, never Markdown.
  */

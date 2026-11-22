@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import type { PlusEditorToHostMessage } from '../../shared/messages';
+import type { FeatureEditorToHostMessage } from '../../shared/messages';
 
 /**
  * Writes the preview's selection to ~/.claude/live-preview-selection.json,
@@ -85,7 +85,7 @@ export function initSelectionStatus(context: vscode.ExtensionContext): void {
 
 export async function writeSelection(
 	document: vscode.TextDocument,
-	message: Extract<PlusEditorToHostMessage, { type: 'plusSelection' }>,
+	message: Extract<FeatureEditorToHostMessage, { type: 'selection' }>,
 ): Promise<void> {
 	if (!vscode.workspace.getConfiguration('liveWriter').get('plus.shareSelectionWithClaude', true)) return;
 	if (!fs.existsSync(dir())) return;

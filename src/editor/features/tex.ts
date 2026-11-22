@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'node:path';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import type { HostToEditorMessage, PlusTexAsset, PlusTexContext, PlusTexPicture } from '../../shared/messages';
+import type { HostToEditorMessage, TexAsset, TexContext, TexPicture } from '../../shared/messages';
 import { cropOf, largestBox, parseSynctexView, type SynctexBox } from '../../shared/synctex';
 import { mergeAux, parseAux, type AuxData } from '../../shared/texAux';
 import { parseBib, type BibEntry } from '../../shared/bib';
@@ -13,7 +13,7 @@ import { isPathInside } from '../../shared/pathContainment';
 import { exists, readText } from './files';
 
 /**
- * md-live-preview-plus: the host side of the LaTeX Live Preview.
+ * The host side of the LaTeX Live Preview.
  *
  * - Finds the root file (`% !TEX root`, the file itself when it has
  *   `\documentclass`, or the nearby root that `\input`s it).
@@ -201,7 +201,7 @@ export class TexSession implements vscode.Disposable {
 			if (text) macros = { ...extractMacros(text), ...macros };
 		}
 
-		const context: PlusTexContext = {
+		const context: TexContext = {
 			labels: data.labels,
 			cites: data.cites,
 			bib,
@@ -210,7 +210,7 @@ export class TexSession implements vscode.Disposable {
 			build,
 		};
 		if (overtaken()) return;
-		this.post({ type: 'plusTexContext', context });
+		this.post({ type: 'texContext', context });
 		this.watch(root);
 	}
 
@@ -250,8 +250,8 @@ export class TexSession implements vscode.Disposable {
 	}
 
 	/** Finds the file `\includegraphics{name}` means, beside the root (and \graphicspath), then beside this file. */
-	async resolveAsset(name: string): Promise<PlusTexAsset> {
-		const missing: PlusTexAsset = { status: 'missing', src: null, name };
+	async resolveAsset(name: string): Promise<TexAsset> {
+		const missing: TexAsset = { status: 'missing', src: null, name };
 		if (!name || name.includes('\0')) return missing;
 		const bases = [this.rootDir(), vscode.Uri.joinPath(this.document.uri, '..')];
 		const dirs = ['', ...this.graphicsPath];
@@ -280,8 +280,8 @@ export class TexSession implements vscode.Disposable {
 	 * it: SyncTeX says where those lines landed in the PDF, and pdftoppm cuts
 	 * that box out (cached by PDF time and box). Nothing is compiled.
 	 */
-	async resolvePicture(lines: number[]): Promise<PlusTexPicture> {
-		const none = (status: PlusTexPicture['status'], note: string): PlusTexPicture => ({ status, src: null, note, stale: false });
+	async resolvePicture(lines: number[]): Promise<TexPicture> {
+		const none = (status: TexPicture['status'], note: string): TexPicture => ({ status, src: null, note, stale: false });
 		const aux = this.auxFile;
 		if (!aux || aux.scheme !== 'file' || this.document.uri.scheme !== 'file') return none('missing', 'No build of this document found (its .aux and .pdf).');
 		const pdf = aux.with({ path: aux.path.replace(/\.aux$/i, '.pdf') });

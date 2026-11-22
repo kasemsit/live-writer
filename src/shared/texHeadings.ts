@@ -2,7 +2,7 @@ import { readArgs, scanTex, type TexScan } from './texScanner';
 import { texToPlain } from './texText';
 
 /**
- * md-live-preview-plus: a LaTeX document's headings — the sectioning
+ * A LaTeX document's headings — the sectioning
  * commands and their levels, and the headings in the body with their titles
  * as plain text, for the outline view.
  */

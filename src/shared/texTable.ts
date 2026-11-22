@@ -1,7 +1,7 @@
 import { matchBrace, readArgs } from './texScanner';
 
 /**
- * md-live-preview-plus: a `tabular` body read into rows and cells, for the
+ * A `tabular` body read into rows and cells, for the
  * LaTeX Live Preview to draw as a table.
  *
  * Offsets are kept for every cell so that a selection in the drawn table can

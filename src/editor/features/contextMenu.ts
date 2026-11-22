@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
-import type { PlusCommand, PlusEditorToHostMessage, PlusHostToEditorMessage } from '../../shared/messages';
+import type { MenuCommand, FeatureEditorToHostMessage, FeatureHostToEditorMessage } from '../../shared/messages';
 import { linkTexts, NOTE_EXT } from '../../shared/links';
 import { ZOTERO_LINK } from '../../shared/zotero';
-import { listNotes, openWikilink, type PlusSession } from './wikiOpen';
+import { listNotes, openWikilink, type EditorSession } from './wikiOpen';
 import { texSessionOf } from './tex';
 
 /**
@@ -16,7 +16,7 @@ import { texSessionOf } from './tex';
  * palette, acting on the caret instead of the click.
  */
 
-const WEBVIEW_COMMANDS: Record<string, PlusCommand> = {
+const WEBVIEW_COMMANDS: Record<string, MenuCommand> = {
 	'liveWriter.plus.copyBlockLink': 'copyBlockLink',
 	'liveWriter.plus.addReviewComment': 'addReviewComment',
 	'liveWriter.plus.copyRichText': 'copyRichText',
@@ -53,14 +53,14 @@ function isRange(arg: unknown): arg is { from: number; to: number } {
 
 export function registerContextMenu(
 	context: vscode.ExtensionContext,
-	postToActive: (message: PlusHostToEditorMessage) => boolean,
+	postToActive: (message: FeatureHostToEditorMessage) => boolean,
 	activeDocument: () => vscode.Uri | undefined,
 ): void {
 	for (const [id, command] of Object.entries(WEBVIEW_COMMANDS)) {
 		context.subscriptions.push(
 			vscode.commands.registerCommand(id, (arg?: unknown) => {
 				// From the menu, `arg` is VS Code's webview context object; a caller may pass a range instead.
-				if (!postToActive({ type: 'plusRun', command, range: isRange(arg) ? arg : undefined })) {
+				if (!postToActive({ type: 'runCommand', command, range: isRange(arg) ? arg : undefined })) {
 					void vscode.window.showWarningMessage('Open a note in Markdown Live Preview first.');
 				}
 			}),
@@ -90,7 +90,7 @@ export function registerContextMenu(
 }
 
 /** The parts of a context-menu command the webview hands back to the host. */
-export async function handlePlusDo(session: PlusSession, message: Extract<PlusEditorToHostMessage, { type: 'plusDo' }>): Promise<void> {
+export async function handleHostAction(session: EditorSession, message: Extract<FeatureEditorToHostMessage, { type: 'hostAction' }>): Promise<void> {
 	switch (message.action) {
 		case 'copy':
 			await vscode.env.clipboard.writeText(message.text);

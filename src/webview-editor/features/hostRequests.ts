@@ -1,4 +1,4 @@
-import type { HostToEditorMessage, PlusAnchor, PlusEditorToHostMessage, PlusNote, PlusPreview } from '../../shared/messages';
+import type { HostToEditorMessage, NoteAnchor, FeatureEditorToHostMessage, NoteEntry, NotePreview } from '../../shared/messages';
 
 /**
  * The plus modules' channel to the host: request/reply for what only the host
@@ -6,23 +6,23 @@ import type { HostToEditorMessage, PlusAnchor, PlusEditorToHostMessage, PlusNote
  * workspace), and plain messages.
  */
 
-type Poster = (message: PlusEditorToHostMessage) => void;
+type Poster = (message: FeatureEditorToHostMessage) => void;
 
 let post: Poster = () => undefined;
 let nextId = 1;
 const waiting = new Map<number, (value: unknown) => void>();
 
-export function setPlusPoster(poster: Poster): void {
+export function setHostPoster(poster: Poster): void {
 	post = poster;
 }
 
 /** Sends a message that wants no reply. */
-export function postPlus(message: PlusEditorToHostMessage): void {
+export function sendToHost(message: FeatureEditorToHostMessage): void {
 	post(message);
 }
 
 /** Resolves with the host's reply, or with `fallback` if none comes within `timeoutMs`. */
-export function request<T>(build: (requestId: number) => PlusEditorToHostMessage, fallback: T, timeoutMs = 4000): Promise<T> {
+export function request<T>(build: (requestId: number) => FeatureEditorToHostMessage, fallback: T, timeoutMs = 4000): Promise<T> {
 	const requestId = nextId++;
 	return new Promise<T>((resolve) => {
 		const timer = setTimeout(() => {
@@ -37,17 +37,17 @@ export function request<T>(build: (requestId: number) => PlusEditorToHostMessage
 	});
 }
 
-let notesCache: { at: number; notes: Promise<PlusNote[]> } | null = null;
+let notesCache: { at: number; notes: Promise<NoteEntry[]> } | null = null;
 const NOTES_TTL_MS = 30_000;
 
 /** Every note in the workspace, cached for half a minute so each keystroke does not rescan it. */
-export function listNotes(): Promise<PlusNote[]> {
+export function listNotes(): Promise<NoteEntry[]> {
 	if (!notesCache || Date.now() - notesCache.at > NOTES_TTL_MS) {
 		const entry = {
 			at: Date.now(),
 			// A big workspace's first scan can outlast the timeout; an empty answer
 			// is then not cached, so the next keystroke asks again.
-			notes: request<PlusNote[] | null>((requestId) => ({ type: 'plusListNotes', requestId }), null, 10_000).then((notes) => {
+			notes: request<NoteEntry[] | null>((requestId) => ({ type: 'listNotes', requestId }), null, 10_000).then((notes) => {
 				if (notes === null && notesCache === entry) notesCache = null;
 				return notes ?? [];
 			}),
@@ -57,8 +57,8 @@ export function listNotes(): Promise<PlusNote[]> {
 	return notesCache.notes;
 }
 
-export function listAnchors(target: string): Promise<PlusAnchor[]> {
-	return request<PlusAnchor[]>((requestId) => ({ type: 'plusListAnchors', requestId, target }), []);
+export function listAnchors(target: string): Promise<NoteAnchor[]> {
+	return request<NoteAnchor[]>((requestId) => ({ type: 'listAnchors', requestId, target }), []);
 }
 
 const embeds = new Map<string, Promise<string | null>>();
@@ -67,7 +67,7 @@ const embeds = new Map<string, Promise<string | null>>();
 export function resolveEmbed(target: string): Promise<string | null> {
 	let src = embeds.get(target);
 	if (!src) {
-		src = request<string | null>((requestId) => ({ type: 'plusResolveEmbed', requestId, target }), null);
+		src = request<string | null>((requestId) => ({ type: 'resolveEmbed', requestId, target }), null);
 		embeds.set(target, src);
 		// A miss may be a file not yet created; ask again next time.
 		void src.then((value) => value === null && embeds.delete(target));
@@ -75,28 +75,28 @@ export function resolveEmbed(target: string): Promise<string | null> {
 	return src;
 }
 
-export function previewLink(target: string): Promise<PlusPreview | null> {
-	return request<PlusPreview | null>((requestId) => ({ type: 'plusPreview', requestId, target }), null);
+export function previewLink(target: string): Promise<NotePreview | null> {
+	return request<NotePreview | null>((requestId) => ({ type: 'linkPreview', requestId, target }), null);
 }
 
 /** The request a reply answers, and the value it carries; null for any other message. */
 function replyOf(message: HostToEditorMessage): { requestId: number; value: unknown } | null {
 	switch (message.type) {
-		case 'plusNotes':
+		case 'notes':
 			return { requestId: message.requestId, value: message.notes };
-		case 'plusAnchors':
+		case 'anchors':
 			return { requestId: message.requestId, value: message.anchors };
-		case 'plusPreviewResult':
+		case 'linkPreviewResult':
 			return { requestId: message.requestId, value: message.preview };
-		case 'plusEmbedResult':
+		case 'embedResult':
 			return { requestId: message.requestId, value: message.src };
-		case 'plusTexAssetResult':
+		case 'texAssetResult':
 			return { requestId: message.requestId, value: message.asset };
-		case 'plusTexPictureResult':
+		case 'texPictureResult':
 			return { requestId: message.requestId, value: message.picture };
-		case 'plusZoteroLinksResult':
+		case 'zoteroLinksResult':
 			return { requestId: message.requestId, value: message.links };
-		case 'plusParaphraseResult':
+		case 'rewriteResult':
 			return { requestId: message.requestId, value: { text: message.text, error: message.error } };
 		default:
 			return null;
@@ -104,7 +104,7 @@ function replyOf(message: HostToEditorMessage): { requestId: number; value: unkn
 }
 
 /** Routes a host reply to its request. Returns true when the message was one. */
-export function handlePlusReply(message: HostToEditorMessage): boolean {
+export function handleHostReply(message: HostToEditorMessage): boolean {
 	const reply = replyOf(message);
 	if (!reply) return false;
 	const resolve = waiting.get(reply.requestId);

@@ -5,7 +5,7 @@ import { BLOCK_ID_LINE, TRAILING_BLOCK_ID } from '../../shared/anchors';
 import type { EditorState } from '@codemirror/state';
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import type { SyntaxNode, Tree } from '@lezer/common';
-import type { PlusCommand, PlusEditorToHostMessage } from '../../shared/messages';
+import type { MenuCommand, FeatureEditorToHostMessage } from '../../shared/messages';
 import { readTableModel, caretPastTable, cellInlineHooks } from '../livePreviewPlugin';
 import { insertRow, insertColumn, deleteRow, deleteColumn, renderTableMarkdown, type TableEditModel } from '../tableEdit';
 import { renderInlineInto } from '../tableCellInline';
@@ -20,18 +20,18 @@ import { texToPlain } from '../../shared/texScan';
  * VS Code decides which items to show from `data-vscode-context` on the
  * clicked element and its ancestors: the editor root says whether there is a
  * selection or footnotes, a link, a table or a formula says what it is. When an
- * item is chosen the host sends `plusRun`, and the command acts on the spot that
+ * item is chosen the host sends `runCommand`, and the command acts on the spot that
  * was right-clicked — remembered here — or on the caret when it came from the
  * command palette.
  */
 
-let post: (message: PlusEditorToHostMessage) => void = () => undefined;
+let post: (message: FeatureEditorToHostMessage) => void = () => undefined;
 let last: { target: HTMLElement | null; pos: number; at: number } | null = null;
 // The LaTeX Live Preview shares this menu; a few commands act on LaTeX there.
 let texMode = false;
 const FRESH_MS = 20_000;
 
-const notify = (message: string, error = false) => post({ type: 'plusDo', action: 'notify', message, error });
+const notify = (message: string, error = false) => post({ type: 'hostAction', action: 'notify', message, error });
 
 function contextPos(view: EditorView): number {
 	return last && Date.now() - last.at < FRESH_MS ? last.pos : view.state.selection.main.head;
@@ -112,7 +112,7 @@ function ensureAnchor(view: EditorView, block: Block): string {
 function copyBlockLink(view: EditorView): void {
 	const block = blockAt(view.state, contextPos(view));
 	if (!block) return notify('There is no block here to link to.', true);
-	post({ type: 'plusDo', action: 'copyBlockLink', anchor: ensureAnchor(view, block) });
+	post({ type: 'hostAction', action: 'copyBlockLink', anchor: ensureAnchor(view, block) });
 }
 
 function addReviewComment(view: EditorView): void {
@@ -185,7 +185,7 @@ async function copyRichText(view: EditorView, range?: { from: number; to: number
 	const html = markdownToHtml(state.sliceDoc(from, to));
 	const text = htmlToText(html);
 	if (await writeRichClipboard(html, text)) notify('Copied as rich text.');
-	else post({ type: 'plusDo', action: 'copy', text, notice: 'Copied as plain text (this window cannot write rich text).' });
+	else post({ type: 'hostAction', action: 'copy', text, notice: 'Copied as plain text (this window cannot write rich text).' });
 }
 
 // ── Footnotes ──
@@ -277,13 +277,13 @@ function cellText(markdown: string): string {
 
 const collator = new Intl.Collator(['th', 'en'], { numeric: true, sensitivity: 'base' });
 
-function tableCommand(view: EditorView, command: PlusCommand): void {
+function tableCommand(view: EditorView, command: MenuCommand): void {
 	const t = tableAtTarget(view);
 	if (!t) return notify('Right-click a table cell first.', true);
 	const { model, row, col } = t;
 	if (command === 'table.copyTsv') {
 		const text = model.rows.map((cells) => cells.map(cellText).join('\t')).join('\n');
-		return post({ type: 'plusDo', action: 'copy', text, notice: `Copied the table (${model.rows.length} rows) as tab-separated text.` });
+		return post({ type: 'hostAction', action: 'copy', text, notice: `Copied the table (${model.rows.length} rows) as tab-separated text.` });
 	}
 	let next: TableEditModel = model;
 	const header = Math.max(1, model.headerRowCount);
@@ -342,12 +342,12 @@ function searchWeb(view: EditorView, base: string): void {
 		.trim()
 		.slice(0, 300);
 	if (!query) return notify('Select the text to search for.', true);
-	post({ type: 'plusDo', action: 'openUrl', url: base + encodeURIComponent(query) });
+	post({ type: 'hostAction', action: 'openUrl', url: base + encodeURIComponent(query) });
 }
 
 // ── Dispatch ──
 
-export function runPlusCommand(view: EditorView, command: PlusCommand, range?: { from: number; to: number }): void {
+export function runMenuCommand(view: EditorView, command: MenuCommand, range?: { from: number; to: number }): void {
 	if (texMode && (command === 'copyBlockLink' || command === 'copyRichText' || command === 'renumberFootnotes' || command.startsWith('table.'))) {
 		return notify('This command is for Markdown notes.', true);
 	}
@@ -359,7 +359,7 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
 		case 'copyRichText':
 			return void copyRichText(view, range);
 		case 'openAsTextHere':
-			return post({ type: 'plusDo', action: 'openAsText', line: view.state.doc.lineAt(contextPos(view)).number });
+			return post({ type: 'hostAction', action: 'openAsText', line: view.state.doc.lineAt(contextPos(view)).number });
 		case 'paraphrase':
 			return paraphraseSelection(view, range, 'polish');
 		case 'rewrite.tighten':
@@ -385,12 +385,12 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
 		case 'openLinkBeside': {
 			const href = (contextTarget()?.closest('[data-href]') as HTMLElement | null)?.dataset.href;
 			if (!href) return notify('Right-click a link first.', true);
-			return post({ type: 'plusDo', action: 'openBeside', href });
+			return post({ type: 'hostAction', action: 'openBeside', href });
 		}
 		case 'copyTex': {
 			const math = contextTarget()?.closest('[data-mlp-tex]') as HTMLElement | null;
 			if (!math) return notify('Right-click a formula first.', true);
-			return post({ type: 'plusDo', action: 'copy', text: math.dataset.mlpTex ?? '', notice: 'Copied the TeX.' });
+			return post({ type: 'hostAction', action: 'copy', text: math.dataset.mlpTex ?? '', notice: 'Copied the TeX.' });
 		}
 		case 'renumberFootnotes':
 			return renumberFootnotes(view);
@@ -406,7 +406,7 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
  * Keeps the editor root's menu context current and remembers where the menu was opened.
  * `tex`: the LaTeX Live Preview, whose menu leaves out the Markdown-only items (`mlpTex`).
  */
-export function contextMenuExtension(poster: (message: PlusEditorToHostMessage) => void, tex = false) {
+export function contextMenuExtension(poster: (message: FeatureEditorToHostMessage) => void, tex = false) {
 	post = poster;
 	texMode = tex;
 	return ViewPlugin.fromClass(

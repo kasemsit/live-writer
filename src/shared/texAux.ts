@@ -1,9 +1,9 @@
 import { braceGroup as group } from './bib';
 
 /**
- * md-live-preview-plus: what the last LaTeX run knows and the source does not
+ * What the last LaTeX run knows and the source does not
  * — the number each `\label` and `\cite` key printed as — read from the
- * `.aux` file. The bibliography is plusBib.ts; how a citation reads, plusCitations.ts.
+ * `.aux` file. The bibliography is bib.ts; how a citation reads, citations.ts.
  *
  * This is how the LaTeX Live Preview shows "Fig. 3" and "[12]" instead of the
  * keys, as Overleaf does: it reuses whatever the user's own build (LaTeX

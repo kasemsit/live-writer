@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-/** md-live-preview-plus: reading the project files the previews draw from (.bib, .aux, _quarto.yml). */
+/** Reading the project files the previews draw from (.bib, .aux, _quarto.yml). */
 
 /** Larger files are not read: no bibliography or project file is this big. */
 const MAX_READ = 4 * 1024 * 1024;

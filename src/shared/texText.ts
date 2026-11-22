@@ -1,7 +1,7 @@
 import { isLetter, lineEnd, readArgs } from './texScanner';
 
 /**
- * md-live-preview-plus: LaTeX's text markup as the characters it prints —
+ * LaTeX's text markup as the characters it prints —
  * symbols written as commands, accents, the ligatures of plain text — and a
  * fragment of LaTeX reduced to its text.
  */

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
-import type { PlusAnchor, PlusNote, PlusPreview } from '../../shared/messages';
+import type { NoteAnchor, NoteEntry, NotePreview } from '../../shared/messages';
 import { anchorsInText, extractPreview, findAnchorLine } from '../../shared/anchors';
 import { linkFileName, NOTE_EXT, rankMatches } from '../../shared/links';
 import { exists } from './files';
@@ -12,17 +12,17 @@ import { exists } from './files';
  * editor has its text.
  */
 
-export interface PlusSession {
+export interface EditorSession {
 	getDocument(): vscode.TextDocument;
 	jumpToLine(line: number): void;
 	asWebviewUri(uri: vscode.Uri): string;
 }
 
-const sessions = new Set<PlusSession>();
+const sessions = new Set<EditorSession>();
 // Target URI → line to jump to once its editor posts `ready` (see takePendingJump).
 const pendingJumps = new Map<string, number>();
 
-export function trackSession(session: PlusSession): vscode.Disposable {
+export function trackSession(session: EditorSession): vscode.Disposable {
 	sessions.add(session);
 	return new vscode.Disposable(() => sessions.delete(session));
 }
@@ -93,7 +93,7 @@ export async function openAtLine(uri: vscode.Uri, line: number, beside = false):
 	}, 500);
 }
 
-export async function openWikilink(session: PlusSession, link: string, beside = false): Promise<void> {
+export async function openWikilink(session: EditorSession, link: string, beside = false): Promise<void> {
 	const parts = link.split('#');
 	const name = parts[0].trim();
 	const anchor = parts.length > 1 ? parts[parts.length - 1].trim() : '';
@@ -124,10 +124,10 @@ export async function openWikilink(session: PlusSession, link: string, beside = 
 	}
 }
 
-let notesCache: { at: number; notes: PlusNote[] } | null = null;
+let notesCache: { at: number; notes: NoteEntry[] } | null = null;
 
 /** Every Markdown note in the workspace, for `[[` completion. */
-export async function listNotes(): Promise<PlusNote[]> {
+export async function listNotes(): Promise<NoteEntry[]> {
 	if (notesCache && Date.now() - notesCache.at < 20_000) return notesCache.notes;
 	const found = await vscode.workspace.findFiles('**/*.{md,markdown}', EXCLUDE, 50_000);
 	const notes = found
@@ -137,7 +137,7 @@ export async function listNotes(): Promise<PlusNote[]> {
 	return notes;
 }
 
-export async function listAnchors(session: PlusSession, target: string): Promise<PlusAnchor[]> {
+export async function listAnchors(session: EditorSession, target: string): Promise<NoteAnchor[]> {
 	const uri = await resolveWikiTarget(session.getDocument().uri, target.trim());
 	if (!uri || !NOTE_EXT.test(uri.fsPath)) return [];
 	try {
@@ -148,7 +148,7 @@ export async function listAnchors(session: PlusSession, target: string): Promise
 }
 
 /** The hover card for `[[note#anchor]]`: the heading's section, the block, or the note's opening. */
-export async function previewWikilink(session: PlusSession, target: string): Promise<PlusPreview> {
+export async function previewWikilink(session: EditorSession, target: string): Promise<NotePreview> {
 	const parts = target.split('#');
 	const name = parts[0].trim();
 	const anchor = parts.length > 1 ? parts[parts.length - 1].trim() : '';

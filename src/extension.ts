@@ -14,7 +14,7 @@ import { migrateSettings } from './editor/features/migrate';
 
 function getActiveMarkdownUri(): vscode.Uri | undefined {
 	const editor = vscode.window.activeTextEditor;
-	// md-live-preview-plus: a LaTeX file opens in the LaTeX Live Preview, and a `.qmd`
+	// A LaTeX file opens in the LaTeX Live Preview, and a `.qmd`
 	// is "quarto" when the Quarto extension is installed.
 	if (editor && ['markdown', 'latex', 'tex', 'quarto'].includes(editor.document.languageId)) {
 		return editor.document.uri;
@@ -194,20 +194,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		vscode.commands.registerCommand('liveWriter.plus.insertFootnote', () => provider.insertFootnoteInActive()),
 	);
 
-	// md-live-preview-plus: not on the Marketplace, so it checks GitHub Releases itself.
+	// Not on the Marketplace, so it checks GitHub Releases itself.
 	void checkForUpdate(context);
-	// md-live-preview-plus: status bar item showing what Claude gets from the preview.
+	// Status bar item showing what Claude gets from the preview.
 	initSelectionStatus(context);
-	// md-live-preview-plus: the Backlinks view and the right-click menu, for the
+	// The Backlinks view and the right-click menu, for the
 	// active Live Preview (or, for Backlinks, an ordinary Markdown editor).
 	const activeNote = () => {
 		const editor = vscode.window.activeTextEditor;
 		return provider.getActiveDocumentUri() ?? (editor?.document.languageId === 'markdown' ? editor.document.uri : undefined);
 	};
 	registerBacklinks(context, activeNote);
-	registerContextMenu(context, (message) => provider.postPlusToActive(message), activeNote);
-	registerInsertCitation(context, (message) => provider.postPlusToActive(message), activeNote);
-	registerTextScale(context, (message) => provider.broadcastPlus(message));
+	registerContextMenu(context, (message) => provider.postToActiveEditor(message), activeNote);
+	registerInsertCitation(context, (message) => provider.postToActiveEditor(message), activeNote);
+	registerTextScale(context, (message) => provider.broadcastToEditors(message));
 	// Live Writer: settings made under the former name carry over.
 	void migrateSettings();
 

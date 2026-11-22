@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { rewritePrompt, type RewriteMode } from '../../shared/rewrite';
 
 /**
- * md-live-preview-plus: Paraphrase with Claude — the selected passage rewritten
+ * Paraphrase with Claude — the selected passage rewritten
  * by Claude Code run headless (`claude -p`), no tools, no session kept, none of
  * the user's settings or hooks, in a temporary folder so no project's
  * CLAUDE.md is read. The webview shows the result to replace or copy.

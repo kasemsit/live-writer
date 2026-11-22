@@ -1,6 +1,6 @@
 import { EditorView, ViewPlugin } from '@codemirror/view';
 import type { EditorState, Extension } from '@codemirror/state';
-import type { PlusEditorToHostMessage } from '../../shared/messages';
+import type { FeatureEditorToHostMessage } from '../../shared/messages';
 
 /**
  * Reports the selection to the host, which writes it where a Claude Code hook
@@ -16,12 +16,12 @@ import type { PlusEditorToHostMessage } from '../../shared/messages';
  * each cell carries (`data-mlp-from` / `data-mlp-to`, see renderTableElement).
  */
 
-type Selection = Extract<PlusEditorToHostMessage, { type: 'plusSelection' }>;
+type Selection = Extract<FeatureEditorToHostMessage, { type: 'selection' }>;
 
 function message(state: EditorState, from: number, to: number): Selection {
-	if (from >= to) return { type: 'plusSelection', text: '' };
+	if (from >= to) return { type: 'selection', text: '' };
 	return {
-		type: 'plusSelection',
+		type: 'selection',
 		text: state.sliceDoc(from, to),
 		from,
 		to,
@@ -78,7 +78,7 @@ export function tableSelectionRange(view: EditorView, sel: globalThis.Selection 
 	return [from, to];
 }
 
-export function selectionReporter(post: (message: PlusEditorToHostMessage) => void): Extension {
+export function selectionReporter(post: (message: FeatureEditorToHostMessage) => void): Extension {
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let last = '';
 	const report = (view: EditorView) => {

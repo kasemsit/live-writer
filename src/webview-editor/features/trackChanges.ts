@@ -13,7 +13,7 @@ import { isBlockRevealed, setBlockRevealed, blockRevealChanged } from '../cmUtil
  * struck through in red, each with ✓ (keep) and ✗ (undo it), and a bar with
  * the count, Next, Accept all and Reject all.
  *
- * The host says which updates to track (`plusTrackNext`, see documentSync.ts):
+ * The host says which updates to track (`trackNext`, see documentSync.ts):
  * a reload from disk, not the user's own typing elsewhere, not undo/redo.
  * Rejecting is an ordinary edit, so it reaches the file and can be undone.
  * Nothing is stored: closing the preview forgets the marks.

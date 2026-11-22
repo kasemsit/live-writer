@@ -30,8 +30,8 @@ import {
 import { t } from '../shared/i18n';
 import { adaptMarkdownCss } from '../shared/cssAdapter';
 import type { EditorLang, TextChange } from '../shared/messages';
-import { plusExtensions, handlePlusHostMessage } from './features';
-// md-live-preview-plus: the LaTeX Live Preview, built instead of the Markdown editor for a .tex file.
+import { featureExtensions, handleFeatureHostMessage } from './features';
+// The LaTeX Live Preview, built instead of the Markdown editor for a .tex file.
 import { texExtensions, texInitialAnchor, handleTexHostMessage } from './features/tex';
 
 const remoteChange = Annotation.define<boolean>();
@@ -94,8 +94,8 @@ function markdownExtensions(): Extension[] {
 		headingSpaceInputHandler,
 		backtickInputHandler,
 		livePreviewPlugin,
-		// md-live-preview-plus: wikilinks, callouts, footnotes, completion, selection export.
-		...plusExtensions(postToHost),
+		// Wikilinks, callouts, footnotes, completion, selection export.
+		...featureExtensions(postToHost),
 		blockDecorationsField,
 		codeHighlightExtension,
 		createImagePasteHandler((atPos, mimeType, dataBase64, needsOwnParagraph) =>
@@ -197,7 +197,7 @@ function createExtensions(): Extension[] {
 // further, past its line break, to actually land outside the block.
 function initialStateFor(text: string): EditorState {
 	const state = EditorState.create({ doc: text, extensions: createExtensions() });
-	// md-live-preview-plus: a LaTeX file opens with the caret at its end, so nothing at the top shows as source.
+	// A LaTeX file opens with the caret at its end, so nothing at the top shows as source.
 	if (lang === 'latex') return state.update({ selection: { anchor: texInitialAnchor(state) } }).state;
 	const fm = detectFrontmatter(state);
 	if (!fm) return state;
@@ -236,7 +236,7 @@ onHostMessage((message) => {
 	// handled by the switch below.
 	if (handleDrawioFileMessage(message)) return;
 	if (handleTexHostMessage(view, message)) return;
-	if (handlePlusHostMessage(view, message)) return;
+	if (handleFeatureHostMessage(view, message)) return;
 	switch (message.type) {
 		case 'init':
 			baseVersion = message.version;

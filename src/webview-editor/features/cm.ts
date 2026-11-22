@@ -5,7 +5,7 @@ import type { SyntaxNode } from '@lezer/common';
 import { blockRevealChanged, isBlockRevealed } from '../cmUtils';
 
 /**
- * md-live-preview-plus: editor helpers the plus features share — where the
+ * Editor helpers the plus features share — where the
  * document shows as source, and taking the reader to a spot.
  */
 

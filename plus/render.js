@@ -83,7 +83,7 @@ window.mlpKatexChunkUri='https://render.invalid/katex-chunk.js';window.mlpKatexB
 	);
 	if (/\.qmd$/i.test(file)) {
 		const project = quartoProject(file);
-		await page.evaluate((p) => window.postMessage({ type: 'plusQuartoProject', project: p }, '*'), project);
+		await page.evaluate((p) => window.postMessage({ type: 'quartoProject', project: p }, '*'), project);
 	}
 	await page.waitForTimeout(1500);
 	if (shot) {

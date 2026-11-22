@@ -26,7 +26,7 @@ export type HostToEditorMessage =
 	// `baseUri` is the webview-loadable URI (with a trailing slash) of the
 	// folder containing the document, used to resolve relative image paths
 	// (e.g. `assets/foo.png`) to something the webview is actually allowed to load.
-	// plus: `lang` picks the editor — Markdown (the default) or the LaTeX Live Preview.
+	// `lang` picks the editor — Markdown (the default) or the LaTeX Live Preview.
 	| { type: 'init'; text: string; version: number; css: string; codeTheme: string; baseUri: string; lang?: EditorLang }
 	| { type: 'externalUpdate'; changes: TextChange[]; version: number }
 	| { type: 'ackEdit'; version: number }
@@ -39,7 +39,7 @@ export type HostToEditorMessage =
 	// document can have requests in flight at the same time.
 	| { type: 'drawioFile'; requestId: number; text?: string; error?: string }
 	| { type: 'setCursor'; pos: number }
-	| PlusHostToEditorMessage;
+	| FeatureHostToEditorMessage;
 
 export type EditorToHostMessage =
 	| { type: 'ready' }
@@ -53,7 +53,7 @@ export type EditorToHostMessage =
 	// and sends its text back for the widget to parse. `src` is the raw, relative
 	// path exactly as written in the Markdown; the host resolves it.
 	| { type: 'readDrawioFile'; requestId: number; src: string }
-	| PlusEditorToHostMessage;
+	| FeatureEditorToHostMessage;
 
 export interface StyleEntry {
 	id: string;
@@ -113,13 +113,13 @@ export type OutlineToHostMessage = { type: 'ready' } | { type: 'jumpToHeading'; 
 export type EditorLang = 'markdown' | 'latex';
 
 /** A note offered by wikilink completion: `name` is the file name without extension, `path` workspace-relative. */
-export interface PlusNote {
+export interface NoteEntry {
 	name: string;
 	path: string;
 }
 
 /** A link target inside a note: a heading (`#Heading`) or a block id (`#^id`). */
-export interface PlusAnchor {
+export interface NoteAnchor {
 	kind: 'heading' | 'block';
 	/** Heading text, or the block id without its `^`. */
 	text: string;
@@ -127,7 +127,7 @@ export interface PlusAnchor {
 }
 
 /** What a wikilink's hover card shows. `text` is Markdown cut from the target note. */
-export interface PlusPreview {
+export interface NotePreview {
 	title: string;
 	text: string;
 	/** `missing`: no such note; `anchor-missing`: the note exists, the heading/block does not. */
@@ -139,7 +139,7 @@ export interface PlusPreview {
  * Context-menu commands the editor webview carries out itself, on the spot that
  * was right-clicked (or the caret, when run from the command palette).
  */
-export type PlusCommand =
+export type MenuCommand =
 	| 'copyBlockLink'
 	| 'addReviewComment'
 	| 'copyRichText'
@@ -165,38 +165,38 @@ export type PlusCommand =
 	| 'table.sortDescending'
 	| 'table.copyTsv';
 
-export type PlusHostToEditorMessage =
-	| { type: 'plusNotes'; requestId: number; notes: PlusNote[] }
-	| { type: 'plusPreviewResult'; requestId: number; preview: PlusPreview }
+export type FeatureHostToEditorMessage =
+	| { type: 'notes'; requestId: number; notes: NoteEntry[] }
+	| { type: 'linkPreviewResult'; requestId: number; preview: NotePreview }
 	// `src` is a webview-loadable URI, or null when no such file exists.
-	| { type: 'plusEmbedResult'; requestId: number; src: string | null }
+	| { type: 'embedResult'; requestId: number; src: string | null }
 	// Quarto: what the document takes from its project; sent again when a project file changes.
-	| { type: 'plusQuartoProject'; project: PlusQuartoProject }
+	| { type: 'quartoProject'; project: QuartoProject }
 	// The reader's text size, a factor over the theme's (setting liveWriter.plus.textScale).
 	// `fontFamily` (setting liveWriter.plus.fontFamily) replaces the theme's text font; '' keeps it.
-	| { type: 'plusTextScale'; scale: number; fontFamily?: string }
+	| { type: 'textScale'; scale: number; fontFamily?: string }
 	// The next externalUpdate came from disk (Claude, git, …): show it as tracked changes.
-	| { type: 'plusTrackNext' }
-	| { type: 'plusAnchors'; requestId: number; anchors: PlusAnchor[] }
-	| { type: 'plusInsertFootnote' }
+	| { type: 'trackNext' }
+	| { type: 'anchors'; requestId: number; anchors: NoteAnchor[] }
+	| { type: 'insertFootnote' }
 	// Text to put in place of the selection (a citation picked in Zotero).
-	| { type: 'plusInsertText'; text: string }
+	| { type: 'insertText'; text: string }
 	// `range` (document offsets) overrides the selection — used by tests and by
 	// callers that already know what to act on.
-	| { type: 'plusRun'; command: PlusCommand; range?: { from: number; to: number } }
-	// LaTeX: what the last build and the bibliography say (see PlusTexContext).
-	| { type: 'plusTexContext'; context: PlusTexContext }
-	| { type: 'plusTexAssetResult'; requestId: number; asset: PlusTexAsset }
-	| { type: 'plusTexPictureResult'; requestId: number; picture: PlusTexPicture }
-	| { type: 'plusZoteroLinksResult'; requestId: number; links: PlusZoteroLinks }
-	| { type: 'plusParaphraseResult'; requestId: number; text: string; error: string };
+	| { type: 'runCommand'; command: MenuCommand; range?: { from: number; to: number } }
+	// LaTeX: what the last build and the bibliography say (see TexContext).
+	| { type: 'texContext'; context: TexContext }
+	| { type: 'texAssetResult'; requestId: number; asset: TexAsset }
+	| { type: 'texPictureResult'; requestId: number; picture: TexPicture }
+	| { type: 'zoteroLinksResult'; requestId: number; links: ZoteroLinks }
+	| { type: 'rewriteResult'; requestId: number; text: string; error: string };
 
 /**
- * md-live-preview-plus: what the LaTeX Live Preview needs beyond the file:
+ * What the LaTeX Live Preview needs beyond the file:
  * the numbers the last build gave labels and citations (from the root's
  * `.aux`), the bibliography entries, and the root preamble's macros.
  */
-export interface PlusTexContext {
+export interface TexContext {
 	labels: Record<string, string>;
 	cites: Record<string, string>;
 	bib: Record<string, BibEntry>;
@@ -212,7 +212,7 @@ export interface PlusTexContext {
  * What a document takes from its Quarto project: the nearest `_quarto.yml`
  * and, for a `.qmd`, its own front matter.
  */
-export interface PlusQuartoProject {
+export interface QuartoProject {
 	/** The words the project sets (`crossref-fig-title`, `callout-note-title`, …); Quarto's defaults fill the rest. */
 	labels: Record<string, string>;
 	/**
@@ -229,14 +229,14 @@ export interface PlusQuartoProject {
 
 /** An `\includegraphics` target: a URI the webview may load, or why there is none. */
 /** Where a cited paper is in Zotero: zotero:// links to its PDF and to the item, or why there are none. */
-export interface PlusZoteroLinks {
+export interface ZoteroLinks {
 	pdf: string | null;
 	item: string | null;
 	note: string;
 }
 
 /** A `tikzpicture` as the last build drew it, cut from its PDF by SyncTeX, or why there is none. */
-export interface PlusTexPicture {
+export interface TexPicture {
 	status: 'image' | 'missing' | 'unsupported';
 	src: string | null;
 	/** Where it came from (`main.pdf, p. 8`), or what is missing. */
@@ -245,42 +245,42 @@ export interface PlusTexPicture {
 	stale: boolean;
 }
 
-export interface PlusTexAsset {
+export interface TexAsset {
 	status: 'image' | 'missing' | 'unsupported';
 	src: string | null;
 	/** The file as found (or the path as written, when missing). */
 	name: string;
 }
 
-export type PlusEditorToHostMessage =
+export type FeatureEditorToHostMessage =
 	// The editor selection, as exact Markdown source with its line numbers;
 	// `text` is empty when nothing is selected. Written to a file a Claude Code
 	// hook reads (see src/editor/features/selectionFile.ts).
-	| { type: 'plusSelection'; text: string; from?: number; to?: number; startLine?: number; endLine?: number }
-	| { type: 'plusListNotes'; requestId: number }
+	| { type: 'selection'; text: string; from?: number; to?: number; startLine?: number; endLine?: number }
+	| { type: 'listNotes'; requestId: number }
 	// `target` is the wikilink target before `#`; empty means the current document.
-	| { type: 'plusListAnchors'; requestId: number; target: string }
+	| { type: 'listAnchors'; requestId: number; target: string }
 	// `target` is everything after `wiki:` — `note#anchor`.
-	| { type: 'plusPreview'; requestId: number; target: string }
+	| { type: 'linkPreview'; requestId: number; target: string }
 	// `![[image.png]]`: find the file by name and give back a URI the webview may load.
-	| { type: 'plusResolveEmbed'; requestId: number; target: string }
-	// Quarto: send this document's project (plusQuartoProject) now and on every change.
-	| { type: 'plusQuartoWatch' }
+	| { type: 'resolveEmbed'; requestId: number; target: string }
+	// Quarto: send this document's project (quartoProject) now and on every change.
+	| { type: 'quartoWatch' }
 	// What a context-menu command needs the host for: the clipboard, opening
 	// files, telling the user something.
-	| { type: 'plusDo'; action: 'copy'; text: string; notice: string }
-	| { type: 'plusDo'; action: 'copyBlockLink'; anchor: string }
-	| { type: 'plusDo'; action: 'openAsText'; line: number }
-	| { type: 'plusDo'; action: 'openBeside'; href: string }
-	| { type: 'plusDo'; action: 'openUrl'; url: string }
+	| { type: 'hostAction'; action: 'copy'; text: string; notice: string }
+	| { type: 'hostAction'; action: 'copyBlockLink'; anchor: string }
+	| { type: 'hostAction'; action: 'openAsText'; line: number }
+	| { type: 'hostAction'; action: 'openBeside'; href: string }
+	| { type: 'hostAction'; action: 'openUrl'; url: string }
 	// A zotero:// link (shared/zotero.ts ZOTERO_LINK): a PDF in Zotero's reader or an item in the library.
-	| { type: 'plusDo'; action: 'openZotero'; url: string }
-	| { type: 'plusDo'; action: 'notify'; message: string; error?: boolean }
+	| { type: 'hostAction'; action: 'openZotero'; url: string }
+	| { type: 'hostAction'; action: 'notify'; message: string; error?: boolean }
 	// LaTeX: find the file an `\includegraphics{path}` means.
-	| { type: 'plusTexAsset'; requestId: number; path: string }
+	| { type: 'texAsset'; requestId: number; path: string }
 	// LaTeX: the last build's drawing of the picture on these lines (1-based) of this file.
-	| { type: 'plusTexPicture'; requestId: number; lines: number[] }
+	| { type: 'texPicture'; requestId: number; lines: number[] }
 	// The Zotero links for a citation key.
-	| { type: 'plusZoteroLinks'; requestId: number; key: string }
+	| { type: 'zoteroLinks'; requestId: number; key: string }
 	// Paraphrase with Claude: the selected source, rewritten by Claude Code.
-	| { type: 'plusParaphrase'; requestId: number; text: string; mode?: RewriteMode };
+	| { type: 'rewrite'; requestId: number; text: string; mode?: RewriteMode };

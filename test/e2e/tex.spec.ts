@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { mountEditor, postToWebview } from './harness';
 
 /**
- * md-live-preview-plus: the LaTeX Live Preview — what a `.tex` file looks
+ * The LaTeX Live Preview — what a `.tex` file looks
  * like, and what clicking it does, in the shipped bundle and stylesheet.
  */
 
@@ -51,7 +51,7 @@ const CONTEXT = {
 
 async function mountTex(page: Page, text = DOC): Promise<void> {
 	await mountEditor(page, text, 'en', 'latex');
-	await postToWebview(page, { type: 'plusTexContext', context: CONTEXT });
+	await postToWebview(page, { type: 'texContext', context: CONTEXT });
 }
 
 /** Text of the editor line whose source starts with `prefix` (lines are matched by their rendered text). */
@@ -156,12 +156,12 @@ test.describe('LaTeX Live Preview', () => {
 	test('\\includegraphics asks the host for the file and shows it', async ({ page }) => {
 		await mountTex(page, 'Before\n\\includegraphics[width=0.5\\linewidth]{figures/plot}\nAfter');
 		const request = await page.waitForFunction(() =>
-			(window as unknown as { __posted: { type: string; path?: string; requestId?: number }[] }).__posted.find((m) => m.type === 'plusTexAsset'),
+			(window as unknown as { __posted: { type: string; path?: string; requestId?: number }[] }).__posted.find((m) => m.type === 'texAsset'),
 		);
 		const asked = (await request.jsonValue()) as { path: string; requestId: number };
 		expect(asked.path).toBe('figures/plot');
 		const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-		await postToWebview(page, { type: 'plusTexAssetResult', requestId: asked.requestId, asset: { status: 'image', src: pixel, name: 'figures/plot.png' } });
+		await postToWebview(page, { type: 'texAssetResult', requestId: asked.requestId, asset: { status: 'image', src: pixel, name: 'figures/plot.png' } });
 		await expect(page.locator('.mlp-tex-graphic img')).toHaveAttribute('src', pixel);
 	});
 
@@ -169,7 +169,7 @@ test.describe('LaTeX Live Preview', () => {
 		const DOC = 'Text -- here.\n\\begin{tikzpicture}\n\\draw (a) -- (b) node {\\textbf{x}};\n\\end{tikzpicture}\nEnd.';
 		const pictureRequest = async (page: Page) => {
 			const request = await page.waitForFunction(() =>
-				(window as unknown as { __posted: { type: string; lines?: number[]; requestId?: number }[] }).__posted.find((m) => m.type === 'plusTexPicture'),
+				(window as unknown as { __posted: { type: string; lines?: number[]; requestId?: number }[] }).__posted.find((m) => m.type === 'texPicture'),
 			);
 			return (await request.jsonValue()) as { lines: number[]; requestId: number };
 		};
@@ -179,7 +179,7 @@ test.describe('LaTeX Live Preview', () => {
 			const asked = await pictureRequest(page);
 			expect(asked.lines).toEqual([3, 2]);
 			const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-			await postToWebview(page, { type: 'plusTexPictureResult', requestId: asked.requestId, picture: { status: 'image', src: pixel, note: 'main.pdf, p. 1', stale: true } });
+			await postToWebview(page, { type: 'texPictureResult', requestId: asked.requestId, picture: { status: 'image', src: pixel, note: 'main.pdf, p. 1', stale: true } });
 			await expect(page.locator('.mlp-tex-picture img')).toHaveAttribute('src', pixel);
 			await expect(page.locator('.mlp-tex-picture-stale')).toHaveText('last build');
 			await expect(page.locator('.mlp-tex-picture-src')).toHaveCount(0);
@@ -189,7 +189,7 @@ test.describe('LaTeX Live Preview', () => {
 		test('without a build, keep their source as written, with a note', async ({ page }) => {
 			await mountTex(page, DOC);
 			const asked = await pictureRequest(page);
-			await postToWebview(page, { type: 'plusTexPictureResult', requestId: asked.requestId, picture: { status: 'missing', src: null, note: 'No build of this document found.', stale: false } });
+			await postToWebview(page, { type: 'texPictureResult', requestId: asked.requestId, picture: { status: 'missing', src: null, note: 'No build of this document found.', stale: false } });
 			await expect(page.locator('.mlp-tex-picture-note')).toHaveText('No build of this document found.');
 			await expect(page.locator('.mlp-tex-picture-src')).toContainText('\\draw (a) -- (b) node {\\textbf{x}};');
 		});

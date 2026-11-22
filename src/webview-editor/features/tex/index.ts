@@ -1,7 +1,7 @@
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { EditorToHostMessage } from '../../../shared/messages';
-import { setPlusPoster } from '../hostRequests';
+import { setHostPoster } from '../hostRequests';
 import { selectionReporter } from '../selection';
 import { trackChangesExtension } from '../trackChanges';
 import { contextMenuExtension } from '../contextMenu';
@@ -14,13 +14,13 @@ import { citeCardExtension } from '../zotero';
 export { handleTexHostMessage } from './context';
 
 /**
- * md-live-preview-plus: the LaTeX Live Preview — the editor a `.tex` file
+ * The LaTeX Live Preview — the editor a `.tex` file
  * gets in place of the Markdown one. What it shares with Markdown notes:
  * the selection sent to Claude, tracked changes from disk, the right-click
  * menu, text size, search, undo through VS Code.
  */
 export function texExtensions(post: (message: EditorToHostMessage) => void): Extension[] {
-	setPlusPoster(post);
+	setHostPoster(post);
 	return [
 		texScanField,
 		texContextField,

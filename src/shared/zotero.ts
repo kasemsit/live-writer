@@ -1,5 +1,5 @@
 /**
- * md-live-preview-plus: from a citation key to the paper in Zotero — its PDF
+ * From a citation key to the paper in Zotero — its PDF
  * in Zotero's reader, or the item in the library. The host asks Zotero's
  * local API (Zotero 7+, which knows each item's `citationKey`), else Better
  * BibTeX, else reads the keys a vault's `@key` reference note records

@@ -1,10 +1,10 @@
 import type { EditorView } from '@codemirror/view';
 import { placeCardAt } from './cm';
-import { postPlus, request } from './hostRequests';
+import { sendToHost, request } from './hostRequests';
 import { REWRITE_MODES, type RewriteMode } from '../../shared/rewrite';
 
 /**
- * md-live-preview-plus: Paraphrase with Claude (right-click on a selection).
+ * Paraphrase with Claude (right-click on a selection).
  * The host has Claude Code rewrite the passage (src/editor/features/paraphrase.ts);
  * a card under the selection shows the result to replace the passage with, or
  * to copy. Replacing is an ordinary edit, undone as one.
@@ -63,7 +63,7 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 	};
 
 	const none = { text: '', error: 'Claude did not answer in time.' };
-	void request<{ text: string; error: string }>((requestId) => ({ type: 'plusParaphrase', requestId, text: source, mode }), none, 200_000).then((result) => {
+	void request<{ text: string; error: string }>((requestId) => ({ type: 'rewrite', requestId, text: source, mode }), none, 200_000).then((result) => {
 		if (!card.isConnected) return;
 		if (!result.text) {
 			body.textContent = result.error;
@@ -84,7 +84,7 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 				view.focus();
 			}),
 			button('Copy', () => {
-				postPlus({ type: 'plusDo', action: 'copy', text: result.text, notice: 'Copied.' });
+				sendToHost({ type: 'hostAction', action: 'copy', text: result.text, notice: 'Copied.' });
 				close();
 			}),
 			button('Close', close),

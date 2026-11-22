@@ -4,7 +4,7 @@ import type { TexScan } from '../../../shared/texScanner';
 import { texContextField, texScanField } from './context';
 
 /**
- * md-live-preview-plus: the macros KaTeX gets — the root preamble's (from the
+ * The macros KaTeX gets — the root preamble's (from the
  * host) under this file's own. Kept as one object per distinct set, so math
  * widgets compare equal across edits that do not change a definition.
  */

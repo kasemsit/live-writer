@@ -1,12 +1,12 @@
 import type { EditorView } from '@codemirror/view';
-import type { HostToEditorMessage, PlusQuartoProject } from '../../shared/messages';
+import type { HostToEditorMessage, QuartoProject } from '../../shared/messages';
 import { citeTerms, type CiteFormat } from '../../shared/citations';
 import { QUARTO_LABELS } from '../../shared/quarto';
 import { blockRevealChanged } from '../cmUtils';
-import { postPlus } from './hostRequests';
+import { sendToHost } from './hostRequests';
 
 /**
- * md-live-preview-plus: what this document takes from its Quarto project,
+ * What this document takes from its Quarto project,
  * sent by the host (src/editor/features/quartoProject.ts) on request and again
  * whenever `_quarto.yml` or a bibliography changes.
  *
@@ -14,7 +14,7 @@ import { postPlus } from './hostRequests';
  * citations through the inline renderer, which has no editor state to read.
  */
 
-let project: PlusQuartoProject = { labels: {}, citations: null, quarto: false };
+let project: QuartoProject = { labels: {}, citations: null, quarto: false };
 let format: CiteFormat | null = null;
 let asked = false;
 
@@ -23,7 +23,7 @@ export function quartoLabel(key: string): string | undefined {
 	return project.labels[key] ?? QUARTO_LABELS[key];
 }
 
-/** True for a `.qmd`: Pandoc's paragraph rules hold (see PlusQuartoProject.quarto). */
+/** True for a `.qmd`: Pandoc's paragraph rules hold (see QuartoProject.quarto). */
 export function isQuartoDocument(): boolean {
 	return project.quarto;
 }
@@ -37,7 +37,7 @@ export function citationFormat(): CiteFormat | null {
 export function watchQuartoProject(): void {
 	if (asked) return;
 	asked = true;
-	postPlus({ type: 'plusQuartoWatch' });
+	sendToHost({ type: 'quartoWatch' });
 }
 
 const listeners = new Set<(view: EditorView) => void>();
@@ -49,7 +49,7 @@ export function onQuartoProject(fn: (view: EditorView) => void): void {
 
 /** Handles the host's project message. Returns true when the message was one. */
 export function handleQuartoHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
-	if (message.type !== 'plusQuartoProject') return false;
+	if (message.type !== 'quartoProject') return false;
 	project = message.project;
 	const c = project.citations;
 	format = c ? { style: c.style, terms: citeTerms(c.lang), bib: c.bib } : null;

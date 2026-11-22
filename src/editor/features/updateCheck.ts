@@ -18,7 +18,7 @@ export async function checkForUpdate(context: vscode.ExtensionContext): Promise<
 	await context.globalState.update(LAST_CHECK_KEY, Date.now());
 	try {
 		const res = await fetch(RELEASES, {
-			headers: { 'User-Agent': 'md-live-preview-plus', Accept: 'application/vnd.github+json' },
+			headers: { 'User-Agent': 'live-writer', Accept: 'application/vnd.github+json' },
 			signal: AbortSignal.timeout(8000),
 		});
 		if (!res.ok) return;
@@ -27,7 +27,7 @@ export async function checkForUpdate(context: vscode.ExtensionContext): Promise<
 		const installed = String(context.extension.packageJSON.version);
 		if (!latest || !isNewer(latest, installed.split('.').map(Number))) return;
 		const pick = await vscode.window.showInformationMessage(
-			`md-live-preview-plus ${release.tag_name} is available (installed ${installed}).`,
+			`Live Writer ${release.tag_name} is available (installed ${installed}).`,
 			'Open release page',
 			"Don't check again",
 		);

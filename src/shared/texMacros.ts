@@ -1,7 +1,7 @@
 import { isLetter, matchBrace, readArgs, scanTex, type TexScan } from './texScanner';
 
 /**
- * md-live-preview-plus: the macros a LaTeX file defines, for KaTeX — read by
+ * The macros a LaTeX file defines, for KaTeX — read by
  * the webview from the file being edited and by the host from the root's
  * preamble.
  */

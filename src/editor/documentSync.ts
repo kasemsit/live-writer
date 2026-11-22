@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import type { EditorToHostMessage, HostToEditorMessage, PlusHostToEditorMessage, TextChange } from '../shared/messages';
+import type { EditorToHostMessage, HostToEditorMessage, FeatureHostToEditorMessage, TextChange } from '../shared/messages';
 import { pickCodeTheme, tokenizeDocument } from './shikiHost';
 import { extensionForMimeType, generateImageFileName } from '../shared/imageAssets';
 import { resolveLinkTarget } from '../shared/linkTarget';
 import { isPathInside } from '../shared/pathContainment';
-import { handlePlusMessage, trackSession, takePendingJump } from './features';
+import { handleFeatureMessage, trackSession, takePendingJump } from './features';
 import { textAppearance } from './features/textScale';
 import { isTrackedChange } from './features/trackChanges';
 import { changesForEditor, eolMap, tokensForEditor } from './features/eol';
@@ -56,14 +56,14 @@ export class DocumentSyncSession {
 	// edit has actually bumped document.version, defeating the staleness guard.
 	private editQueue: Promise<void> = Promise.resolve();
 
-	// md-live-preview-plus: set for a .tex file, which gets the LaTeX Live Preview.
+	// Set for a .tex file, which gets the LaTeX Live Preview.
 	private readonly tex: TexSession | undefined;
 
 	constructor(
 		private readonly document: vscode.TextDocument,
 		private readonly webviewPanel: vscode.WebviewPanel,
 		private readonly getCss: () => string,
-		// md-live-preview-plus: where PDF figures of a LaTeX document are converted to PNG.
+		// Where PDF figures of a LaTeX document are converted to PNG.
 		figureCache?: vscode.Uri,
 	) {
 		this.lastAppliedVersion = document.version;
@@ -88,7 +88,7 @@ export class DocumentSyncSession {
 			vscode.window.onDidChangeActiveColorTheme(() => this.scheduleRehighlight(true)),
 		);
 
-		// md-live-preview-plus: wikilinks need to find the editor a note opened in.
+		// Wikilinks need to find the editor a note opened in.
 		this.disposables.push(trackSession(this));
 	}
 
@@ -97,8 +97,8 @@ export class DocumentSyncSession {
 	}
 
 	private handleMessage(message: EditorToHostMessage) {
-		// md-live-preview-plus: selection export, wikilinks, completion lists.
-		if (handlePlusMessage(this, (m) => this.post(m), message)) return;
+		// Selection export, wikilinks, completion lists.
+		if (handleFeatureMessage(this, (m) => this.post(m), message)) return;
 		switch (message.type) {
 			case 'ready':
 				this.sendInit();
@@ -254,7 +254,7 @@ export class DocumentSyncSession {
 		// blank line separates the image into its own paragraph instead of
 		// running it straight onto the table's last line.
 		const insertText = needsOwnParagraph ? `\n\n![](assets/${fileName})` : `![](assets/${fileName})`;
-		// plus: `atPos` is a CodeMirror offset; in a CRLF file it differs (plus/eol.ts).
+		// `atPos` is a CodeMirror offset; in a CRLF file it differs (plus/eol.ts).
 		const position = eolMap(this.document).position(atPos);
 		const edit = new vscode.WorkspaceEdit();
 		edit.insert(this.document.uri, position, insertText);
@@ -274,12 +274,12 @@ export class DocumentSyncSession {
 			baseUri: `${this.webviewPanel.webview.asWebviewUri(docDir).toString()}/`,
 			lang: this.tex ? 'latex' : 'markdown',
 		});
-		// md-live-preview-plus: labels, citations and macros for a LaTeX document.
+		// Labels, citations and macros for a LaTeX document.
 		void this.tex?.sendContext();
 		this.lastAppliedVersion = this.document.version;
-		// md-live-preview-plus: the reader's remembered text size.
-		this.post({ type: 'plusTextScale', ...textAppearance() });
-		// md-live-preview-plus: a wikilink with an anchor opened this note.
+		// The reader's remembered text size.
+		this.post({ type: 'textScale', ...textAppearance() });
+		// A wikilink with an anchor opened this note.
 		const jump = takePendingJump(this.document.uri);
 		if (jump) setTimeout(() => this.jumpToLine(jump), 250);
 	}
@@ -299,7 +299,7 @@ export class DocumentSyncSession {
 		}
 
 		const edit = new vscode.WorkspaceEdit();
-		// plus: the webview's offsets count a line break as one character; in a
+		// The webview's offsets count a line break as one character; in a
 		// CRLF file VS Code counts two, so they are converted (plus/eol.ts).
 		const map = eolMap(this.document);
 		for (const change of changes) {
@@ -335,16 +335,16 @@ export class DocumentSyncSession {
 			return;
 		}
 
-		// plus: converted to the webview's offsets for a CRLF file (plus/eol.ts).
+		// Converted to the webview's offsets for a CRLF file (plus/eol.ts).
 		const changes: TextChange[] = changesForEditor(event);
-		// md-live-preview-plus: a reload from disk is shown as tracked changes.
-		if (isTrackedChange(event)) this.post({ type: 'plusTrackNext' });
+		// A reload from disk is shown as tracked changes.
+		if (isTrackedChange(event)) this.post({ type: 'trackNext' });
 		this.post({ type: 'externalUpdate', changes, version: event.document.version });
 		this.scheduleRehighlight();
 	}
 
 	private scheduleRehighlight(immediate = false) {
-		// plus: a LaTeX document has no Markdown code fences to highlight.
+		// A LaTeX document has no Markdown code fences to highlight.
 		if (this.tex) return;
 		if (this.rehighlightTimer) {
 			clearTimeout(this.rehighlightTimer);
@@ -375,18 +375,18 @@ export class DocumentSyncSession {
 		this.post({ type: 'jumpToLine', line });
 	}
 
-	/** md-live-preview-plus: insert a new footnote at the caret. */
+	/** Insert a new footnote at the caret. */
 	insertFootnote(): void {
-		this.post({ type: 'plusInsertFootnote' });
+		this.post({ type: 'insertFootnote' });
 	}
 
-	/** md-live-preview-plus: a URI this editor's webview can load (for embedded images). */
+	/** A URI this editor's webview can load (for embedded images). */
 	asWebviewUri(uri: vscode.Uri): string {
 		return this.webviewPanel.webview.asWebviewUri(uri).toString();
 	}
 
-	/** md-live-preview-plus: send a plus message (a context-menu command) to this editor. */
-	postPlus(message: PlusHostToEditorMessage): void {
+	/** Send a feature message (a context-menu command) to this editor. */
+	sendToHost(message: FeatureHostToEditorMessage): void {
 		this.post(message);
 	}
 

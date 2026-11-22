@@ -2,7 +2,7 @@ import type { BibEntry } from './bib';
 import { CITE_KEY_PATTERN, findCitations } from './wikilinks';
 
 /**
- * md-live-preview-plus: how a citation reads once its entry is known.
+ * How a citation reads once its entry is known.
  *
  * - LaTeX `\cite`: the numbers the last build assigned (IEEEtran style), else
  *   author–year (`citeLabel`).
@@ -12,7 +12,7 @@ import { CITE_KEY_PATTERN, findCitations } from './wikilinks';
  *   Only author–date styles are drawn; a numeric style's numbers depend on the
  *   whole book, so those citations show their keys.
  *
- * Finding the citations in text is plusWikilinks.ts (`findCitations`).
+ * Finding the citations in text is wikilinks.ts (`findCitations`).
  */
 
 // ── LaTeX: numbers from the last build ──────────────────────────────────────
@@ -61,7 +61,7 @@ export function citeLabel(keys: string[], cites: Record<string, string>, bib: Re
 //
 // The rules below were read off Pandoc's citeproc (Quarto 1.8, pandoc 3.8) with
 // apa.csl and the default Chicago author-date style, in English and Thai; the
-// cases are pinned in plusCitations.citeproc.test.ts.
+// cases are pinned in citations.citeproc.test.ts.
 
 /** `apa` puts a comma before the year; `chicago` (author-date, Quarto's default) does not. */
 export type CiteStyle = 'apa' | 'chicago' | 'numeric';

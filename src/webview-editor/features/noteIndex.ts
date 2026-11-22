@@ -1,4 +1,4 @@
-import type { PlusNote } from '../../shared/messages';
+import type { NoteEntry } from '../../shared/messages';
 import { NOTE_EXT } from '../../shared/links';
 import { listNotes } from './hostRequests';
 import { splitTarget } from '../../shared/wikilinks';
@@ -18,7 +18,7 @@ const listeners = new Set<() => void>();
 
 const key = (s: string) => s.replace(/\\/g, '/').replace(NOTE_EXT, '').toLowerCase();
 
-function build(notes: PlusNote[]): void {
+function build(notes: NoteEntry[]): void {
 	names = new Set();
 	suffixes = new Set();
 	for (const note of notes) {

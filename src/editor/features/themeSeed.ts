@@ -13,7 +13,7 @@ import { createHash } from 'node:crypto';
 const THEME = 'thai-readable.css';
 const VERSION_KEY = 'liveWriter.plusThemeVersion';
 
-export async function seedPlusTheme(context: vscode.ExtensionContext, stylesUri: vscode.Uri): Promise<void> {
+export async function seedWriterTheme(context: vscode.ExtensionContext, stylesUri: vscode.Uri): Promise<void> {
 	try {
 		const bundled = await vscode.workspace.fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'media', 'sample-styles', THEME));
 		const version = createHash('sha1').update(bundled).digest('hex').slice(0, 12);
@@ -31,6 +31,6 @@ export async function seedPlusTheme(context: vscode.ExtensionContext, stylesUri:
 		}
 		await context.globalState.update(VERSION_KEY, version);
 	} catch (err) {
-		console.error('md-live-preview-plus: theme seeding failed', err);
+		console.error('Live Writer: theme seeding failed', err);
 	}
 }

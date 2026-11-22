@@ -43,7 +43,7 @@ export function alignedBlockRange(state: EditorState, from: number, to: number):
 	if (to !== toLine.to) return null;
 	const fromLine = state.doc.lineAt(from);
 	if (fromLine.from === from) return { from, to };
-	// plus: blockquote markers count as indentation too, so a table inside a
+	// Blockquote markers count as indentation too, so a table inside a
 	// quote ("> | a | b |") renders; the table model keeps "> " as its indent
 	// and writes it back on every line it rebuilds.
 	return /^[ \t]*(?:>[ \t]*)*$/.test(state.sliceDoc(fromLine.from, from)) ? { from: fromLine.from, to } : null;
@@ -535,9 +535,9 @@ class TableWidget extends WidgetType {
 		// top-right corner. The button can't hang off `.mlp-block` (the outer
 		// spacing wrapper) because that box is what CodeMirror measures.
 		const wrap = document.createElement('div');
-		// plus: a table inside a blockquote/callout is framed by the theme.
+		// A table inside a blockquote/callout is framed by the theme.
 		wrap.className = />/.test(this.indent) ? 'mlp-table-wrap mlp-table-in-quote' : 'mlp-table-wrap';
-		// plus: shows the table items of the right-click menu (plus/contextMenu.ts).
+		// Shows the table items of the right-click menu (plus/contextMenu.ts).
 		wrap.dataset.vscodeContext = '{"mlpTable":true}';
 		wrap.dataset.mlpTableFrom = String(this.tableFrom);
 		// The button is a normal element *before* the table, not an overlay on top
@@ -1159,7 +1159,7 @@ export function readCellSpans(state: EditorState, rowNode: SyntaxNode): CellSpan
 	let cellStart = 0;
 	let escaped = false;
 	let index = 0;
-	// plus: a "|" inside [[note|label]] or $|x|$ is not a cell boundary (see plus/table.ts).
+	// A "|" inside [[note|label]] or $|x|$ is not a cell boundary (see plus/table.ts).
 	const inLink = insideTableAtom(text);
 	for (const ch of text) {
 		if (ch === '|' && !escaped && !inLink(index)) {
@@ -1322,7 +1322,7 @@ export function buildTableWidget(state: EditorState, node: SyntaxNodeRef): Table
 export function blockReplacedLines(state: EditorState, item: SyntaxNode): Set<number> {
 	const lines = new Set<number>();
 	for (let child = item.firstChild; child; child = child.nextSibling) {
-		// plus: a multi-line $$ math block is block-replaced too (plus/math.ts).
+		// A multi-line $$ math block is block-replaced too (plus/math.ts).
 		if (child.name === 'BlockMath') {
 			const math = mathBlockReplaced(state, child);
 			if (math) for (let n = state.doc.lineAt(math.from).number; n <= state.doc.lineAt(math.to).number; n++) lines.add(n);
@@ -1571,7 +1571,7 @@ function buildDecorations(view: EditorView): DecorationSet {
 						return;
 					}
 					case 'Blockquote': {
-						// plus: lines a quoted table's block widget replaces must carry no
+						// Lines a quoted table's block widget replaces must carry no
 						// line decoration (same reason as for list items above).
 						const replaced = blockReplacedLines(state, node.node);
 						addLineRange(node.from, node.to, (n, first, last) => {
@@ -1687,14 +1687,14 @@ function buildDecorations(view: EditorView): DecorationSet {
 						return; // descend to hide the ``` fence marks
 					}
 					case 'Link': {
-						// plus: "[^1]" is a footnote reference (plus/footnotes.ts), "[x]"
+						// "[^1]" is a footnote reference (plus/footnotes.ts), "[x]"
 						// inside "[[x]]" is part of a wikilink (plus/wikilinks.ts), and
 						// "[@key]" is a citation (plus/citations.ts).
 						if (state.sliceDoc(node.from, node.from + 2) === '[^') return false;
 						const linkLine = doc.lineAt(node.from);
 						if (insideWikilink(linkLine.text)(node.from - linkLine.from)) return false;
 						if (isCitationAt(linkLine.text, node.from - linkLine.from)) return false;
-						// plus: "[text]" with no "[text]: url" definition is plain text (CommonMark).
+						// "[text]" with no "[text]: url" definition is plain text (CommonMark).
 						if (isUndefinedReferenceLink(state, node.node)) return false;
 						const marks = node.node.getChildren('LinkMark');
 						if (marks.length < 2) return;
@@ -1712,7 +1712,7 @@ function buildDecorations(view: EditorView): DecorationSet {
 						return false;
 					}
 					case 'Image': {
-						// plus: `![[name.png]]` is an Obsidian embed, drawn by plus/embeds.ts.
+						// `![[name.png]]` is an Obsidian embed, drawn by plus/embeds.ts.
 						if (state.sliceDoc(node.from, node.from + 3) === '![[') return false;
 						const marks = node.node.getChildren('LinkMark');
 						if (marks.length < 2) return;
@@ -1727,7 +1727,7 @@ function buildDecorations(view: EditorView): DecorationSet {
 							// diagram widget (which reads the file through the host)
 							// instead. `.drawio.svg`/`.drawio.png` deliberately do not —
 							// those are real images that an <img> already shows correctly.
-							// plus: `![…](…){#fig-id width=…}` is a Quarto figure (plus/quarto.ts).
+							// `![…](…){#fig-id width=…}` is a Quarto figure (plus/quarto.ts).
 							const figure = isDrawioPath(src) ? null : quartoImage(state, node.node, src, alt);
 							const widget = figure ? figure.widget : isDrawioPath(src) ? new DrawioFileWidget(src, alt, node.from) : new ImageWidget(src, alt);
 							pushReplace(node.from, figure?.to ?? node.to, Decoration.replace({ widget }));

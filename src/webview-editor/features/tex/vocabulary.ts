@@ -1,5 +1,5 @@
 /**
- * md-live-preview-plus: the LaTeX Live Preview's vocabulary — the
+ * The LaTeX Live Preview's vocabulary — the
  * environments and commands it knows, and how each is drawn. render.ts looks
  * every name up here; blocks.ts (tables) and inline.ts (table cells) share
  * the tables they need.

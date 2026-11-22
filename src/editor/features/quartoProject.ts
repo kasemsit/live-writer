@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import type { HostToEditorMessage, PlusQuartoProject } from '../../shared/messages';
+import type { HostToEditorMessage, QuartoProject } from '../../shared/messages';
 import { parseBib, type BibEntry } from '../../shared/bib';
 import { labelsFromQuartoYaml, quartoCitationPlan } from '../../shared/quarto';
 import { readText } from './files';
-import type { PlusSession } from './wikiOpen';
+import type { EditorSession } from './wikiOpen';
 
 /**
- * md-live-preview-plus: what a document takes from its Quarto project.
+ * What a document takes from its Quarto project.
  *
  * - The labels the nearest `_quarto.yml` sets (`crossref-fig-title`, …), for
  *   any document under it.
@@ -39,7 +39,7 @@ async function findProjectFile(document: vscode.Uri): Promise<vscode.Uri | null>
 }
 
 /** The project as the document sees it, and the files to watch for changes. */
-export async function readQuartoProject(document: vscode.TextDocument): Promise<{ project: PlusQuartoProject; watched: vscode.Uri[] }> {
+export async function readQuartoProject(document: vscode.TextDocument): Promise<{ project: QuartoProject; watched: vscode.Uri[] }> {
 	const projectFile = await findProjectFile(document.uri);
 	const yaml = projectFile ? ((await readText(projectFile)) ?? '') : '';
 	const labels = labelsFromQuartoYaml(yaml);
@@ -61,10 +61,10 @@ export async function readQuartoProject(document: vscode.TextDocument): Promise<
 	return { project: { labels, citations: { style: plan.style, lang: plan.lang, bib }, quarto: true }, watched };
 }
 
-const watching = new WeakMap<PlusSession, vscode.Disposable>();
+const watching = new WeakMap<EditorSession, vscode.Disposable>();
 
 /** Sends the project to the editor now, and again when one of its files changes. */
-export function watchQuartoProject(session: PlusSession, post: (message: HostToEditorMessage) => void): void {
+export function watchQuartoProject(session: EditorSession, post: (message: HostToEditorMessage) => void): void {
 	watching.get(session)?.dispose();
 	let disposed = false;
 	let run = 0;
@@ -80,7 +80,7 @@ export function watchQuartoProject(session: PlusSession, post: (message: HostToE
 		const { project, watched } = await readQuartoProject(document);
 		// A slower, older read must not overwrite a newer one.
 		if (disposed || mine !== run) return;
-		post({ type: 'plusQuartoProject', project });
+		post({ type: 'quartoProject', project });
 		watchers.forEach((w) => w.dispose());
 		watchers = watched.map((uri) => {
 			const name = uri.path.slice(uri.path.lastIndexOf('/') + 1);
@@ -106,6 +106,6 @@ export function watchQuartoProject(session: PlusSession, post: (message: HostToE
 	void send();
 }
 
-export function stopWatchingQuartoProject(session: PlusSession): void {
+export function stopWatchingQuartoProject(session: EditorSession): void {
 	watching.get(session)?.dispose();
 }

@@ -1,5 +1,5 @@
 /**
- * md-live-preview-plus: a fast, error-tolerant scanner for LaTeX source.
+ * A fast, error-tolerant scanner for LaTeX source.
  *
  * Not a TeX implementation. It finds what the LaTeX Live Preview needs to
  * draw a document the way Overleaf's Visual Editor does: comments, math,

@@ -2,6 +2,14 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.2.1
+
+Housekeeping; nothing changes in how Live Writer works.
+
+- The code is one project: features in `features/` folders, modules named for what they do (`bib.ts`, `citations.ts`, `quarto.ts`, …), messages and functions without the old `plus` prefix, and the markers that kept changes apart from t-shoot's code removed. Files the former upstream project needed are gone.
+- The update notice and the update check say Live Writer.
+- Two end-to-end tests that failed only under load now wait for focus and layout.
+
 ## 1.2.0
 
 - **Rewrite with Claude**, a submenu on a selection (it replaces *Paraphrase with Claude*): **Paraphrase**, **Tighten** (shorter, dropping no claim, number or hedge), **More Formal**, **Translate to English** and **Translate to Thai** (technical terms rendered as each literature names them, the same way each time). Every mode keeps the meaning, numbers, citations and LaTeX/Markdown markup; the card says which mode it ran.

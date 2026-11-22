@@ -63,7 +63,7 @@ describe('wikilink syntax', () => {
 	});
 });
 
-describe('tables (PlusTable)', () => {
+describe('tables (TableSyntax)', () => {
 	it('keeps a header row holding [[a|b]] as two columns', () => {
 		const { tables } = parse('| [[a|A]] | b |\n|---|---|\n| 1 | 2 |\n');
 		expect(tables).toHaveLength(1);

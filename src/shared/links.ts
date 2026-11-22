@@ -1,4 +1,4 @@
-// md-live-preview-plus: how a wikilink target names a file (src/editor/features/wikiOpen.ts).
+// How a wikilink target names a file (src/editor/features/wikiOpen.ts).
 
 /** A note's file extension; a note's name is its file name without it. */
 export const NOTE_EXT = /\.(md|markdown)$/i;

@@ -2,7 +2,7 @@ import { type EditorView, ViewPlugin } from '@codemirror/view';
 import { placeCard } from './cm';
 import { zoteroRow } from './zotero';
 import type { Extension } from '@codemirror/state';
-import type { PlusPreview } from '../../shared/messages';
+import type { NotePreview } from '../../shared/messages';
 import { renderInlineInto } from '../tableCellInline';
 import { cellInlineHooks } from '../livePreviewPlugin';
 import { previewLink } from './hostRequests';
@@ -126,7 +126,7 @@ export function renderMarkdownBlocks(parent: HTMLElement, text: string): void {
 	}
 }
 
-const STATUS_NOTE: Record<PlusPreview['status'], string> = {
+const STATUS_NOTE: Record<NotePreview['status'], string> = {
 	ok: '',
 	missing: 'No note by this name in the workspace.',
 	'anchor-missing': 'Heading or block not found; showing the start of the note.',
@@ -141,7 +141,7 @@ export function linkPreviewExtension(onOpen: (href: string) => void): Extension 
 			private hovered: HTMLElement | null = null;
 			private showTimer: ReturnType<typeof setTimeout> | undefined;
 			private hideTimer: ReturnType<typeof setTimeout> | undefined;
-			private readonly cache = new Map<string, { at: number; preview: PlusPreview }>();
+			private readonly cache = new Map<string, { at: number; preview: NotePreview }>();
 
 			private readonly onOver = (event: MouseEvent) => {
 				const link = (event.target as HTMLElement | null)?.closest?.('.mlp-wikilink') as HTMLElement | null;
@@ -184,7 +184,7 @@ export function linkPreviewExtension(onOpen: (href: string) => void): Extension 
 				this.shownHref = '';
 			}
 
-			private async fetch(target: string): Promise<PlusPreview | null> {
+			private async fetch(target: string): Promise<NotePreview | null> {
 				const hit = this.cache.get(target);
 				if (hit && Date.now() - hit.at < CACHE_MS) return hit.preview;
 				const preview = await previewLink(target);
@@ -206,7 +206,7 @@ export function linkPreviewExtension(onOpen: (href: string) => void): Extension 
 				placeCard(card, link);
 			}
 
-			private render(href: string, preview: PlusPreview): HTMLElement {
+			private render(href: string, preview: NotePreview): HTMLElement {
 				const card = document.createElement('div');
 				card.className = `mlp-link-preview mlp-lp-${preview.status}`;
 				const title = document.createElement('div');

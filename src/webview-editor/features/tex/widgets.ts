@@ -1,5 +1,5 @@
 import { type EditorView, WidgetType } from '@codemirror/view';
-import type { PlusTexContext } from '../../../shared/messages';
+import type { TexContext } from '../../../shared/messages';
 import type { TexTable } from '../../../shared/texTable';
 import { renderMathInto } from '../math';
 import { LINK_CONTEXT } from '../wikilinks';
@@ -8,7 +8,7 @@ import { NO_BUILD_YET, resolveTexPicture } from './context';
 import { CITE_CONTEXT } from '../zotero';
 
 /**
- * md-live-preview-plus: the widgets the LaTeX Live Preview draws in place of
+ * The widgets the LaTeX Live Preview draws in place of
  * source. Each one that stands for source puts the caret back into that
  * source when clicked, which is what reveals it for editing.
  */
@@ -261,7 +261,7 @@ export class TexTableWidget extends WidgetType {
 		readonly source: string,
 		readonly table: TexTable,
 		readonly at: number,
-		readonly ctx: PlusTexContext,
+		readonly ctx: TexContext,
 		readonly macros: Record<string, string>,
 		/** Each cell's source, row by row (the widget outlives the state it was built from). */
 		readonly cellText: string[][],

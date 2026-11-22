@@ -7,7 +7,7 @@ import {
 } from '@codemirror/autocomplete';
 import type { EditorState, Extension } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import type { PlusAnchor, PlusNote } from '../../shared/messages';
+import type { NoteAnchor, NoteEntry } from '../../shared/messages';
 import { listAnchors, listNotes } from './hostRequests';
 import { insertFootnote, scanFootnotes } from './footnotes';
 import { anchorsInText } from '../../shared/anchors';
@@ -47,7 +47,7 @@ const noteSource: CompletionSource = async (context: CompletionContext): Promise
 };
 
 /** Headings and block ids of the document being edited, without a round trip to the host. */
-export function anchorsOf(state: EditorState): PlusAnchor[] {
+export function anchorsOf(state: EditorState): NoteAnchor[] {
 	return anchorsInText(state.doc.toString());
 }
 
@@ -95,7 +95,7 @@ const footnoteSource = (context: CompletionContext): CompletionResult | null => 
 	return { from: m.from + 2, validFor: /^[^\]\s]*$/, options };
 };
 
-export const plusCompletion: Extension = autocompletion({
+export const featureCompletion: Extension = autocompletion({
 	override: [noteSource, anchorSource, footnoteSource],
 	icons: false,
 });

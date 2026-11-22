@@ -75,7 +75,7 @@ export function quotePrefixLength(text: string): number {
 	return /^(?:[ \t]*>[ \t]?)*/.exec(text)![0].length;
 }
 
-class PlusTableParser {
+class TableSyntaxParser {
 	// null: second line not seen yet; false: not a table; array: the rows so far.
 	rows: Element[] | null | false = null;
 
@@ -111,7 +111,7 @@ class PlusTableParser {
 	}
 }
 
-export const PlusTable: MarkdownConfig = {
+export const TableSyntax: MarkdownConfig = {
 	defineNodes: [
 		{ name: 'Table', block: true },
 		{ name: 'TableHeader', style: { 'TableHeader/...': tags.heading } },
@@ -123,10 +123,10 @@ export const PlusTable: MarkdownConfig = {
 		{
 			name: 'Table',
 			leaf(_cx, leaf) {
-				return hasPipe(leaf.content, 0) ? new PlusTableParser() : null;
+				return hasPipe(leaf.content, 0) ? new TableSyntaxParser() : null;
 			},
 			endLeaf(cx, line, leaf) {
-				if (leaf.parsers.some((p) => p instanceof PlusTableParser) || !hasPipe(line.text, line.basePos)) return false;
+				if (leaf.parsers.some((p) => p instanceof TableSyntaxParser) || !hasPipe(line.text, line.basePos)) return false;
 				const next = cx.peekLine();
 				// Inside a blockquote the peeked line still carries its markers.
 				if (line.basePos > 0 && /^[ \t]*>/.test(line.text)) {

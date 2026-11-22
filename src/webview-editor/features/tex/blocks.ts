@@ -9,7 +9,7 @@ import { PICTURE_ENVS, TABLE_ENVS, isFloatEnv } from './vocabulary';
 import { TexDisplayMathWidget, TexFoldWidget, TexPictureWidget, TexTableWidget } from './widgets';
 
 /**
- * md-live-preview-plus: display math, tables and TikZ pictures, drawn over the whole lines
+ * Display math, tables and TikZ pictures, drawn over the whole lines
  * they occupy — block widgets, which CodeMirror accepts only from state.
  *
  * Unlike Markdown tables (switched by their own button), these follow the

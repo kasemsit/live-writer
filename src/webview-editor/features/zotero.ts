@@ -1,11 +1,11 @@
 import { type EditorView, ViewPlugin } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
-import type { PlusZoteroLinks } from '../../shared/messages';
+import type { ZoteroLinks } from '../../shared/messages';
 import { placeCard } from './cm';
-import { postPlus, request } from './hostRequests';
+import { sendToHost, request } from './hostRequests';
 
 /**
- * md-live-preview-plus: a cited paper, one click from its PDF in Zotero.
+ * A cited paper, one click from its PDF in Zotero.
  *
  * - A pointer resting on a Quarto citation or a LaTeX `\cite` opens a card
  *   with each work's entry and *Open PDF* / *Show in Zotero* (a vault note's
@@ -22,20 +22,20 @@ export const CITE_CONTEXT = JSON.stringify({ mlpCite: true });
 export const CITE_LINK_CONTEXT = JSON.stringify({ mlpLink: true, mlpCite: true });
 
 const TTL_MS = 60_000;
-const cache = new Map<string, { at: number; links: Promise<PlusZoteroLinks> }>();
+const cache = new Map<string, { at: number; links: Promise<ZoteroLinks> }>();
 
 /** The Zotero links for a citation key, asked of the host and kept for a minute (a PDF may be added meanwhile). */
-export function zoteroLinks(key: string): Promise<PlusZoteroLinks> {
+export function zoteroLinks(key: string): Promise<ZoteroLinks> {
 	const hit = cache.get(key);
 	if (hit && Date.now() - hit.at < TTL_MS) return hit.links;
-	const none: PlusZoteroLinks = { pdf: null, item: null, note: 'Zotero did not answer.' };
-	const links = request<PlusZoteroLinks>((requestId) => ({ type: 'plusZoteroLinks', requestId, key }), none, 6000);
+	const none: ZoteroLinks = { pdf: null, item: null, note: 'Zotero did not answer.' };
+	const links = request<ZoteroLinks>((requestId) => ({ type: 'zoteroLinks', requestId, key }), none, 6000);
 	cache.set(key, { at: Date.now(), links });
 	return links;
 }
 
 export function openInZotero(url: string): void {
-	postPlus({ type: 'plusDo', action: 'openZotero', url });
+	sendToHost({ type: 'hostAction', action: 'openZotero', url });
 }
 
 function button(label: string, url: string, done?: () => void): HTMLElement {

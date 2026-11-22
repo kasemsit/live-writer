@@ -1,14 +1,14 @@
 import { texToPlain } from './texScan';
 
 /**
- * md-live-preview-plus: BibTeX files, read into the entries citations are drawn
+ * BibTeX files, read into the entries citations are drawn
  * from — by the LaTeX Live Preview (`\cite`) and by Quarto documents (`[@key]`).
- * How a citation then reads is plusCitations.ts.
+ * How a citation then reads is citations.ts.
  */
 
 /**
  * The text of a `{…}` group starting at `open`, and where it ends; null when
- * unbalanced. Unlike plusTexScanner's matchBrace, `%` is text: `.bib` and `.aux`
+ * unbalanced. Unlike texScanner's matchBrace, `%` is text: `.bib` and `.aux`
  * files have no comments inside values, and URLs carry `%20`.
  */
 export function braceGroup(text: string, open: number): { body: string; end: number } | null {

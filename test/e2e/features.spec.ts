@@ -146,7 +146,7 @@ test.describe('Quarto', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await mountEditor(page, DOC);
-		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: true } });
+		await postToWebview(page, { type: 'quartoProject', project: { labels: {}, citations: null, quarto: true } });
 	});
 
 	test('a callout is a coloured box with its fences hidden', async ({ page }) => {
@@ -187,7 +187,7 @@ test.describe('Quarto', () => {
 	});
 
 	test('a Markdown note is not held to Pandoc’s blank-line rules', async ({ page }) => {
-		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: false } });
+		await postToWebview(page, { type: 'quartoProject', project: { labels: {}, citations: null, quarto: false } });
 		await expect(page.locator('.mlp-q-warning')).toHaveCount(0);
 		await expect(page.locator('.cm-line.mlp-q-joined')).toHaveCount(0);
 		await expect(page.locator('.mlp-qfig')).toHaveCount(2);
@@ -195,7 +195,7 @@ test.describe('Quarto', () => {
 
 	test('the words come from the project’s _quarto.yml', async ({ page }) => {
 		await postToWebview(page, {
-			type: 'plusQuartoProject',
+			type: 'quartoProject',
 			project: { labels: { 'crossref-fig-title': 'รูปที่', 'callout-tip-title': 'เคล็ดลับ' }, citations: null, quarto: true },
 		});
 		await expect(page.locator('.mlp-qfig-caption').first()).toHaveText('รูปที่ 1: A caption');
@@ -217,7 +217,7 @@ test.describe('Quarto citations', () => {
 		venue: '',
 	});
 	const BIB = { chen2015: entry('chen2015', ['Chen'], '2015', 'Online Retail'), lee2019: entry('lee2019', ['Lee', 'Park'], '2019', 'Two Authors') };
-	const project = (lang: string) => ({ type: 'plusQuartoProject', project: { labels: {}, citations: { style: 'apa', lang, bib: BIB }, quarto: true } });
+	const project = (lang: string) => ({ type: 'quartoProject', project: { labels: {}, citations: { style: 'apa', lang, bib: BIB }, quarto: true } });
 	const DOC = [
 		'# Title',
 		'',
@@ -235,7 +235,7 @@ test.describe('Quarto citations', () => {
 	});
 
 	test('the editor asks for its project; citations read as the book prints them', async ({ page }) => {
-		expect((await posted(page)).some((m) => m.type === 'plusQuartoWatch')).toBe(true);
+		expect((await posted(page)).some((m) => m.type === 'quartoWatch')).toBe(true);
 		await postToWebview(page, project('en'));
 		await expect(page.locator('.cm-line .mlp-qcite')).toHaveText(['(Chen, 2015; Lee & Park, 2019, p. 2)', 'Chen (2015)', '(nosuch?)']);
 		await expect(page.locator('.cm-line .mlp-qcite-missing')).toHaveText('nosuch?');
@@ -257,7 +257,7 @@ test.describe('Quarto citations', () => {
 	});
 
 	test('without a bibliography, [@key] still links to the @key note', async ({ page }) => {
-		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: null, quarto: false } });
+		await postToWebview(page, { type: 'quartoProject', project: { labels: {}, citations: null, quarto: false } });
 		await expect(page.locator('.cm-line a.mlp-cite')).toHaveCount(3);
 		await expect(page.locator('.mlp-qcite')).toHaveCount(0);
 	});
@@ -265,9 +265,9 @@ test.describe('Quarto citations', () => {
 
 test.describe('citations open their paper in Zotero', () => {
 	const answerZotero = async (page: Page, links: { pdf: string | null; item: string | null; note: string }) => {
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusZoteroLinks')).toBe(true);
-		const req = (await posted(page)).filter((m) => m.type === 'plusZoteroLinks').at(-1)!;
-		await postToWebview(page, { type: 'plusZoteroLinksResult', requestId: req.requestId, links });
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'zoteroLinks')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'zoteroLinks').at(-1)!;
+		await postToWebview(page, { type: 'zoteroLinksResult', requestId: req.requestId, links });
 		return req;
 	};
 	const PDF = 'zotero://open-pdf/library/items/WRGRQ66N';
@@ -276,7 +276,7 @@ test.describe('citations open their paper in Zotero', () => {
 	test('a Quarto citation shows a card with Open PDF and Show in Zotero', async ({ page }) => {
 		await mountEditor(page, '# T\n\nAs shown [@chen2015] here.\n\nEnd.');
 		const bib = { chen2015: { key: 'chen2015', type: 'misc', authorShort: 'Chen', families: ['Chen'], others: false, authors: 'Chen', title: 'Online Retail', year: '2015', venue: '' } };
-		await postToWebview(page, { type: 'plusQuartoProject', project: { labels: {}, citations: { style: 'apa', lang: 'en', bib }, quarto: true } });
+		await postToWebview(page, { type: 'quartoProject', project: { labels: {}, citations: { style: 'apa', lang: 'en', bib }, quarto: true } });
 		await page.locator('.cm-line .mlp-qcite').hover();
 		const card = page.locator('.mlp-cite-card');
 		await expect(card.locator('.mlp-cite-desc')).toHaveText('chen2015: Chen. Online Retail. 2015');
@@ -284,16 +284,16 @@ test.describe('citations open their paper in Zotero', () => {
 		expect(req.key).toBe('chen2015');
 		await expect(card.locator('.mlp-zotero-btn')).toHaveText(['Open PDF', 'Show in Zotero']);
 		await card.locator('.mlp-zotero-btn', { hasText: 'Open PDF' }).click();
-		expect((await posted(page)).filter((m) => m.type === 'plusDo').at(-1)).toMatchObject({ action: 'openZotero', url: PDF });
+		expect((await posted(page)).filter((m) => m.type === 'hostAction').at(-1)).toMatchObject({ action: 'openZotero', url: PDF });
 		await expect(card).toHaveCount(0);
 	});
 
 	test('a vault note\'s [@key] gets the Zotero row in its link card', async ({ page }) => {
 		await mountEditor(page, '# T\n\nSee [@smith2020] here.\n\nEnd.\n');
 		await page.locator('.cm-line a.mlp-cite').hover();
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
-		const pre = (await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)!;
-		await postToWebview(page, { type: 'plusPreviewResult', requestId: pre.requestId, preview: { title: '@smith2020', text: 'A note.', status: 'ok', truncated: false } });
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'linkPreview')).toBe(true);
+		const pre = (await posted(page)).filter((m) => m.type === 'linkPreview').at(-1)!;
+		await postToWebview(page, { type: 'linkPreviewResult', requestId: pre.requestId, preview: { title: '@smith2020', text: 'A note.', status: 'ok', truncated: false } });
 		await answerZotero(page, { pdf: PDF, item: ITEM, note: '' });
 		await expect(page.locator('.mlp-link-preview .mlp-zotero-btn')).toHaveText(['Open PDF', 'Show in Zotero']);
 	});
@@ -301,9 +301,9 @@ test.describe('citations open their paper in Zotero', () => {
 	test('a key Zotero does not hold says so instead', async ({ page }) => {
 		await mountEditor(page, '# T\n\nSee [@nosuch2020] here.\n\nEnd.\n');
 		await page.locator('.cm-line a.mlp-cite').hover();
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
-		const pre = (await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)!;
-		await postToWebview(page, { type: 'plusPreviewResult', requestId: pre.requestId, preview: { title: '@nosuch2020', text: '', status: 'missing', truncated: false } });
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'linkPreview')).toBe(true);
+		const pre = (await posted(page)).filter((m) => m.type === 'linkPreview').at(-1)!;
+		await postToWebview(page, { type: 'linkPreviewResult', requestId: pre.requestId, preview: { title: '@nosuch2020', text: '', status: 'missing', truncated: false } });
 		await answerZotero(page, { pdf: null, item: null, note: 'nosuch2020 is not in your Zotero library.' });
 		await expect(page.locator('.mlp-link-preview .mlp-zotero-note')).toHaveText('nosuch2020 is not in your Zotero library.');
 		await expect(page.locator('.mlp-link-preview .mlp-zotero-btn')).toHaveCount(0);
@@ -354,7 +354,7 @@ test.describe('footnotes', () => {
 	test('the insert command adds the next number and its definition', async ({ page }) => {
 		await page.locator('.cm-line').filter({ hasText: 'End.' }).click();
 		await page.keyboard.press('End');
-		await postToWebview(page, { type: 'plusInsertFootnote' });
+		await postToWebview(page, { type: 'insertFootnote' });
 		await page.keyboard.type('New note.');
 		await expect(page.locator('.cm-content')).toContainText('[^2]: New note.');
 		await expect(page.locator('.cm-line .mlp-fn-ref')).toHaveText(['1', '2', '3']);
@@ -375,7 +375,7 @@ test('the selection is reported as Markdown source with line numbers', async ({ 
 	await page.keyboard.press('Home');
 	await page.keyboard.press('Shift+End');
 	await expect
-		.poll(async () => (await posted(page)).filter((m) => m.type === 'plusSelection').at(-1))
+		.poll(async () => (await posted(page)).filter((m) => m.type === 'selection').at(-1))
 		.toMatchObject({ text: 'Some **bold** text.', startLine: 3, endLine: 3 });
 });
 
@@ -385,10 +385,10 @@ test.describe('completion', () => {
 		await page.locator('.cm-line').last().click();
 		await page.keyboard.press('End');
 		await page.keyboard.type(' [[');
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusListNotes')).toBe(true);
-		const req = (await posted(page)).filter((m) => m.type === 'plusListNotes').at(-1)!;
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'listNotes')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'listNotes').at(-1)!;
 		await postToWebview(page, {
-			type: 'plusNotes',
+			type: 'notes',
 			requestId: req.requestId,
 			notes: [
 				{ name: 'Alpha note', path: 'A/Alpha note.md' },
@@ -423,11 +423,11 @@ test.describe('wikilink hover preview', () => {
 	test('shows the target block in a card, and its title opens the note', async ({ page }) => {
 		await mountEditor(page, '# T\n\nSee [[Laws/TH - PDPA#^ma-32|ม.32]] here.\n\nEnd.\n');
 		await page.locator('.cm-line .mlp-wikilink').hover();
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
-		const req = (await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)!;
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'linkPreview')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'linkPreview').at(-1)!;
 		expect(req.target).toBe('Laws/TH - PDPA#^ma-32');
 		await postToWebview(page, {
-			type: 'plusPreviewResult',
+			type: 'linkPreviewResult',
 			requestId: req.requestId,
 			preview: {
 				title: 'TH - PDPA › ^ma-32',
@@ -450,9 +450,9 @@ test.describe('wikilink hover preview', () => {
 	test('the card closes when the pointer leaves', async ({ page }) => {
 		await mountEditor(page, '# T\n\nSee [[Other]] here.\n\nEnd.\n');
 		await page.locator('.cm-line .mlp-wikilink').hover();
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
-		const req = (await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)!;
-		await postToWebview(page, { type: 'plusPreviewResult', requestId: req.requestId, preview: { title: 'Other', text: 'Body.', status: 'ok', truncated: false } });
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'linkPreview')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'linkPreview').at(-1)!;
+		await postToWebview(page, { type: 'linkPreviewResult', requestId: req.requestId, preview: { title: 'Other', text: 'Body.', status: 'ok', truncated: false } });
 		await expect(page.locator('.mlp-link-preview')).toBeVisible();
 		await page.mouse.move(990, 690);
 		await expect(page.locator('.mlp-link-preview')).toHaveCount(0);
@@ -461,10 +461,10 @@ test.describe('wikilink hover preview', () => {
 
 test('links to notes that do not exist are marked', async ({ page }) => {
 	await mountEditor(page, '# T\n\n[[Exists]], [[Missing note]], [[Folder/Deep|deep]], [[pic.png]], [[#T]].\n\nEnd.\n');
-	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusListNotes')).toBe(true);
-	const req = (await posted(page)).filter((m) => m.type === 'plusListNotes').at(-1)!;
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'listNotes')).toBe(true);
+	const req = (await posted(page)).filter((m) => m.type === 'listNotes').at(-1)!;
 	await postToWebview(page, {
-		type: 'plusNotes',
+		type: 'notes',
 		requestId: req.requestId,
 		notes: [
 			{ name: 'Exists', path: 'Exists.md' },
@@ -514,9 +514,9 @@ test.describe('citations', () => {
 		await expect(keys).toHaveText(['@smith2020', '@lee2019', '@typo']);
 		await expect(page.locator('.cm-line .mlp-cite-group')).toHaveCount(2);
 		await expect(page.locator('.cm-content')).toContainText('[@smith2020; @lee2019]');
-		const req = (await posted(page)).filter((m) => m.type === 'plusListNotes').at(-1)!;
+		const req = (await posted(page)).filter((m) => m.type === 'listNotes').at(-1)!;
 		await postToWebview(page, {
-			type: 'plusNotes',
+			type: 'notes',
 			requestId: req.requestId,
 			notes: [
 				{ name: '@smith2020', path: 'References/@smith2020.md' },
@@ -533,8 +533,8 @@ test.describe('citations', () => {
 		const cell = page.locator('.mlp-table-wrap .mlp-cite');
 		await expect(cell).toHaveText('@smith2020');
 		await cell.hover();
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusPreview')).toBe(true);
-		expect((await posted(page)).filter((m) => m.type === 'plusPreview').at(-1)?.target).toBe('@smith2020');
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'linkPreview')).toBe(true);
+		expect((await posted(page)).filter((m) => m.type === 'linkPreview').at(-1)?.target).toBe('@smith2020');
 	});
 });
 
@@ -550,7 +550,7 @@ test('a selection made inside a rendered table reaches Claude as source', async 
 		sel.addRange(range);
 	});
 	await expect
-		.poll(async () => (await posted(page)).filter((m) => m.type === 'plusSelection').at(-1))
+		.poll(async () => (await posted(page)).filter((m) => m.type === 'selection').at(-1))
 		.toMatchObject({ text: 'beta', startLine: 5, endLine: 5 });
 	// Across two cells: both cells' source.
 	await page.evaluate(() => {
@@ -563,7 +563,7 @@ test('a selection made inside a rendered table reaches Claude as source', async 
 		sel.addRange(range);
 	});
 	await expect
-		.poll(async () => (await posted(page)).filter((m) => m.type === 'plusSelection').at(-1)?.text)
+		.poll(async () => (await posted(page)).filter((m) => m.type === 'selection').at(-1)?.text)
 		.toBe('alpha **beta** gamma | delta');
 });
 
@@ -577,7 +577,7 @@ test('a real mouse drag across rendered cells reaches Claude as source', async (
 	await page.mouse.move(b.x + b.width - 5, b.y + b.height / 2, { steps: 5 });
 	await page.mouse.up();
 	await expect
-		.poll(async () => (await posted(page)).filter((m) => m.type === 'plusSelection').at(-1))
+		.poll(async () => (await posted(page)).filter((m) => m.type === 'selection').at(-1))
 		.toMatchObject({ text: 'Alice | OK', startLine: 5, endLine: 5 });
 });
 
@@ -642,7 +642,7 @@ test.describe('math', () => {
 // ── Right-click menu ──
 // VS Code's own menu cannot be opened in a page, so each test does what it
 // does: a `contextmenu` event on the element (which the editor remembers),
-// then the `plusRun` message the host sends when an item is chosen.
+// then the `runCommand` message the host sends when an item is chosen.
 
 type Edit = { type: 'edit'; changes: { from: number; to: number; insert: string }[] };
 
@@ -667,8 +667,8 @@ async function rightClick(page: Page, selector: string, nth = 0): Promise<void> 
 	);
 }
 
-const run = (page: Page, command: string, range?: { from: number; to: number }) => postToWebview(page, { type: 'plusRun', command, range });
-const lastDo = async (page: Page) => (await posted(page)).filter((m) => m.type === 'plusDo').at(-1);
+const run = (page: Page, command: string, range?: { from: number; to: number }) => postToWebview(page, { type: 'runCommand', command, range });
+const lastDo = async (page: Page) => (await posted(page)).filter((m) => m.type === 'hostAction').at(-1);
 
 test.describe('right-click menu', () => {
 	test('elements tell VS Code what they are, so the menu shows the right items', async ({ page }) => {
@@ -837,10 +837,10 @@ test.describe('image embeds ![[…]]', () => {
 
 	test('the host finds the file by name; the image shows at the given width', async ({ page }) => {
 		await mountEditor(page, '# T\n\nBefore.\n\n![[am03-dustbin.png|200]]\n\nAfter.\n');
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusResolveEmbed')).toBe(true);
-		const req = (await posted(page)).filter((m) => m.type === 'plusResolveEmbed').at(-1)!;
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'resolveEmbed')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'resolveEmbed').at(-1)!;
 		expect(req.target).toBe('am03-dustbin.png');
-		await postToWebview(page, { type: 'plusEmbedResult', requestId: req.requestId, src: PNG });
+		await postToWebview(page, { type: 'embedResult', requestId: req.requestId, src: PNG });
 		const img = page.locator('.cm-line img.mlp-embed-image');
 		await expect(img).toHaveAttribute('src', PNG);
 		await expect(img).toHaveCSS('width', '200px');
@@ -849,9 +849,9 @@ test.describe('image embeds ![[…]]', () => {
 
 	test('a missing file says so; the caret on the line shows the source', async ({ page }) => {
 		await mountEditor(page, '# T\n\n![[nope.png]]\n\nAfter.\n');
-		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusResolveEmbed')).toBe(true);
-		const req = (await posted(page)).filter((m) => m.type === 'plusResolveEmbed').at(-1)!;
-		await postToWebview(page, { type: 'plusEmbedResult', requestId: req.requestId, src: null });
+		await expect.poll(async () => (await posted(page)).some((m) => m.type === 'resolveEmbed')).toBe(true);
+		const req = (await posted(page)).filter((m) => m.type === 'resolveEmbed').at(-1)!;
+		await postToWebview(page, { type: 'embedResult', requestId: req.requestId, src: null });
 		await expect(page.locator('.mlp-embed-missing')).toHaveText('nope.png not found in the workspace');
 		await page.locator('.mlp-embed-missing').click();
 		await expect(page.locator('.cm-content')).toContainText('![[nope.png]]');
@@ -908,7 +908,7 @@ test('a citation picked in Zotero goes in at the caret', async ({ page }) => {
 	await mountEditor(page, '# T\n\nAs shown here.\n\nEnd.');
 	await page.locator('.cm-content').click({ position: { x: 5, y: 5 } });
 	await page.keyboard.press('Control+End');
-	await postToWebview(page, { type: 'plusInsertText', text: ' [@chen2015]' });
+	await postToWebview(page, { type: 'insertText', text: ' [@chen2015]' });
 	await expect(page.locator('.cm-content')).toContainText('End. [@chen2015]');
 	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'edit')).toBe(true);
 });
@@ -917,11 +917,11 @@ test('Paraphrase with Claude: the card offers the rewrite, and Replace puts it i
 	await mountEditor(page, '# T\n\nAn alternative is to capture displays.\n\nEnd.');
 	const from = '# T\n\n'.length;
 	const to = from + 'An alternative is to capture displays.'.length;
-	await postToWebview(page, { type: 'plusRun', command: 'paraphrase', range: { from, to } });
-	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusParaphrase')).toBe(true);
-	const req = (await posted(page)).filter((m) => m.type === 'plusParaphrase').at(-1)!;
+	await postToWebview(page, { type: 'runCommand', command: 'paraphrase', range: { from, to } });
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'rewrite')).toBe(true);
+	const req = (await posted(page)).filter((m) => m.type === 'rewrite').at(-1)!;
 	expect(req.text).toBe('An alternative is to capture displays.');
-	await postToWebview(page, { type: 'plusParaphraseResult', requestId: req.requestId, text: 'Another approach photographs the displays.', error: '' });
+	await postToWebview(page, { type: 'rewriteResult', requestId: req.requestId, text: 'Another approach photographs the displays.', error: '' });
 	const card = page.locator('.mlp-paraphrase-card');
 	await expect(card.locator('.mlp-paraphrase-text')).toHaveText('Another approach photographs the displays.');
 	await card.locator('.mlp-zotero-btn', { hasText: 'Replace' }).click();
@@ -933,9 +933,9 @@ test('Paraphrase with Claude: the card offers the rewrite, and Replace puts it i
 test('Rewrite with Claude: a mode from the submenu goes to the host, and titles the card', async ({ page }) => {
 	await mountEditor(page, '# T\n\nระบบอ่านค่าจากจอ\n\nEnd.');
 	const from = '# T\n\n'.length;
-	await postToWebview(page, { type: 'plusRun', command: 'rewrite.toEnglish', range: { from, to: from + 'ระบบอ่านค่าจากจอ'.length } });
-	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusParaphrase')).toBe(true);
-	expect((await posted(page)).filter((m) => m.type === 'plusParaphrase').at(-1)).toMatchObject({ mode: 'toEnglish', text: 'ระบบอ่านค่าจากจอ' });
+	await postToWebview(page, { type: 'runCommand', command: 'rewrite.toEnglish', range: { from, to: from + 'ระบบอ่านค่าจากจอ'.length } });
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'rewrite')).toBe(true);
+	expect((await posted(page)).filter((m) => m.type === 'rewrite').at(-1)).toMatchObject({ mode: 'toEnglish', text: 'ระบบอ่านค่าจากจอ' });
 	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Translate to English with Claude');
 });
 
@@ -943,11 +943,11 @@ test('font: the host\'s font family sets the text; code keeps its own', async ({
 	await mountEditor(page, '# T\n\nPlain text with `code` here.\n\n```\nfenced\n```\n\nEnd.');
 	const fontOf = (sel: string) => page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontFamily);
 	const codeBefore = await fontOf('.mlp-line-code');
-	await postToWebview(page, { type: 'plusTextScale', scale: 1, fontFamily: 'Georgia, serif' });
+	await postToWebview(page, { type: 'textScale', scale: 1, fontFamily: 'Georgia, serif' });
 	await expect.poll(() => fontOf('.mlp-line-paragraph')).toContain('Georgia');
 	expect(await fontOf('.mlp-line-code')).toBe(codeBefore);
 	expect(await fontOf('.mlp-line-paragraph code, .mlp-line-paragraph .mlp-inline-code')).not.toContain('Georgia');
-	await postToWebview(page, { type: 'plusTextScale', scale: 1, fontFamily: '' });
+	await postToWebview(page, { type: 'textScale', scale: 1, fontFamily: '' });
 	await expect.poll(() => fontOf('.mlp-line-paragraph')).not.toContain('Georgia');
 });
 
@@ -955,14 +955,14 @@ test('text size: the host\'s factor scales the reading column, and 1 restores it
 	await mountEditor(page, '# T\n\nSome text.\n');
 	const size = () => page.locator('.cm-content').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 	const base = await size();
-	await postToWebview(page, { type: 'plusTextScale', scale: 1.5 });
+	await postToWebview(page, { type: 'textScale', scale: 1.5 });
 	await expect.poll(size).toBeCloseTo(base * 1.5, 1);
 	// The base is VS Code's editor font size (at least 15px, see the theme CSS);
 	// when it changes, the next theme refresh re-measures it and keeps the factor.
 	await page.evaluate(() => document.documentElement.style.setProperty('--vscode-editor-font-size', '20px'));
 	await postToWebview(page, { type: 'applyCss', css: '' });
 	await expect.poll(size).toBeCloseTo(30, 1);
-	await postToWebview(page, { type: 'plusTextScale', scale: 1 });
+	await postToWebview(page, { type: 'textScale', scale: 1 });
 	await expect.poll(size).toBeCloseTo(20, 1);
 });
 
@@ -971,7 +971,7 @@ test.describe('tracked changes from outside the editor', () => {
 	const external = (page: Page, from: number, to: number, insert: string, tracked = true) =>
 		page.evaluate(
 			([f, t, i, tr]) => {
-				if (tr) window.dispatchEvent(new MessageEvent('message', { data: { type: 'plusTrackNext' } }));
+				if (tr) window.dispatchEvent(new MessageEvent('message', { data: { type: 'trackNext' } }));
 				window.dispatchEvent(new MessageEvent('message', { data: { type: 'externalUpdate', changes: [{ from: f, to: t, insert: i }], version: 2 } }));
 			},
 			[from, to, insert, tracked] as const,

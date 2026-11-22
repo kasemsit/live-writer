@@ -2,7 +2,7 @@ import { parser as baseMarkdownParser, Table, TaskList, Strikethrough, Autolink 
 import type { SyntaxNode, Tree } from '@lezer/common';
 import { withInlinePasses } from './features/inlineExtras';
 import { isCitationAt } from '../shared/wikilinks';
-import { PlusMath } from './features/mathSyntax';
+import { MathSyntax } from './features/mathSyntax';
 import { renderMathInto } from './features/math';
 import { isShortcutLink } from './features/references';
 
@@ -20,8 +20,8 @@ import { isShortcutLink } from './features/references';
 // parser the editor already uses for the document removes that whole class of
 // divergence by construction: whatever the parser says the markup is, is what
 // gets drawn.
-// plus: PlusMath, so `$…$` in a cell is one math node rather than emphasis-prone text.
-const cellParser = baseMarkdownParser.configure([Table, TaskList, Strikethrough, Autolink, PlusMath]);
+// MathSyntax, so `$…$` in a cell is one math node rather than emphasis-prone text.
+const cellParser = baseMarkdownParser.configure([Table, TaskList, Strikethrough, Autolink, MathSyntax]);
 
 /** Inline nodes rendered as a wrapper element around their own children. */
 const WRAPPER_TAGS: Record<string, { tag: string; className: string }> = {
@@ -113,7 +113,7 @@ function renderNode(parent: HTMLElement, node: SyntaxNode, src: string, hooks: C
 			return;
 		}
 		case 'Image': {
-			// plus: an Obsidian embed `![[name.png]]` is not a Markdown image; shown as written.
+			// An Obsidian embed `![[name.png]]` is not a Markdown image; shown as written.
 			if (src.slice(node.from, node.from + 3) === '![[') {
 				appendText(parent, src.slice(node.from, node.to));
 				return;
@@ -128,7 +128,7 @@ function renderNode(parent: HTMLElement, node: SyntaxNode, src: string, hooks: C
 			return;
 		}
 		case 'Link': {
-			// plus: "[^1]" is a footnote reference (plus/footnotes.ts) and "[@key]"
+			// "[^1]" is a footnote reference (plus/footnotes.ts) and "[@key]"
 			// a citation (plus/citations.ts); both are rendered from the text. A
 			// bare "[text]" is a link only with a "[text]: url" definition, which a
 			// cell cannot see — so it stays text (plus/references.ts).
@@ -174,7 +174,7 @@ function renderNode(parent: HTMLElement, node: SyntaxNode, src: string, hooks: C
 			return;
 		}
 		case 'InlineMath': {
-			// plus: rendered by KaTeX (plus/math.ts).
+			// Rendered by KaTeX (plus/math.ts).
 			const span = document.createElement('span');
 			span.className = 'mlp-math';
 			renderMathInto(span, src.slice(node.from + 1, node.to - 1), false);
@@ -204,6 +204,6 @@ function inlineRoot(tree: Tree): SyntaxNode {
  */
 export function renderInlineInto(parent: HTMLElement, text: string, hooks: CellInlineHooks): void {
 	if (!text) return;
-	// plus: wikilinks and footnote references (see plus/inlineExtras.ts).
+	// Wikilinks and footnote references (see plus/inlineExtras.ts).
 	withInlinePasses(text, parent, (source) => renderChildren(parent, inlineRoot(cellParser.parse(source)), source, hooks));
 }

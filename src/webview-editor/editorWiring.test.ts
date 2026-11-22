@@ -40,7 +40,7 @@ describe('editor wiring', () => {
 	});
 
 	it('builds the LaTeX Live Preview for a document the host marks as LaTeX', () => {
-		// md-live-preview-plus: without these the .tex editor is the Markdown one.
+		// Without these the .tex editor is the Markdown one.
 		expect(MAIN).toContain("lang = message.lang ?? 'markdown'");
 		expect(MAIN).toContain("lang === 'latex' ? [...texExtensions(postToHost)");
 		expect(MAIN).toContain('handleTexHostMessage(view, message)');

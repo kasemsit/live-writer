@@ -1,6 +1,6 @@
 import { TaskList, Strikethrough, Autolink, type BlockContext, type Line, type LeafBlock, type MarkdownExtension } from '@lezer/markdown';
-import { PlusTable } from './features/table';
-import { PlusMath } from './features/mathSyntax';
+import { TableSyntax } from './features/table';
+import { MathSyntax } from './features/mathSyntax';
 import { insideTableAtom } from '../shared/wikilinks';
 
 const delimiterLine = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/;
@@ -22,7 +22,7 @@ function countCells(text: string, start: number): number {
 	let first = true;
 	let cellStart = -1;
 	let escaped = false;
-	// plus: a "|" inside [[note|label]] is part of the link (see plus/table.ts).
+	// A "|" inside [[note|label]] is part of the link (see plus/table.ts).
 	const inLink = insideTableAtom(text);
 	for (let i = start; i < text.length; i++) {
 		const ch = text.charCodeAt(i);
@@ -84,6 +84,6 @@ const fixIndentedTableInterrupt: MarkdownExtension = {
 	],
 };
 
-// plus: `PlusTable` replaces @lezer/markdown's `Table` (wikilink pipes, tables in quotes);
-// `PlusMath` adds $…$ / $$…$$ math nodes.
-export const GFM: MarkdownExtension[] = [fixIndentedTableInterrupt, PlusTable, TaskList, Strikethrough, Autolink, PlusMath];
+// `TableSyntax` replaces @lezer/markdown's `Table` (wikilink pipes, tables in quotes);
+// `MathSyntax` adds $…$ / $$…$$ math nodes.
+export const GFM: MarkdownExtension[] = [fixIndentedTableInterrupt, TableSyntax, TaskList, Strikethrough, Autolink, MathSyntax];

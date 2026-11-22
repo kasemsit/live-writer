@@ -18,16 +18,16 @@ import { beforeExternalUpdate, trackChangesExtension, trackNextUpdate } from './
 import { linkPreviewExtension } from './linkPreview';
 import { citeCardExtension } from './zotero';
 import { selectionReporter } from './selection';
-import { plusCompletion } from './completion';
-import { handlePlusReply, setPlusPoster } from './hostRequests';
-import { contextMenuExtension, runPlusCommand } from './contextMenu';
+import { featureCompletion } from './completion';
+import { handleHostReply, setHostPoster } from './hostRequests';
+import { contextMenuExtension, runMenuCommand } from './contextMenu';
 
 /**
- * md-live-preview-plus: everything this fork adds to the editor webview, as one
+ * Everything this fork adds to the editor webview, as one
  * extension list and one message handler, so main.ts needs two hooks.
  */
-export function plusExtensions(post: (message: EditorToHostMessage) => void): Extension[] {
-	setPlusPoster(post);
+export function featureExtensions(post: (message: EditorToHostMessage) => void): Extension[] {
+	setHostPoster(post);
 	return [
 		wikilinkExtension((href) => post({ type: 'openLink', href })),
 		linkPreviewExtension((href) => post({ type: 'openLink', href })),
@@ -45,38 +45,38 @@ export function plusExtensions(post: (message: EditorToHostMessage) => void): Ex
 		trackChangesExtension,
 		selectionReporter(post),
 		contextMenuExtension(post),
-		plusCompletion,
+		featureCompletion,
 	];
 }
 
 /** Handles a plus message from the host. Returns true when it was one. */
-export function handlePlusHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
-	if (handlePlusReply(message)) return true;
+export function handleFeatureHostMessage(view: EditorView | undefined, message: HostToEditorMessage): boolean {
+	if (handleHostReply(message)) return true;
 	if (handleQuartoHostMessage(view, message)) return true;
-	if (message.type === 'plusTrackNext') {
+	if (message.type === 'trackNext') {
 		trackNextUpdate();
 		return true;
 	}
 	// Not ours: the editor applies it; tracked changes are worked out once it has.
 	if (message.type === 'externalUpdate') beforeExternalUpdate(view, message.changes);
-	if (message.type === 'plusTextScale') {
+	if (message.type === 'textScale') {
 		setTextScale(view, message.scale, message.fontFamily ?? '');
 		return true;
 	}
 	// Not ours, but a new document or theme changes the size the text scale multiplies.
 	if (message.type === 'init' || message.type === 'applyCss') reapplyTextScale();
-	if (message.type === 'plusRun') {
-		if (view) runPlusCommand(view, message.command, message.range);
+	if (message.type === 'runCommand') {
+		if (view) runMenuCommand(view, message.command, message.range);
 		return true;
 	}
-	if (message.type === 'plusInsertText') {
+	if (message.type === 'insertText') {
 		if (view) {
 			view.dispatch(view.state.replaceSelection(message.text));
 			view.focus();
 		}
 		return true;
 	}
-	if (message.type === 'plusInsertFootnote') {
+	if (message.type === 'insertFootnote') {
 		if (view) insertFootnote(view);
 		return true;
 	}

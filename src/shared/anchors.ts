@@ -1,4 +1,4 @@
-import type { PlusAnchor } from './messages';
+import type { NoteAnchor } from './messages';
 
 /**
  * Wikilink anchors in Markdown text — `#Heading` and `#^block-id` targets —
@@ -16,8 +16,8 @@ export const TRAILING_BLOCK_ID = new RegExp(String.raw`\s+\^(${ID})\s*$`);
 /** A line that is only a block id (it names the list or table above it). Group 1: the id. */
 export const BLOCK_ID_LINE = new RegExp(String.raw`^\s*\^(${ID})\s*$`);
 
-export function anchorsInText(text: string): PlusAnchor[] {
-	const out: PlusAnchor[] = [];
+export function anchorsInText(text: string): NoteAnchor[] {
+	const out: NoteAnchor[] = [];
 	let inFence = false;
 	for (const line of text.split(/\r?\n/)) {
 		if (FENCE.test(line)) {
