@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",

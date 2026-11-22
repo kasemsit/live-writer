@@ -1,7 +1,7 @@
 import { renderInlineInto } from '../tableCellInline';
-import { BLOCK_ID_LINE, TRAILING_BLOCK_ID } from '../../shared/anchors';
+import { TRAILING_BLOCK_ID } from '../../shared/anchors';
+import { nestListItems, parseMarkdownBlocks, type MdBlock, type MdListNode } from '../../shared/markdownBlocks';
 import { cellInlineHooks } from '../livePreviewPlugin';
-import { splitTableRow } from '../../shared/wikilinks';
 
 /**
  * Markdown → HTML for pasting into Word, Google Docs or an e-mail ("Copy as
@@ -45,134 +45,73 @@ function inline(parent: HTMLElement, text: string): void {
 	parent.append(...Array.from(span.childNodes));
 }
 
-const LIST_ITEM = /^(\s*)([-*+]|\d+[.)])\s+(?:\[([ xX])\]\s+)?(.*)$/;
+function renderList(parent: HTMLElement, list: MdListNode): void {
+	const el = document.createElement(list.ordered ? 'ol' : 'ul');
+	for (const { item, children } of list.items) {
+		const li = document.createElement('li');
+		if (item.task) li.append(item.task === ' ' ? '☐ ' : '☑ ');
+		inline(li, item.text);
+		for (const line of item.more) {
+			li.appendChild(document.createElement('br'));
+			inline(li, line);
+		}
+		for (const child of children) renderList(li, child);
+		el.appendChild(li);
+	}
+	parent.appendChild(el);
+}
 
-function renderBlocks(parent: HTMLElement, lines: string[]): void {
-	const add = <K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K] => {
-		const el = document.createElement(tag);
-		parent.appendChild(el);
-		return el;
-	};
-	let para: HTMLParagraphElement | null = null;
-	for (let i = 0; i < lines.length; ) {
-		const line = lines[i];
-		if (!line.trim() || BLOCK_ID_LINE.test(line)) {
-			para = null;
-			i++;
-			continue;
-		}
-		if (/^\s*<!--/.test(line)) {
-			while (i < lines.length && !lines[i].includes('-->')) i++;
-			i++;
-			para = null;
-			continue;
-		}
-		if (/^\s*(```|~~~)/.test(line)) {
-			const fence = line.trim().slice(0, 3);
-			let end = i + 1;
-			while (end < lines.length && !lines[end].trim().startsWith(fence)) end++;
-			const code = document.createElement('code');
-			code.textContent = lines.slice(i + 1, end).join('\n');
-			add('pre').appendChild(code);
-			i = end + 1;
-			para = null;
-			continue;
-		}
-		if (/^\s*\$\$/.test(line)) {
-			let end = i;
-			if (!/\$\$.*\$\$\s*$/.test(line.trim())) {
-				end = i + 1;
-				while (end < lines.length && !/\$\$\s*$/.test(lines[end])) end++;
+function renderBlocks(parent: HTMLElement, blocks: MdBlock[]): void {
+	const add = <K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K] => parent.appendChild(document.createElement(tag));
+	for (const block of blocks) {
+		switch (block.kind) {
+			case 'heading':
+				inline(add(`h${block.level}` as 'h1'), block.text);
+				break;
+			case 'paragraph': {
+				const p = add('p');
+				block.lines.forEach((line, i) => {
+					if (i) p.appendChild(document.createElement('br'));
+					inline(p, line);
+				});
+				break;
 			}
-			add('p').textContent = lines.slice(i, end + 1).join('\n').trim();
-			i = end + 1;
-			para = null;
-			continue;
-		}
-		const h = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
-		if (h) {
-			inline(add(`h${h[1].length}` as 'h1'), h[2]);
-			i++;
-			para = null;
-			continue;
-		}
-		if (/^\s*>/.test(line)) {
-			const body: string[] = [];
-			while (i < lines.length && /^\s*>/.test(lines[i])) body.push(lines[i++].replace(/^\s*>[ \t]?/, ''));
-			const quote = add('blockquote');
-			const head = /^\[!([A-Za-z][\w-]*)\][+-]?\s*(.*)$/.exec(body[0] ?? '');
-			if (head) {
-				const strong = document.createElement('strong');
-				inline(strong, head[2] || head[1].charAt(0).toUpperCase() + head[1].slice(1));
-				const p = document.createElement('p');
-				p.appendChild(strong);
-				quote.appendChild(p);
-				body.shift();
-			}
-			renderBlocks(quote, body);
-			para = null;
-			continue;
-		}
-		if (/^\s*\|/.test(line)) {
-			const table = add('table');
-			table.setAttribute('border', '1');
-			table.style.borderCollapse = 'collapse';
-			let first = true;
-			while (i < lines.length && /^\s*\|/.test(lines[i])) {
-				const row = lines[i++];
-				if (/^\s*\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?\s*$/.test(row)) continue;
-				const tr = table.insertRow();
-				for (const cell of splitTableRow(row.trim())) {
-					const td = document.createElement(first ? 'th' : 'td');
-					inline(td, cell);
-					tr.appendChild(td);
+			case 'code':
+				add('pre').appendChild(document.createElement('code')).textContent = block.text;
+				break;
+			case 'math':
+				add('p').textContent = block.source;
+				break;
+			case 'quote': {
+				const quote = add('blockquote');
+				if (block.callout) {
+					const strong = document.createElement('strong');
+					inline(strong, block.callout.title);
+					quote.appendChild(document.createElement('p')).appendChild(strong);
 				}
-				first = false;
+				renderBlocks(quote, block.children);
+				break;
 			}
-			para = null;
-			continue;
-		}
-		if (LIST_ITEM.test(line)) {
-			const stack: { indent: number; list: HTMLElement }[] = [];
-			let lastItem: HTMLElement | null = null;
-			while (i < lines.length) {
-				const m = LIST_ITEM.exec(lines[i]);
-				if (!m) {
-					// A continuation line of the item above.
-					if (lastItem && /^\s+\S/.test(lines[i]) && !BLOCK_ID_LINE.test(lines[i])) {
-						lastItem.appendChild(document.createElement('br'));
-						inline(lastItem, lines[i].trim());
-						i++;
-						continue;
-					}
-					break;
-				}
-				const indent = m[1].length;
-				while (stack.length && indent < stack[stack.length - 1].indent) stack.pop();
-				if (!stack.length || indent > stack[stack.length - 1].indent) {
-					const list = document.createElement(/\d/.test(m[2]) ? 'ol' : 'ul');
-					(stack.length && lastItem ? lastItem : parent).appendChild(list);
-					stack.push({ indent, list });
-				}
-				lastItem = document.createElement('li');
-				if (m[3]) lastItem.append(m[3] === ' ' ? '☐ ' : '☑ ');
-				inline(lastItem, m[4]);
-				stack[stack.length - 1].list.appendChild(lastItem);
-				i++;
+			case 'table': {
+				const table = add('table');
+				table.setAttribute('border', '1');
+				table.style.borderCollapse = 'collapse';
+				block.rows.forEach((row, r) => {
+					const tr = table.insertRow();
+					for (const cell of row) inline(tr.appendChild(document.createElement(r ? 'td' : 'th')), cell);
+				});
+				break;
 			}
-			para = null;
-			continue;
+			case 'list':
+				for (const list of nestListItems(block.items)) renderList(parent, list);
+				break;
 		}
-		if (!para) para = add('p');
-		else para.appendChild(document.createElement('br'));
-		inline(para, line.trim());
-		i++;
 	}
 }
 
 export function markdownToHtml(markdown: string): string {
 	const root = document.createElement('div');
-	renderBlocks(root, markdown.split('\n'));
+	renderBlocks(root, parseMarkdownBlocks(markdown));
 	return root.innerHTML;
 }
 

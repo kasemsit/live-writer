@@ -6,7 +6,7 @@ import type { NotePreview } from '../../shared/messages';
 import { renderInlineInto } from '../tableCellInline';
 import { cellInlineHooks } from '../livePreviewPlugin';
 import { previewLink } from './hostRequests';
-import { splitTableRow } from '../../shared/wikilinks';
+import { parseMarkdownBlocks, type MdBlock } from '../../shared/markdownBlocks';
 import { calloutStyle } from './callouts';
 import { renderMathInto } from './math';
 
@@ -24,105 +24,79 @@ const CACHE_MS = 15_000;
 const inline = (el: HTMLElement, text: string) => renderInlineInto(el, text, cellInlineHooks);
 
 /**
- * A small block renderer for the card: headings, paragraphs (line breaks kept,
- * as Obsidian shows them), lists, quotes and callouts, tables and code. Inline
- * Markdown goes through the same renderer table cells use.
+ * The card's block renderer: headings, paragraphs (line breaks kept, as
+ * Obsidian shows them), lists, quotes and callouts, tables, code and display
+ * math, from the structure Copy as Rich Text also uses. Inline Markdown goes
+ * through the same renderer table cells use.
  */
 export function renderMarkdownBlocks(parent: HTMLElement, text: string): void {
-	const lines = text.split('\n');
-	let para: HTMLElement | null = null;
+	renderBlocks(parent, parseMarkdownBlocks(text));
+}
+
+function renderBlocks(parent: HTMLElement, blocks: MdBlock[]): void {
 	const add = (tag: string, cls: string) => {
 		const el = document.createElement(tag);
 		el.className = cls;
-		parent.appendChild(el);
-		para = null;
-		return el;
+		return parent.appendChild(el);
 	};
-	for (let i = 0; i < lines.length; ) {
-		const line = lines[i];
-		if (/^\s*(```|~~~)/.test(line)) {
-			const fence = line.trim().slice(0, 3);
-			let end = i + 1;
-			while (end < lines.length && !lines[end].trim().startsWith(fence)) end++;
-			add('pre', 'mlp-lp-code').textContent = lines.slice(i + 1, end).join('\n');
-			i = end + 1;
-			continue;
-		}
-		if (!line.trim()) {
-			para = null;
-			i++;
-			continue;
-		}
-		if (/^\s*\$\$/.test(line)) {
-			// Display math: one line, or $$ lines around it.
-			let end = i;
-			if (!/\$\$.*\$\$\s*$/.test(line.trim())) {
-				end = i + 1;
-				while (end < lines.length && !/\$\$\s*$/.test(lines[end])) end++;
+	const line = (into: HTMLElement, text: string) => inline(into.appendChild(document.createElement('span')), text);
+	for (const block of blocks) {
+		switch (block.kind) {
+			case 'heading':
+				inline(add('div', `mlp-lp-h mlp-lp-h${block.level}`), block.text);
+				break;
+			case 'paragraph': {
+				const p = add('p', 'mlp-lp-p');
+				block.lines.forEach((text, i) => {
+					if (i) p.appendChild(document.createElement('br'));
+					line(p, text);
+				});
+				break;
 			}
-			const tex = lines.slice(i, end + 1).join('\n').trim().replace(/^\$\$/, '').replace(/\$\$$/, '');
-			renderMathInto(add('div', 'mlp-math mlp-math-display'), tex.trim(), true);
-			i = end + 1;
-			continue;
-		}
-		const h = /^(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
-		if (h) {
-			inline(add('div', `mlp-lp-h mlp-lp-h${h[1].length}`), h[2]);
-			i++;
-			continue;
-		}
-		if (/^\s*>/.test(line)) {
-			const body: string[] = [];
-			while (i < lines.length && /^\s*>/.test(lines[i])) body.push(lines[i++].replace(/^\s*>[ \t]?/, ''));
-			const box = add('div', 'mlp-lp-quote');
-			const head = /^\[!([A-Za-z][\w-]*)\][+-]?\s*(.*)$/.exec(body[0] ?? '');
-			if (head) {
-				box.classList.add('mlp-lp-callout', `mlp-co-${calloutStyle(head[1]).colour}`);
-				const title = document.createElement('div');
-				title.className = 'mlp-lp-callout-title';
-				inline(title, head[2] || head[1].charAt(0).toUpperCase() + head[1].slice(1));
-				box.appendChild(title);
-				body.shift();
-			}
-			renderMarkdownBlocks(box, body.join('\n'));
-			continue;
-		}
-		if (/^\s*\|/.test(line)) {
-			const table = add('table', 'mlp-lp-table') as HTMLTableElement;
-			let first = true;
-			while (i < lines.length && /^\s*\|/.test(lines[i])) {
-				const row = lines[i++];
-				if (/^\s*\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?\s*$/.test(row)) continue;
-				const tr = table.insertRow();
-				for (const cell of splitTableRow(row.trim())) {
-					const td = document.createElement(first ? 'th' : 'td');
-					inline(td, cell);
-					tr.appendChild(td);
+			case 'code':
+				add('pre', 'mlp-lp-code').textContent = block.text;
+				break;
+			case 'math':
+				renderMathInto(add('div', 'mlp-math mlp-math-display'), block.tex, true);
+				break;
+			case 'quote': {
+				const box = add('div', 'mlp-lp-quote');
+				if (block.callout) {
+					box.classList.add('mlp-lp-callout', `mlp-co-${calloutStyle(block.callout.type).colour}`);
+					const title = document.createElement('div');
+					title.className = 'mlp-lp-callout-title';
+					inline(title, block.callout.title);
+					box.appendChild(title);
 				}
-				first = false;
+				renderBlocks(box, block.children);
+				break;
 			}
-			continue;
+			case 'table': {
+				const table = add('table', 'mlp-lp-table') as HTMLTableElement;
+				block.rows.forEach((row, r) => {
+					const tr = table.insertRow();
+					for (const cell of row) inline(tr.appendChild(document.createElement(r ? 'td' : 'th')), cell);
+				});
+				break;
+			}
+			case 'list':
+				// Flat rows, indented by depth: a card has no room for real list margins.
+				for (const item of block.items) {
+					const row = add('div', 'mlp-lp-li');
+					row.style.paddingLeft = `${1.1 + item.indent * 0.5}em`;
+					const mark = row.appendChild(document.createElement('span'));
+					mark.className = 'mlp-lp-li-mark';
+					mark.textContent = item.ordered ? item.marker : '•';
+					const content = row.appendChild(document.createElement('span'));
+					if (item.task) content.append(item.task === ' ' ? '☐ ' : '☑ ');
+					inline(content, item.text);
+					for (const more of item.more) {
+						content.appendChild(document.createElement('br'));
+						inline(content, more);
+					}
+				}
+				break;
 		}
-		const li = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/.exec(line);
-		if (li) {
-			const item = add('div', 'mlp-lp-li');
-			item.style.paddingLeft = `${1.1 + li[1].length * 0.5}em`;
-			const mark = document.createElement('span');
-			mark.className = 'mlp-lp-li-mark';
-			mark.textContent = /\d/.test(li[2]) ? li[2] : '•';
-			item.appendChild(mark);
-			const content = document.createElement('span');
-			inline(content, li[3]);
-			item.appendChild(content);
-			i++;
-			continue;
-		}
-		if (!para) para = add('p', 'mlp-lp-p');
-		else para.appendChild(document.createElement('br'));
-		const span = document.createElement('span');
-		inline(span, line.trim());
-		(para as HTMLElement).appendChild(span);
-		i++;
 	}
 }
 

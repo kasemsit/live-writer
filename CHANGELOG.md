@@ -2,6 +2,13 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.5.1
+
+One Markdown reader instead of two: the link preview card and Copy as Rich Text now read blocks with the same code (`src/shared/markdownBlocks.ts`) and only draw them differently. On 248 notes from the vault, each produces what it did before, except:
+
+- **Link preview card:** `^block-id` lines and `<!-- notes -->` are left out, as Copy as Rich Text already did; a list item's indented continuation lines stay in the item instead of becoming a separate paragraph; `[ ]` and `[x]` show as ☐ and ☑.
+- **Copy as Rich Text:** a numbered list right after a bulleted one (or the reverse) is pasted as a list of its own, not merged into the one above.
+
 ## 1.5.0
 
 - **LaTeX: back from the PDF.** Ctrl+click in LaTeX Workshop's PDF viewer (its inverse search) now shows the line in the Live Writer tab of that file instead of opening the file as text; a text tab opened only for the jump is closed. Turn off with `liveWriter.plus.inverseSearch`.
