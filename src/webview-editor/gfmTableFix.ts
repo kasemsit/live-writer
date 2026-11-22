@@ -1,7 +1,7 @@
 import { TaskList, Strikethrough, Autolink, type BlockContext, type Line, type LeafBlock, type MarkdownExtension } from '@lezer/markdown';
-import { PlusTable } from './plus/table';
-import { PlusMath } from './plus/mathSyntax';
-import { insideTableAtom } from '../shared/plusWikilinks';
+import { PlusTable } from './features/table';
+import { PlusMath } from './features/mathSyntax';
+import { insideTableAtom } from '../shared/wikilinks';
 
 const delimiterLine = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/;
 

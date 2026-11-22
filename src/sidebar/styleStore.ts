@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import type { StyleEntry } from '../shared/messages';
-import { seedPlusTheme } from '../editor/plus/themeSeed';
+import { seedPlusTheme } from '../editor/features/themeSeed';
 
 const CONFIG_SECTION = 'liveWriter';
 const ENABLED_STYLES_KEY = 'enabledStyles';

@@ -4,9 +4,9 @@ import { extractHeadings } from '../shared/headings';
 import type { HeadingItem } from '../shared/headings';
 import { escapeAttribute } from '../shared/i18n';
 import type { PlusHostToEditorMessage } from '../shared/messages';
-import { extractTexHeadings } from '../shared/plusTexScan';
-import { isTexDocument } from './plus/tex';
-import { quartoOutline } from '../shared/plusQuarto';
+import { extractTexHeadings } from '../shared/texScan';
+import { isTexDocument } from './features/tex';
+import { quartoOutline } from '../shared/quarto';
 
 export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvider {
 	static readonly viewType = 'liveWriter.editor';
@@ -139,7 +139,7 @@ export class MarkdownLivePreviewProvider implements vscode.CustomTextEditorProvi
 			vscode.Uri.joinPath(this.context.extensionUri, 'media', 'webview-editor-theme.css'),
 		);
 		// md-live-preview-plus: callouts, footnotes, wikilinks, completion.
-		const plusStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'plus.css'));
+		const plusStyleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'writer.css'));
 		// Mermaid ships as its own bundle, loaded only once a document actually
 		// contains a diagram (see webview-editor/mermaidLoader.ts). The webview
 		// can't build this URI itself — `asWebviewUri` is host-side API — so it's

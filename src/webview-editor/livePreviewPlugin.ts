@@ -12,10 +12,10 @@ import { renderInlineInto, type CellInlineHooks } from './tableCellInline';
 import { createCodeModeButton, createCopyCodeButton, createRenderModeButton } from './codeModeButton';
 import { insertRow, insertColumn, renderTableMarkdown, type TableEditModel } from './tableEdit';
 import { t } from '../shared/i18n';
-import { insideTableAtom, insideWikilink, isCitationAt } from '../shared/plusWikilinks';
-import { mathBlockReplaced } from './plus/mathSyntax';
-import { isUndefinedReferenceLink } from './plus/references';
-import { quartoImage } from './plus/quarto';
+import { insideTableAtom, insideWikilink, isCitationAt } from '../shared/wikilinks';
+import { mathBlockReplaced } from './features/mathSyntax';
+import { isUndefinedReferenceLink } from './features/references';
+import { quartoImage } from './features/quarto';
 
 const HEADING_LINE_CLASS: Record<string, string> = {
 	ATXHeading1: 'mlp-line-h1',

@@ -1,10 +1,10 @@
 import { parser as baseMarkdownParser, Table, TaskList, Strikethrough, Autolink } from '@lezer/markdown';
 import type { SyntaxNode, Tree } from '@lezer/common';
-import { withInlinePasses } from './plus/inlineExtras';
-import { isCitationAt } from '../shared/plusWikilinks';
-import { PlusMath } from './plus/mathSyntax';
-import { renderMathInto } from './plus/math';
-import { isShortcutLink } from './plus/references';
+import { withInlinePasses } from './features/inlineExtras';
+import { isCitationAt } from '../shared/wikilinks';
+import { PlusMath } from './features/mathSyntax';
+import { renderMathInto } from './features/math';
+import { isShortcutLink } from './features/references';
 
 // A table cell's content is plain text as far as CodeMirror is concerned — the
 // rich TableWidget builds its own DOM outside the editor, so the live-preview

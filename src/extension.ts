@@ -4,13 +4,13 @@ import { StyleManagerViewProvider } from './sidebar/StyleManagerViewProvider';
 import { StyleStore } from './sidebar/styleStore';
 import { OutlineViewProvider } from './sidebar/OutlineViewProvider';
 import { setGrammarRoot } from './editor/shikiHost';
-import { checkForUpdate } from './editor/plus/updateCheck';
-import { initSelectionStatus } from './editor/plus/selectionFile';
-import { registerBacklinks } from './editor/plus/backlinks';
-import { registerContextMenu } from './editor/plus/contextMenu';
-import { registerInsertCitation } from './editor/plus/cite';
-import { registerTextScale } from './editor/plus/textScale';
-import { migrateSettings } from './editor/plus/migrate';
+import { checkForUpdate } from './editor/features/updateCheck';
+import { initSelectionStatus } from './editor/features/selectionFile';
+import { registerBacklinks } from './editor/features/backlinks';
+import { registerContextMenu } from './editor/features/contextMenu';
+import { registerInsertCitation } from './editor/features/cite';
+import { registerTextScale } from './editor/features/textScale';
+import { migrateSettings } from './editor/features/migrate';
 
 function getActiveMarkdownUri(): vscode.Uri | undefined {
 	const editor = vscode.window.activeTextEditor;

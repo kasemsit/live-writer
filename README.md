@@ -154,17 +154,17 @@ end is never drawn.
 Live Writer's own code is kept apart from the editor core it started from:
 
 - **New files:**
-  - `src/webview-editor/plus/` holds the editor side: one module per feature, `cm.ts` for the helpers they share, and `hostRequests.ts`, the one channel to the extension host.
+  - `src/webview-editor/features/` holds the editor side: one module per feature, `cm.ts` for the helpers they share, and `hostRequests.ts`, the one channel to the extension host.
     - `tex/` is the LaTeX Live Preview; `quarto.ts` and `quartoProject.ts` are Quarto; `citations.ts` draws `[@key]` for both notes and Quarto.
-  - `src/editor/plus/` holds the extension host side: `tex.ts` (root file, `.aux`, `.bib`, images), `quartoProject.ts` (`_quarto.yml`, bibliography), `files.ts`.
+  - `src/editor/features/` holds the extension host side: `tex.ts` (root file, `.aux`, `.bib`, images), `quartoProject.ts` (`_quarto.yml`, bibliography), `files.ts`.
   - `src/shared/plus*.ts` holds pure helpers shared by both, with their tests:
-    - `plusBib.ts` reads `.bib` files; `plusCitations.ts` says how a citation reads (LaTeX's numbers, citeproc's author–date, checked against `quarto pandoc --citeproc` output in `fixtures/citeproc.json`).
-    - `plusQuarto.ts` and `plusCodeFences.ts`: Pandoc's divs, attributes and cross-references.
+    - `bib.ts` reads `.bib` files; `citations.ts` says how a citation reads (LaTeX's numbers, citeproc's author–date, checked against `quarto pandoc --citeproc` output in `fixtures/citeproc.json`).
+    - `quarto.ts` and `codeFences.ts`: Pandoc's divs, attributes and cross-references.
     - `plusTex*.ts`: the LaTeX scanner, headings, text, macros and project files, and the `.aux` and `tabular` readers.
-    - `plusMessages.ts`: every message Live Writer adds; `messages.ts` re-exports it.
-  - `media/plus.css`, `plus/` (theme, fonts, hooks, installers, tools), `test/e2e/plus.spec.ts` and `test/e2e/tex.spec.ts`.
+    - `messages.ts`: every message Live Writer adds; `messages.ts` re-exports it.
+  - `media/writer.css`, `plus/` (theme, fonts, hooks, installers, tools), `test/e2e/plus.spec.ts` and `test/e2e/tex.spec.ts`.
 - **The editor core's files** carry small hooks into that code, marked `plus:` or `md-live-preview-plus`. Since Live Writer no longer merges from t-shoot, this split is a convenience, not a rule.
-  - `src/webview-editor/plus/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.
+  - `src/webview-editor/features/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.
 
 ## Licence
 

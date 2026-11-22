@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseBib } from './plusBib';
-import { citeTerms, citeText, findCiteGroups, findNarrativeCitations, formatCiteGroup, formatNarrative, type CiteFormat, type CiteStyle } from './plusCitations';
+import { parseBib } from './bib';
+import { citeTerms, citeText, findCiteGroups, findNarrativeCitations, formatCiteGroup, formatNarrative, type CiteFormat, type CiteStyle } from './citations';
 
 /**
  * The editor's Quarto citations against what Quarto's own citeproc prints for

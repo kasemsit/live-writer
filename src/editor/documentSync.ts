@@ -4,11 +4,11 @@ import { pickCodeTheme, tokenizeDocument } from './shikiHost';
 import { extensionForMimeType, generateImageFileName } from '../shared/imageAssets';
 import { resolveLinkTarget } from '../shared/linkTarget';
 import { isPathInside } from '../shared/pathContainment';
-import { handlePlusMessage, trackSession, takePendingJump } from './plus';
-import { textAppearance } from './plus/textScale';
-import { isTrackedChange } from './plus/trackChanges';
-import { changesForEditor, eolMap, tokensForEditor } from './plus/eol';
-import { isTexDocument, registerTexSession, TexSession } from './plus/tex';
+import { handlePlusMessage, trackSession, takePendingJump } from './features';
+import { textAppearance } from './features/textScale';
+import { isTrackedChange } from './features/trackChanges';
+import { changesForEditor, eolMap, tokensForEditor } from './features/eol';
+import { isTexDocument, registerTexSession, TexSession } from './features/tex';
 
 /**
  * Largest `.drawio` file that will be read and parsed.

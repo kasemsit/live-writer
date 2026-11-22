@@ -24,12 +24,12 @@ if (!file) {
 const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
 const shot = option('--shot');
 
-/** What the host would send a `.qmd` (src/editor/plus/quartoProject.ts), read from disk. */
+/** What the host would send a `.qmd` (src/editor/features/quartoProject.ts), read from disk. */
 function quartoProject(docPath) {
 	const { buildSync } = require('esbuild');
 	const out = buildSync({
 		stdin: {
-			contents: "export { labelsFromQuartoYaml, quartoCitationPlan } from './src/shared/plusQuarto'; export { parseBib } from './src/shared/plusBib';",
+			contents: "export { labelsFromQuartoYaml, quartoCitationPlan } from './src/shared/quarto'; export { parseBib } from './src/shared/bib';",
 			resolveDir: ROOT,
 			loader: 'ts',
 		},
@@ -73,7 +73,7 @@ const css = option('--css') ? fs.readFileSync(option('--css'), 'utf8') : '';
 	});
 	await page.setContent(`<!DOCTYPE html><html><head><meta charset="utf-8"/><style>
 html,body{margin:0;background:#1e1e1e}#mlp-root{height:100%}
-${read('media/webview-ui.css')}${read('media/webview-editor-theme.css')}${read('media/plus.css')}</style></head>
+${read('media/webview-ui.css')}${read('media/webview-editor-theme.css')}${read('media/writer.css')}</style></head>
 <body><div id="mlp-root"></div><script>window.__posted=[];window.acquireVsCodeApi=()=>({postMessage:m=>window.__posted.push(m),getState:()=>null,setState:()=>{}});
 window.mlpKatexChunkUri='https://render.invalid/katex-chunk.js';window.mlpKatexBase='https://render.invalid/katex/';</script>
 <script>${read('dist/webview-editor.js').replace(/<\/script>/gi, '<\\/script>')}</script></body></html>`);

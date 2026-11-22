@@ -1,0 +1,31 @@
+// md-live-preview-plus: how a wikilink target names a file (src/editor/features/wikiOpen.ts).
+
+/** A note's file extension; a note's name is its file name without it. */
+export const NOTE_EXT = /\.(md|markdown)$/i;
+
+/** The file name a link points to: `name` gets `.md` unless it already names a file type. */
+export function linkFileName(name: string): string {
+	if (NOTE_EXT.test(name) || /\.[A-Za-z0-9]{1,5}$/.test(name)) return name;
+	return `${name}.md`;
+}
+
+/**
+ * Picks among same-named files the way Obsidian does: an exact workspace path
+ * first, then one beside the current note, then the shortest path.
+ */
+export function rankMatches<T extends { rel: string; dir: string; fsPath: string }>(candidates: T[], want: string, hereDir: string): T[] {
+	const norm = (x: string) => x.replace(/\\/g, '/').toLowerCase();
+	const score = (c: { rel: string; dir: string }) => (norm(c.rel) === norm(want) ? 0 : 2) + (c.dir === hereDir ? 0 : 1);
+	return [...candidates].sort((a, b) => score(a) - score(b) || a.fsPath.length - b.fsPath.length);
+}
+
+/**
+ * What to write for each note: its bare name where that is unique in the
+ * workspace, its path otherwise — the "shortest path when possible" rule
+ * Obsidian uses, so links stay short and still resolve to one file.
+ */
+export function linkTexts(notes: { name: string; path: string }[]): string[] {
+	const count = new Map<string, number>();
+	for (const n of notes) count.set(n.name.toLowerCase(), (count.get(n.name.toLowerCase()) ?? 0) + 1);
+	return notes.map((n) => (count.get(n.name.toLowerCase())! > 1 ? n.path.replace(NOTE_EXT, '') : n.name));
+}

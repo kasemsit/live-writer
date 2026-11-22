@@ -30,9 +30,9 @@ import {
 import { t } from '../shared/i18n';
 import { adaptMarkdownCss } from '../shared/cssAdapter';
 import type { EditorLang, TextChange } from '../shared/messages';
-import { plusExtensions, handlePlusHostMessage } from './plus';
+import { plusExtensions, handlePlusHostMessage } from './features';
 // md-live-preview-plus: the LaTeX Live Preview, built instead of the Markdown editor for a .tex file.
-import { texExtensions, texInitialAnchor, handleTexHostMessage } from './plus/tex';
+import { texExtensions, texInitialAnchor, handleTexHostMessage } from './features/tex';
 
 const remoteChange = Annotation.define<boolean>();
 const FLUSH_DEBOUNCE_MS = 250;
