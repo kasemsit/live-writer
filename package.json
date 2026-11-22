@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -186,7 +186,7 @@
       },
       {
         "command": "liveWriter.plus.paraphrase",
-        "title": "Paraphrase with Claude",
+        "title": "Paraphrase",
         "category": "Markdown Live Preview"
       },
       {
@@ -277,6 +277,26 @@
       {
         "command": "liveWriter.plus.insertCitation",
         "title": "Insert Citation from Zotero",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteTighten",
+        "title": "Tighten",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteFormal",
+        "title": "More Formal",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteToEnglish",
+        "title": "Translate to English",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteToThai",
+        "title": "Translate to Thai",
         "category": "Live Writer"
       }
     ],
@@ -401,6 +421,22 @@
         {
           "command": "liveWriter.plus.insertCitation",
           "when": "activeCustomEditorId == liveWriter.editor"
+        },
+        {
+          "command": "liveWriter.plus.rewriteTighten",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteFormal",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteToEnglish",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteToThai",
+          "when": "false"
         }
       ],
       "webview/context": [
@@ -410,7 +446,7 @@
           "group": "1_plus_claude@1"
         },
         {
-          "command": "liveWriter.plus.paraphrase",
+          "submenu": "liveWriter.rewrite",
           "when": "webviewId == 'liveWriter.editor' && mlpHasSelection",
           "group": "1_plus_claude@2"
         },
@@ -534,6 +570,28 @@
           "when": "webviewId == 'liveWriter.editor'",
           "group": "3_plus_open@3"
         }
+      ],
+      "liveWriter.rewrite": [
+        {
+          "command": "liveWriter.plus.paraphrase",
+          "group": "1_style@0"
+        },
+        {
+          "command": "liveWriter.plus.rewriteTighten",
+          "group": "1_style@1"
+        },
+        {
+          "command": "liveWriter.plus.rewriteFormal",
+          "group": "1_style@2"
+        },
+        {
+          "command": "liveWriter.plus.rewriteToEnglish",
+          "group": "2_translate@3"
+        },
+        {
+          "command": "liveWriter.plus.rewriteToThai",
+          "group": "2_translate@4"
+        }
       ]
     },
     "configuration": {
@@ -608,6 +666,11 @@
           "type": "boolean",
           "default": true,
           "description": "Live Writer: when an open note changes on disk (Claude or another program writing it, a git checkout), show the changes in the Live Preview — insertions green, deletions struck through — to keep or undo one by one."
+        },
+        "liveWriter.plus.claudeModel": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Live Writer: the Claude model for *Rewrite with Claude* (a name or an alias such as `sonnet` or `opus`). Empty uses Claude Code's default."
         }
       }
     },
@@ -623,6 +686,12 @@
         "key": "ctrl+alt+c",
         "mac": "cmd+alt+c",
         "when": "activeCustomEditorId == liveWriter.editor"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "liveWriter.rewrite",
+        "label": "Rewrite with Claude"
       }
     ]
   },

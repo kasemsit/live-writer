@@ -930,6 +930,15 @@ test('Paraphrase with Claude: the card offers the rewrite, and Replace puts it i
 	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'edit')).toBe(true);
 });
 
+test('Rewrite with Claude: a mode from the submenu goes to the host, and titles the card', async ({ page }) => {
+	await mountEditor(page, '# T\n\nระบบอ่านค่าจากจอ\n\nEnd.');
+	const from = '# T\n\n'.length;
+	await postToWebview(page, { type: 'plusRun', command: 'rewrite.toEnglish', range: { from, to: from + 'ระบบอ่านค่าจากจอ'.length } });
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'plusParaphrase')).toBe(true);
+	expect((await posted(page)).filter((m) => m.type === 'plusParaphrase').at(-1)).toMatchObject({ mode: 'toEnglish', text: 'ระบบอ่านค่าจากจอ' });
+	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Translate to English with Claude');
+});
+
 test('font: the host\'s font family sets the text; code keeps its own', async ({ page }) => {
 	await mountEditor(page, '# T\n\nPlain text with `code` here.\n\n```\nfenced\n```\n\nEnd.');
 	const fontOf = (sel: string) => page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontFamily);

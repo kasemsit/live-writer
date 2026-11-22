@@ -2,6 +2,11 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.2.0
+
+- **Rewrite with Claude**, a submenu on a selection (it replaces *Paraphrase with Claude*): **Paraphrase**, **Tighten** (shorter, dropping no claim, number or hedge), **More Formal**, **Translate to English** and **Translate to Thai** (technical terms rendered as each literature names them, the same way each time). Every mode keeps the meaning, numbers, citations and LaTeX/Markdown markup; the card says which mode it ran.
+- **`liveWriter.plus.claudeModel`**: the model these use (`sonnet`, `opus`, or a full name); empty keeps Claude Code's default.
+
 ## 1.1.0
 
 - **Insert Citation from Zotero** (Ctrl+Alt+C, Cmd+Alt+C on a Mac, or right-click). Zotero's citation picker opens (Better BibTeX's *cite as you write*); the works you pick go in at the caret as the document's own syntax: `[@a; @b]` in Markdown and Quarto, `\cite{a,b}` in LaTeX. Needs Zotero running with Better BibTeX.

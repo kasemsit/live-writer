@@ -54,7 +54,7 @@ What Live Writer adds:
   - `[@chen2015]` reads *(Chen, 2015)* and `@chen2015` *Chen (2015)*, from the `.bib` that `bibliography:` names, in the `csl:` style (APA or Chicago author-date) and the `lang:` of the project. Hover for the entry.
   - `{#sec-id}` after a heading is hidden, and callout titles stay out of the Outline.
   - A heading or image that Pandoc joins to the line above or below it is flagged. Quarto would print the heading as `## …` and leave the figure unnumbered.
-- **Paraphrase with Claude** (right-click on a selection): Claude Code rewrites the passage in the same language, keeping terms, numbers, citations and markup; replace it or copy it from the card. Needs Claude Code signed in (`claude -p` is run without tools or your settings).
+- **Rewrite with Claude** (right-click on a selection): *Paraphrase*, *Tighten*, *More Formal*, *Translate to English*, *Translate to Thai*. Meaning, terms, numbers, citations and markup are kept; replace the passage or copy the result from the card. The model is `liveWriter.plus.claudeModel`. Needs Claude Code signed in (`claude -p` is run without tools or your settings).
 - **Font:** the setting `liveWriter.plus.fontFamily` (e.g. `Sarabun, sans-serif`) sets the text font; code and formulas keep theirs.
 - **Insert Citation from Zotero** (Ctrl+Alt+C): pick works in Zotero's citation picker; they go in at the caret as `[@key]` or `\cite{key}`. Needs Better BibTeX.
 - **Citations open their paper in Zotero.** Rest the pointer on a citation (`[@key]` in a note or a `.qmd`, `\cite{key}` in LaTeX) for its entry with *Open PDF* (in Zotero's reader, with your annotations) and *Show in Zotero*; or right-click → *Open PDF in Zotero*.

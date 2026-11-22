@@ -361,7 +361,15 @@ export function runPlusCommand(view: EditorView, command: PlusCommand, range?: {
 		case 'openAsTextHere':
 			return post({ type: 'plusDo', action: 'openAsText', line: view.state.doc.lineAt(contextPos(view)).number });
 		case 'paraphrase':
-			return paraphraseSelection(view, range);
+			return paraphraseSelection(view, range, 'polish');
+		case 'rewrite.tighten':
+			return paraphraseSelection(view, range, 'tighten');
+		case 'rewrite.formal':
+			return paraphraseSelection(view, range, 'formal');
+		case 'rewrite.toEnglish':
+			return paraphraseSelection(view, range, 'toEnglish');
+		case 'rewrite.toThai':
+			return paraphraseSelection(view, range, 'toThai');
 		case 'openInZotero': {
 			const cite = contextTarget()?.closest('[data-citekeys]') as HTMLElement | null;
 			const key = cite ? citeKeysOf(cite)[0]?.key : undefined;

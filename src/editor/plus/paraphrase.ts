@@ -2,6 +2,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawn } from 'node:child_process';
+import * as vscode from 'vscode';
+import { rewritePrompt, type RewriteMode } from '../../shared/plusRewrite';
 
 /**
  * md-live-preview-plus: Paraphrase with Claude — the selected passage rewritten
@@ -10,14 +12,6 @@ import { spawn } from 'node:child_process';
  * CLAUDE.md is read. The webview shows the result to replace or copy.
  */
 
-const SYSTEM = [
-	'Paraphrase the passage you are given.',
-	'Keep its language: Thai stays Thai, English stays English.',
-	'Keep its meaning, technical terms, numbers, citations such as [@key] or \\cite{key}, and any LaTeX or Markdown markup exactly.',
-	'Write conventional academic prose.',
-	'Reply with the rewritten passage only, nothing else.',
-].join(' ');
-
 /** The `claude` command: on PATH, else where the installer puts it. */
 function claudeCommand(): string {
 	return process.env.PATH?.split(path.delimiter).some((d) => d && fs.existsSync(path.join(d, 'claude')))
@@ -25,9 +19,12 @@ function claudeCommand(): string {
 		: path.join(os.homedir(), '.local', 'bin', 'claude');
 }
 
-export function paraphrase(text: string): Promise<{ text: string; error: string }> {
+export function paraphrase(text: string, mode: RewriteMode = 'polish'): Promise<{ text: string; error: string }> {
 	return new Promise((resolve) => {
-		const args = ['-p', '--tools', '', '--no-session-persistence', '--setting-sources', 'project', '--output-format', 'text', '--system-prompt', SYSTEM];
+		const args = ['-p', '--tools', '', '--no-session-persistence', '--setting-sources', 'project', '--output-format', 'text', '--system-prompt', rewritePrompt(mode)];
+		// liveWriter.plus.claudeModel: a model name or alias (sonnet, opus); empty leaves Claude Code's default.
+		const model = String(vscode.workspace.getConfiguration('liveWriter').get('plus.claudeModel', '') ?? '').trim();
+		if (/^[\w.:-]+$/.test(model)) args.push('--model', model);
 		const child = spawn(claudeCommand(), args, { cwd: os.tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
 		let out = '';
 		let err = '';

@@ -161,6 +161,24 @@ describe('paraphrase', () => {
 		expect(cwd).toBe((await import('node:os')).tmpdir());
 	});
 
+	it('each mode gives its own instruction, and liveWriter.plus.claudeModel picks the model', async () => {
+		let args: string[] = [];
+		proc.spawn = (_cmd, a) => {
+			args = a;
+			return child('แปลแล้ว', 0);
+		};
+		fake.settings.set(`${vscode.ConfigurationTarget.Global}:liveWriter.plus.claudeModel`, 'sonnet');
+		await paraphrase('Text.', 'toThai');
+		const prompt = args[args.indexOf('--system-prompt') + 1];
+		expect(prompt).toMatch(/^Translate the passage into formal academic Thai\./);
+		expect(prompt).toMatch(/citations such as \[@key\]/);
+		expect(args.slice(-2)).toEqual(['--model', 'sonnet']);
+		fake.settings.set(`${vscode.ConfigurationTarget.Global}:liveWriter.plus.claudeModel`, 'sonnet; rm -rf ~');
+		await paraphrase('Text.', 'tighten');
+		expect(args).not.toContain('--model');
+		expect(args[args.indexOf('--system-prompt') + 1]).toMatch(/^Make the passage shorter/);
+	});
+
 	it('reports a failure instead of inserting nothing', async () => {
 		proc.spawn = () => child('', 1, 'Not logged in');
 		expect(await paraphrase('x')).toEqual({ text: '', error: 'Not logged in' });

@@ -1,5 +1,6 @@
 import type { BibEntry } from './plusBib';
 import type { CiteStyle } from './plusCitations';
+import type { RewriteMode } from './plusRewrite';
 
 /**
  * md-live-preview-plus: the messages this fork adds between the editor webview
@@ -45,6 +46,10 @@ export type PlusCommand =
 	| 'openLinkBeside'
 	| 'openInZotero'
 	| 'paraphrase'
+	| 'rewrite.tighten'
+	| 'rewrite.formal'
+	| 'rewrite.toEnglish'
+	| 'rewrite.toThai'
 	| 'copyTex'
 	| 'searchGoogle'
 	| 'searchScholar'
@@ -177,4 +182,4 @@ export type PlusEditorToHostMessage =
 	// The Zotero links for a citation key.
 	| { type: 'plusZoteroLinks'; requestId: number; key: string }
 	// Paraphrase with Claude: the selected source, rewritten by Claude Code.
-	| { type: 'plusParaphrase'; requestId: number; text: string };
+	| { type: 'plusParaphrase'; requestId: number; text: string; mode?: RewriteMode };

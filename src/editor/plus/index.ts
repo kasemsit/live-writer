@@ -7,6 +7,7 @@ import { texSessionOf } from './tex';
 import { stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
 import { zoteroLinks } from './zotero';
 import { paraphrase } from './paraphrase';
+import { isRewriteMode } from '../../shared/plusRewrite';
 
 export { takePendingJump } from './wikiOpen';
 
@@ -54,7 +55,7 @@ export function handlePlusMessage(
 			);
 			return true;
 		case 'plusParaphrase':
-			void paraphrase(message.text).then((r) => post({ type: 'plusParaphraseResult', requestId: message.requestId, ...r }));
+			void paraphrase(message.text, isRewriteMode(message.mode) ? message.mode : 'polish').then((r) => post({ type: 'plusParaphraseResult', requestId: message.requestId, ...r }));
 			return true;
 		case 'plusZoteroLinks':
 			void zoteroLinks(session.getDocument().uri, message.key).then((links) =>

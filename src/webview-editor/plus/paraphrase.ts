@@ -1,6 +1,7 @@
 import type { EditorView } from '@codemirror/view';
 import { placeCardAt } from './cm';
 import { postPlus, request } from './hostRequests';
+import { REWRITE_MODES, type RewriteMode } from '../../shared/plusRewrite';
 
 /**
  * md-live-preview-plus: Paraphrase with Claude (right-click on a selection).
@@ -18,14 +19,14 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text = '
 	return node;
 }
 
-export function paraphraseSelection(view: EditorView, range?: { from: number; to: number }): void {
+export function paraphraseSelection(view: EditorView, range?: { from: number; to: number }, mode: RewriteMode = 'polish'): void {
 	const { from, to } = range ?? view.state.selection.main;
 	if (from === to) return;
 	open?.close();
 	const source = view.state.sliceDoc(from, to);
 
 	const card = el('div', 'mlp-link-preview mlp-paraphrase-card');
-	const head = el('div', 'mlp-lp-title', 'Paraphrase with Claude');
+	const head = el('div', 'mlp-lp-title', `${REWRITE_MODES[mode].label} with Claude`);
 	const body = el('div', 'mlp-paraphrase-text', 'Claude is rewriting the passage…');
 	const actions = el('div', 'mlp-zotero-row');
 	card.append(head, body, actions);
@@ -62,7 +63,7 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 	};
 
 	const none = { text: '', error: 'Claude did not answer in time.' };
-	void request<{ text: string; error: string }>((requestId) => ({ type: 'plusParaphrase', requestId, text: source }), none, 200_000).then((result) => {
+	void request<{ text: string; error: string }>((requestId) => ({ type: 'plusParaphrase', requestId, text: source, mode }), none, 200_000).then((result) => {
 		if (!card.isConnected) return;
 		if (!result.text) {
 			body.textContent = result.error;
@@ -83,7 +84,7 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 				view.focus();
 			}),
 			button('Copy', () => {
-				postPlus({ type: 'plusDo', action: 'copy', text: result.text, notice: 'Paraphrase copied.' });
+				postPlus({ type: 'plusDo', action: 'copy', text: result.text, notice: 'Copied.' });
 				close();
 			}),
 			button('Close', close),
