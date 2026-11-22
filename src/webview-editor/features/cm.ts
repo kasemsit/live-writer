@@ -74,13 +74,21 @@ export function placeCard(card: HTMLElement, anchor: HTMLElement): void {
 	placeCardAt(card, anchor.getBoundingClientRect());
 }
 
-/** Puts a floating card under a screen rectangle (an element's, or a position's from coordsAtPos). */
-export function placeCardAt(card: HTMLElement, r: { left: number; top: number; bottom: number }): void {
+/**
+ * Puts a floating card by a screen rectangle (an element's, or a position's
+ * from coordsAtPos), inside the window: below it, moving above when only
+ * there it fits; or, with `above`, above it unless it does not fit there.
+ * `shift` moves it sideways.
+ */
+export function placeCardAt(card: HTMLElement, r: { left: number; top: number; bottom: number }, { above = false, shift = 0 } = {}): void {
 	const vw = document.documentElement.clientWidth;
 	const vh = document.documentElement.clientHeight;
 	const w = card.offsetWidth;
 	const h = card.offsetHeight;
-	card.style.left = `${Math.max(8, Math.min(r.left, vw - w - 8))}px`;
+	card.style.left = `${Math.max(8, Math.min(r.left + shift, vw - w - 8))}px`;
 	const below = r.bottom + 6;
-	card.style.top = `${below + h <= vh - 8 || r.top - h - 6 < 8 ? below : r.top - h - 6}px`;
+	const over = r.top - h - 6;
+	const fitsBelow = below + h <= vh - 8;
+	const fitsAbove = over >= 8;
+	card.style.top = `${(above ? fitsAbove : !fitsBelow && fitsAbove) ? over : below}px`;
 }

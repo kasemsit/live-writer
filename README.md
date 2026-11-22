@@ -151,20 +151,13 @@ end is never drawn.
 
 ## Where the code is
 
-Live Writer's own code is kept apart from the editor core it started from:
-
-- **New files:**
-  - `src/webview-editor/features/` holds the editor side: one module per feature, `cm.ts` for the helpers they share, and `hostRequests.ts`, the one channel to the extension host.
-    - `tex/` is the LaTeX Live Preview; `quarto.ts` and `quartoProject.ts` are Quarto; `citations.ts` draws `[@key]` for both notes and Quarto.
-  - `src/editor/features/` holds the extension host side: `tex.ts` (root file, `.aux`, `.bib`, images), `quartoProject.ts` (`_quarto.yml`, bibliography), `files.ts`.
-  - `src/shared/plus*.ts` holds pure helpers shared by both, with their tests:
-    - `bib.ts` reads `.bib` files; `citations.ts` says how a citation reads (LaTeX's numbers, citeproc's author–date, checked against `quarto pandoc --citeproc` output in `fixtures/citeproc.json`).
-    - `quarto.ts` and `codeFences.ts`: Pandoc's divs, attributes and cross-references.
-    - `plusTex*.ts`: the LaTeX scanner, headings, text, macros and project files, and the `.aux` and `tabular` readers.
-    - `messages.ts`: every message Live Writer adds; `messages.ts` re-exports it.
-  - `media/writer.css`, `plus/` (theme, fonts, hooks, installers, tools), `test/e2e/plus.spec.ts` and `test/e2e/tex.spec.ts`.
-- **The editor core's files** carry small hooks into that code, marked `plus:` or `md-live-preview-plus`. Since Live Writer no longer merges from t-shoot, this split is a convenience, not a rule.
-  - `src/webview-editor/features/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.
+- `src/webview-editor/` is the editor (a CodeMirror 6 webview): `livePreviewPlugin.ts` draws Markdown, with tables, Mermaid and draw.io beside it.
+  - `features/` holds one module per feature (wikilinks, callouts, footnotes, math, citations, Quarto, Zotero, rewrite, …), `cm.ts` for the helpers they share, and `hostRequests.ts`, the one channel to the extension host. `features/tex/` is the LaTeX editor.
+- `src/editor/` is the extension host: `documentSync.ts` keeps the editor and the file in step; `features/` finds what the editor cannot read itself (notes, `_quarto.yml`, `.bib`, `.aux`, Zotero, TikZ crops) and runs Claude.
+- `src/shared/` holds the pure logic both sides use, each module with its tests: `bib.ts` and `citations.ts` (checked against `quarto pandoc --citeproc` output in `fixtures/citeproc.json`), `quarto.ts`, `tex*.ts` (the LaTeX scanner, headings, text, macros, project files, `.aux` and `tabular`), `zotero.ts`, `synctex.ts`, `rewrite.ts`, `messages.ts` (every message between the two sides).
+- `src/test-support/vscode.ts` is an in-memory `vscode` for the host's unit tests.
+- `media/` holds the stylesheets (`writer.css` for the features); `plus/` the theme source, fonts, the Claude Code hook, installers and the release and render tools.
+- `src/webview-editor/features/table.ts` replaces @lezer/markdown's GFM table parser with a copy that knows about wikilinks and quotes.
 
 ## Licence
 

@@ -3,7 +3,7 @@ import type { EditorState, Range, Text as Doc } from '@codemirror/state';
 import { cursorTouchesRange } from '../cmUtils';
 import { renderInlineInto } from '../tableCellInline';
 import { cellInlineHooks } from '../livePreviewPlugin';
-import { inSourceContext, jumpTo, revealChanged } from './cm';
+import { inSourceContext, jumpTo, placeCardAt, revealChanged } from './cm';
 import { linesOutsideCode } from '../../shared/codeFences';
 import { registerInlinePass } from './inlineExtras';
 
@@ -114,11 +114,7 @@ export function footnoteRefElement(label: string, scan: FootnoteScan = current):
 	// right edge or the top of the panel would otherwise be cut off.
 	wrap.addEventListener('mouseenter', () => {
 		wrap.classList.add('mlp-fn-open');
-		const r = sup.getBoundingClientRect();
-		const vw = document.documentElement.clientWidth;
-		card.style.left = `${Math.max(8, Math.min(r.left - 16, vw - card.offsetWidth - 8))}px`;
-		const above = r.top - card.offsetHeight - 6;
-		card.style.top = `${above >= 8 ? above : r.bottom + 6}px`;
+		placeCardAt(card, sup.getBoundingClientRect(), { above: true, shift: -16 });
 	});
 	wrap.addEventListener('mouseleave', () => wrap.classList.remove('mlp-fn-open'));
 	onPress(sup, def.from);
