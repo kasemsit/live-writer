@@ -114,6 +114,7 @@ Later releases update it.
 |---|---|---|
 | `liveWriter.plus.shareSelectionWithClaude` | `true` | Writes the selection to `~/.claude/live-preview-selection.json`, only if `~/.claude` exists. |
 | `liveWriter.plus.checkForUpdates` | `true` | Once a day, asks `api.github.com` for the latest release. |
+| `liveWriter.plus.pageWidth` | `0` | Width of the reading column in em; `0` keeps the theme's. Right-click → *Wider Page* / *Narrower Page*. |
 
 The keybinding for **Insert Footnote** can be changed in *Keyboard Shortcuts*. Search for
 `liveWriter.plus.insertFootnote`.

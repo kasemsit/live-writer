@@ -66,7 +66,7 @@ export function handleFeatureHostMessage(view: EditorView | undefined, message: 
 	// Not ours: the editor applies it; tracked changes are worked out once it has.
 	if (message.type === 'externalUpdate') beforeExternalUpdate(view, message.changes);
 	if (message.type === 'textScale') {
-		setTextScale(view, message.scale, message.fontFamily ?? '');
+		setTextScale(view, message.scale, message.fontFamily ?? '', message.pageWidth ?? 0);
 		return true;
 	}
 	// Not ours, but a new document or theme changes the size the text scale multiplies.

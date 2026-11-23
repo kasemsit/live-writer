@@ -1000,6 +1000,19 @@ test('text size: the host\'s factor scales the reading column, and 1 restores it
 	await expect.poll(size).toBeCloseTo(20, 1);
 });
 
+test('page width: the host\'s width in em sets the reading column, and 0 restores the theme\'s', async ({ page }) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
+	await mountEditor(page, '# T\n\nSome text.\n');
+	const width = () => page.locator('.cm-content').evaluate((el) => el.getBoundingClientRect().width);
+	const fontPx = () => page.locator('.cm-content').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+	const base = await width();
+	await postToWebview(page, { type: 'textScale', scale: 1, pageWidth: 100 });
+	// 100em of text plus the two gutters (2.5rem each at this window width).
+	await expect.poll(width).toBeCloseTo(100 * (await fontPx()) + 80, 0);
+	await postToWebview(page, { type: 'textScale', scale: 1, pageWidth: 0 });
+	await expect.poll(width).toBeCloseTo(base, 0);
+});
+
 test.describe('tracked changes from outside the editor', () => {
 	const DOC = '# T\n\nThe quick brown fox jumps.\n\nEnd.\n';
 	const external = (page: Page, from: number, to: number, insert: string, tracked = true) =>

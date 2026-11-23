@@ -38,8 +38,9 @@ body {
 	word-wrap: break-word;
 	font-feature-settings: "kern", "liga";
 	text-rendering: optimizeLegibility;
-	/* A reading column of about 80 characters, not the whole window. */
-	max-width: calc(48em + 2 * clamp(1rem, 3.5vw, 2.5rem));
+	/* A reading column, not the whole window: 56em, about 100 Latin characters.
+	   Wider Page / Narrower Page (setting liveWriter.plus.pageWidth) change it. */
+	max-width: calc(56em + 2 * clamp(1rem, 3.5vw, 2.5rem));
 }
 
 /* Sarabun runs small for its size, and the editor's floor is 15px: set the text

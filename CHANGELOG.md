@@ -2,6 +2,11 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.9.0
+
+- **Page width you can change.** Right-click → *Wider Page* / *Narrower Page* / *Reset Page Width*, or the setting `liveWriter.plus.pageWidth` (in em of the text; `0` keeps the theme's). It is remembered and applies to every open preview, and it follows Larger / Smaller Text.
+- The Thai/English theme's column is wider by default: 56em (about 100 Latin characters), up from 48em.
+
 ## 1.8.0
 
 **The Thai/English reading theme, redrawn for reading.**

@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -275,6 +275,21 @@
         "command": "liveWriter.plus.textReset",
         "title": "Reset Text Size",
         "category": "Markdown Live Preview"
+      },
+      {
+        "command": "liveWriter.plus.pageWider",
+        "title": "Wider Page",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.pageNarrower",
+        "title": "Narrower Page",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.pageWidthReset",
+        "title": "Reset Page Width",
+        "category": "Live Writer"
       },
       {
         "command": "liveWriter.plus.insertCitation",
@@ -622,6 +637,21 @@
           "group": "7_plus_view@3"
         },
         {
+          "command": "liveWriter.plus.pageWider",
+          "when": "webviewId == 'liveWriter.editor'",
+          "group": "7_plus_view@4"
+        },
+        {
+          "command": "liveWriter.plus.pageNarrower",
+          "when": "webviewId == 'liveWriter.editor'",
+          "group": "7_plus_view@5"
+        },
+        {
+          "command": "liveWriter.plus.pageWidthReset",
+          "when": "webviewId == 'liveWriter.editor'",
+          "group": "7_plus_view@6"
+        },
+        {
           "command": "liveWriter.plus.insertCitation",
           "when": "webviewId == 'liveWriter.editor'",
           "group": "3_plus_open@3"
@@ -727,6 +757,13 @@
           "minimum": 0.7,
           "maximum": 2,
           "description": "Live Writer: text size in the Live Preview, as a factor over the CSS theme's own size (1 = as the theme sets it). Changed by Larger Text / Smaller Text in the right-click menu."
+        },
+        "liveWriter.plus.pageWidth": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 400,
+          "markdownDescription": "Live Writer: the width of the reading column, in em of the text (about two Latin characters each), e.g. `72`. `0` keeps the CSS theme's width (56 for the Thai/English theme). Changed by *Wider Page* / *Narrower Page* in the right-click menu."
         },
         "liveWriter.plus.fontFamily": {
           "type": "string",

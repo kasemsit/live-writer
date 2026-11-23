@@ -11,6 +11,7 @@ import { EditorView } from '@codemirror/view';
 
 let scale = 1;
 let font = '';
+let width = 0;
 
 // Code, formulas and drawn source keep their own fonts.
 const TEXT = '.cm-editor .cm-content, .cm-editor .cm-content :not(code, pre, kbd, .katex, .katex *, .mlp-tex-code, .mlp-tex-code *, .mlp-line-code, .mlp-line-code *), .mlp-link-preview, .mlp-link-preview :not(code, pre, .katex, .katex *)';
@@ -31,13 +32,17 @@ function apply(view: EditorView | null): void {
 		rules.push(`.cm-editor .cm-content.cm-content { font-size: ${(base * scale).toFixed(2)}px !important; }`);
 	}
 	if (font) rules.push(`${TEXT} { font-family: ${font} !important; }`);
+	// The reading column, in em of the text so it follows the text size; the
+	// gutters are the editor's own (webview-editor-theme.css).
+	if (width > 0) rules.push(`.cm-editor .cm-content.cm-content { max-width: calc(${width}em + 2 * clamp(1rem, 3.5vw, 2.5rem)) !important; }`);
 	style.textContent = rules.join('\n');
 	view.requestMeasure();
 }
 
-export function setTextScale(view: EditorView | undefined, next: number, fontFamily = ''): void {
+export function setTextScale(view: EditorView | undefined, next: number, fontFamily = '', pageWidth = 0): void {
 	scale = next;
 	font = fontFamily;
+	width = Number.isFinite(pageWidth) && pageWidth > 0 ? pageWidth : 0;
 	apply(view ?? null);
 }
 

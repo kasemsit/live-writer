@@ -99,6 +99,19 @@ suite('md-live-preview-plus text size', () => {
 		await vscode.commands.executeCommand('liveWriter.plus.textReset');
 		assert.strictEqual(config().get('plus.textScale'), 1);
 	});
+
+	test('Wider, Narrower and Reset Page Width step the remembered width', async () => {
+		await config().update('plus.pageWidth', undefined, vscode.ConfigurationTarget.Global);
+		await vscode.commands.executeCommand('liveWriter.plus.pageWider');
+		assert.strictEqual(config().get('plus.pageWidth'), 64);
+		await vscode.commands.executeCommand('liveWriter.plus.pageWider');
+		assert.strictEqual(config().get('plus.pageWidth'), 72);
+		await vscode.commands.executeCommand('liveWriter.plus.pageNarrower');
+		assert.strictEqual(config().get('plus.pageWidth'), 64);
+		await vscode.commands.executeCommand('liveWriter.plus.pageWidthReset');
+		assert.strictEqual(config().get('plus.pageWidth'), 0);
+		await config().update('plus.pageWidth', undefined, vscode.ConfigurationTarget.Global);
+	});
 });
 
 suite('md-live-preview-plus tracked changes', () => {

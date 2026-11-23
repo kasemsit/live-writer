@@ -177,7 +177,8 @@ export type FeatureHostToEditorMessage =
 	| { type: 'quartoProject'; project: QuartoProject }
 	// The reader's text size, a factor over the theme's (setting liveWriter.plus.textScale).
 	// `fontFamily` (setting liveWriter.plus.fontFamily) replaces the theme's text font; '' keeps it.
-	| { type: 'textScale'; scale: number; fontFamily?: string }
+	// `pageWidth` (setting liveWriter.plus.pageWidth) is the reading column in em; 0 keeps the theme's.
+	| { type: 'textScale'; scale: number; fontFamily?: string; pageWidth?: number }
 	// The next externalUpdate came from disk (Claude, git, …): show it as tracked changes.
 	| { type: 'trackNext' }
 	| { type: 'anchors'; requestId: number; anchors: NoteAnchor[] }
