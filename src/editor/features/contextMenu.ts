@@ -18,6 +18,7 @@ import { texSessionOf } from './tex';
  */
 
 const WEBVIEW_COMMANDS: Record<string, MenuCommand> = {
+	'liveWriter.plus.find': 'find',
 	'liveWriter.plus.copyBlockLink': 'copyBlockLink',
 	'liveWriter.plus.addReviewComment': 'addReviewComment',
 	'liveWriter.plus.copyRichText': 'copyRichText',

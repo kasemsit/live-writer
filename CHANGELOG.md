@@ -2,6 +2,10 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.9.2
+
+- **Ctrl+F (Cmd+F) always opens the search box** in a Live Writer tab, also when the focus is not in the text: just after opening a file, or after clicking the Outline or the tab. Before, the key reached Live Writer only from inside the text.
+
 ## 1.9.1
 
 - **Tables: words stay whole.** A short column beside long ones was squeezed to one character, so `B0` drew as `B` over `0` and *Corresponding* broke mid-word. Cells inherited the editor's break-anywhere wrapping; they now break between words only, and a URL too long for any column still wraps.

@@ -12,6 +12,7 @@ import { renderInlineInto } from '../tableCellInline';
 import { scanFootnotes } from './footnotes';
 import { markdownToHtml, htmlToText } from './richText';
 import { texToPlain } from '../../shared/texScan';
+import { openSearchPanelFocused } from '../searchReveal';
 
 /**
  * The editor side of the right-click menu (the menu itself is VS Code's, see
@@ -352,6 +353,11 @@ export function runMenuCommand(view: EditorView, command: MenuCommand, range?: {
 		return notify('This command is for Markdown notes.', true);
 	}
 	switch (command) {
+		case 'find':
+			// VS Code's own Ctrl+F, for when the focus is not in the text (just opened, or in the Outline).
+			view.focus();
+			openSearchPanelFocused(view);
+			return;
 		case 'copyBlockLink':
 			return copyBlockLink(view);
 		case 'addReviewComment':

@@ -142,6 +142,7 @@ export interface NotePreview {
  * was right-clicked (or the caret, when run from the command palette).
  */
 export type MenuCommand =
+	| 'find'
 	| 'copyBlockLink'
 	| 'addReviewComment'
 	| 'copyRichText'
