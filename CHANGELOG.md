@@ -2,6 +2,10 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.9.1
+
+- **Tables: words stay whole.** A short column beside long ones was squeezed to one character, so `B0` drew as `B` over `0` and *Corresponding* broke mid-word. Cells inherited the editor's break-anywhere wrapping; they now break between words only, and a URL too long for any column still wraps.
+
 ## 1.9.0
 
 - **Page width you can change.** Right-click → *Wider Page* / *Narrower Page* / *Reset Page Width*, or the setting `liveWriter.plus.pageWidth` (in em of the text; `0` keeps the theme's). It is remembered and applies to every open preview, and it follows Larger / Smaller Text.

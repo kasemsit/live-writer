@@ -691,6 +691,15 @@ table.mlp-table th, table.mlp-table td {
 	height: 34px;
 	box-sizing: border-box;
 	vertical-align: middle;
+	/* CodeMirror's line wrapping sets `word-break: break-word` on the whole
+	   editor, and cells inherited it. That rule lets a word break anywhere, so a
+	   column's minimum width fell to one character and the auto layout squeezed
+	   short columns to it: "B0" drew as "B" over "0", "candidate" as
+	   "candid/ate". Words break only between words here; `overflow-wrap` still
+	   breaks a run too long for any column (a URL) without making columns narrow. */
+	word-break: normal;
+	overflow-wrap: break-word;
+	white-space: normal;
 }
 table.mlp-table tr > :last-child { border-right: 0; }
 table.mlp-table tr:last-child > * { border-bottom: 0; }

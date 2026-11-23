@@ -1000,6 +1000,20 @@ test('text size: the host\'s factor scales the reading column, and 1 restores it
 	await expect.poll(size).toBeCloseTo(20, 1);
 });
 
+test('table: a short column keeps its words whole beside long ones', async ({ page }) => {
+	const long = 'a long sentence that wraps over several lines in a narrow window '.repeat(3);
+	await mountEditor(page, `# T\n\n| | paper | target |\n|---|---|---|\n| **B0** | ${long} | A-candidate |\n| **PX** | ${long} | Corresponding |\n`);
+	// One line of text per short cell: a word broken across lines gives two or more rects.
+	const lines = (text: string) => page.locator('table.mlp-table td', { hasText: text }).first().evaluate((td) => {
+		const range = document.createRange();
+		range.selectNodeContents(td);
+		return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+	});
+	await expect(page.locator('table.mlp-table')).toBeVisible();
+	expect(await lines('B0')).toBe(1);
+	expect(await lines('Corresponding')).toBe(1);
+});
+
 test('page width: the host\'s width in em sets the reading column, and 0 restores the theme\'s', async ({ page }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
 	await mountEditor(page, '# T\n\nSome text.\n');
