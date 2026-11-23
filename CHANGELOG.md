@@ -2,6 +2,11 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.7.0
+
+- **Live Writer opens `.md`, `.markdown`, `.qmd` and `.tex` files by default** on every machine it is installed on, with no setting to make. `liveWriter.defaultEditor` now defaults to `livePreview` and covers all four types; set it to `prompt` to keep the text editor as the default, or `default` to always use it. The extension starts with VS Code so the association is in place before the first file is opened.
+- **New title-bar icons.** *Open with Live Preview* is a pencil, no longer the same icon as VS Code's own Markdown preview; *View PDF* is a PDF file, no longer the same icon as LaTeX Workshop's.
+
 ## 1.6.0
 
 - **LaTeX: build from Live Writer.** A ▶ button on the editor's title bar, **Ctrl+Alt+B** (Cmd+Alt+B on a Mac) or right-click → *Build LaTeX* builds with LaTeX Workshop's default recipe (`latex-workshop.latex.recipe.default`, e.g. the last one used). The button beside it, **Ctrl+Alt+Shift+B** or *Build LaTeX with Recipe…* asks which recipe (xelatex, pdflatex, latexmk …, as your LaTeX Workshop settings list them). **Ctrl+Alt+V** or *View PDF* (in the title bar's `…` menu) opens the PDF in its viewer. The build is LaTeX Workshop's own, with its problems list and viewer refresh; the file shows as text for a moment while it starts, as with Show in PDF.

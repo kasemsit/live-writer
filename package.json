@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -58,7 +58,9 @@
     "Visualization",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "customEditors": [
@@ -114,7 +116,7 @@
         "command": "liveWriter.openWithLivePreview",
         "title": "%command.openWithLivePreview%",
         "category": "Markdown Live Preview",
-        "icon": "$(open-preview)"
+        "icon": "$(pencil)"
       },
       {
         "command": "liveWriter.openWithSource",
@@ -320,7 +322,7 @@
         "command": "liveWriter.plus.viewPdf",
         "title": "View PDF",
         "category": "Live Writer",
-        "icon": "$(open-preview)"
+        "icon": "$(file-pdf)"
       }
     ],
     "menus": {
@@ -706,7 +708,7 @@
             "%config.defaultEditor.livePreview%",
             "%config.defaultEditor.default%"
           ],
-          "default": "prompt",
+          "default": "livePreview",
           "description": "%config.defaultEditor%"
         },
         "liveWriter.plus.shareSelectionWithClaude": {

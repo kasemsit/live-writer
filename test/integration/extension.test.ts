@@ -33,7 +33,7 @@ suite('extension', () => {
 	test('contributes its settings with the documented defaults', () => {
 		const config = vscode.workspace.getConfiguration('liveWriter');
 		assert.strictEqual(config.get('codeTheme'), 'auto');
-		assert.strictEqual(config.get('defaultEditor'), 'prompt');
+		assert.strictEqual(config.get('defaultEditor'), 'livePreview');
 		// `enabledStyles` is application-scoped, so a real installation's value
 		// leaks into the test window; only its type is worth asserting.
 		assert.ok(Array.isArray(config.get('enabledStyles')));

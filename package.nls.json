@@ -11,8 +11,8 @@
   "config.codeTheme.githubDark": "GitHub Dark palette.",
   "config.codeTheme.githubLight": "GitHub Light palette.",
   "config.enabledStyles": "The CSS theme applied to the live preview. Pick one exclusively from \"CSS Themes\" in the sidebar (global setting).",
-  "config.defaultEditor": "Controls whether .md files open in Markdown Live Preview by default.",
+  "config.defaultEditor": "Controls whether .md, .qmd and .tex files open in Live Writer by default.",
   "config.defaultEditor.prompt": "Keep the normal text editor as the default; open Live Preview manually from the toolbar button.",
-  "config.defaultEditor.livePreview": "Always open .md files in Markdown Live Preview.",
-  "config.defaultEditor.default": "Always open .md files in VS Code's normal text editor."
+  "config.defaultEditor.livePreview": "Always open .md, .qmd and .tex files in Live Writer (the default).",
+  "config.defaultEditor.default": "Always open .md, .qmd and .tex files in VS Code's normal text editor."
 }

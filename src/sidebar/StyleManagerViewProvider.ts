@@ -109,7 +109,7 @@ export class StyleManagerViewProvider implements vscode.WebviewViewProvider {
 	private getSettings(): SidebarSettings {
 		const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
 		return {
-			defaultEditor: config.get<string>('defaultEditor', 'prompt'),
+			defaultEditor: config.get<string>('defaultEditor', 'livePreview'),
 			codeTheme: config.get<string>('codeTheme', 'auto'),
 		};
 	}

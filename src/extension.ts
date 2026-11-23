@@ -84,7 +84,7 @@ const REOPEN_RETRY_DELAYS_MS = [150, 500, 1500];
  * always use it, reusing the same tab/column so no split is created.
  */
 async function maybeReopenAsLivePreview(tab: vscode.Tab, attempt = 0): Promise<void> {
-	const mode = vscode.workspace.getConfiguration('liveWriter').get<string>('defaultEditor', 'prompt');
+	const mode = vscode.workspace.getConfiguration('liveWriter').get<string>('defaultEditor', 'livePreview');
 	if (mode !== 'livePreview') return;
 
 	const input = tab.input;
@@ -134,21 +134,29 @@ async function maybeReopenAsLivePreview(tab: vscode.Tab, attempt = 0): Promise<v
 	reopeningUris.delete(uriKey);
 }
 
-async function syncDefaultEditorAssociation(): Promise<void> {
-	const mode = vscode.workspace.getConfiguration('liveWriter').get<string>('defaultEditor', 'prompt');
-	const rootConfig = vscode.workspace.getConfiguration();
-	const associations = {
-		...(rootConfig.get<Record<string, string>>('workbench.editorAssociations') ?? {}),
-	};
+// The file types whose association `liveWriter.defaultEditor` manages. The
+// tab watcher above stays Markdown-only on purpose: LaTeX's build and Show in
+// PDF open a `.tex` as text for a moment, and reopening it would break them.
+const ASSOCIATED_PATTERNS = ['*.md', '*.markdown', '*.qmd', '*.tex'];
 
-	if (mode === 'livePreview') {
-		associations['*.md'] = MarkdownLivePreviewProvider.viewType;
-	} else if (mode === 'default') {
-		associations['*.md'] = 'default';
-	} else {
-		delete associations['*.md'];
+async function syncDefaultEditorAssociation(): Promise<void> {
+	const mode = vscode.workspace.getConfiguration('liveWriter').get<string>('defaultEditor', 'livePreview');
+	const rootConfig = vscode.workspace.getConfiguration();
+	const current = rootConfig.get<Record<string, string>>('workbench.editorAssociations') ?? {};
+	const associations = { ...current };
+
+	for (const pattern of ASSOCIATED_PATTERNS) {
+		if (mode === 'livePreview') {
+			associations[pattern] = MarkdownLivePreviewProvider.viewType;
+		} else if (mode === 'default') {
+			associations[pattern] = 'default';
+		} else if (associations[pattern] === MarkdownLivePreviewProvider.viewType || associations[pattern] === 'default') {
+			// 'prompt': remove only what this setting would have written.
+			delete associations[pattern];
+		}
 	}
 
+	if (JSON.stringify(associations) === JSON.stringify(current)) return;
 	await rootConfig.update('workbench.editorAssociations', associations, vscode.ConfigurationTarget.Global);
 }
 

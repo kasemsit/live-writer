@@ -49,7 +49,7 @@ What Live Writer adds:
   - Ctrl/Cmd+B / +I wrap in `\textbf` / `\textit`, Ctrl/Cmd+/ comments lines, Enter continues an `\item`; completion after `\ref{`, `\cite{` and `\begin{`.
   - Nothing is compiled. Keep building with LaTeX Workshop (or latexmk) for the PDF.
 
-- **Quarto `.qmd` files** open in Live Preview (*Open With → Markdown Live Preview*) and look like the rendered book:
+- **Quarto `.qmd` files** open in Live Writer and look like the rendered book:
   - `::: {.callout-note}` … `:::` is a callout box, titled by its first heading, `title="…"` or its type. `icon=false` and `appearance="simple"`/`"minimal"` are followed.
   - `![caption](img.png){#fig-id width=80%}` is a figure, sized and captioned, numbered per file as Quarto numbers a chapter.
   - `@fig-id` reads *Figure 2* and `@sec-id` the heading's text; a click jumps there. The words come from the project's `_quarto.yml` (`crossref-fig-title`, `callout-note-title`, …).
@@ -95,7 +95,9 @@ The installer does three things:
 Next:
 1. Reload VS Code (*Developer: Reload Window*).
 2. Start a new Claude Code session.
-3. Open a `.md` or `.tex` file with *Open With → Live Preview (Markdown, LaTeX)*.
+3. Open a `.md`, `.qmd` or `.tex` file: it opens in Live Writer. The ✏️ button on a text editor's title bar opens one in Live Writer; *Open With → Text Editor*, or the button on Live Writer's title bar, shows the source.
+
+Live Writer is the default editor for `.md`, `.markdown`, `.qmd` and `.tex` from 1.7.0. The setting `liveWriter.defaultEditor` changes that: `livePreview` (the default), `prompt` (the text editor stays the default) or `default` (always the text editor). It writes `workbench.editorAssociations` in your user settings.
 
 To check that the bridge works, select some text and ask Claude what you selected.
 
