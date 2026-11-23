@@ -2,6 +2,15 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.8.0
+
+**The Thai/English reading theme, redrawn for reading.**
+
+- Its own colours in light and dark themes: heading levels in four hues (blue, teal, amber, violet), links in blue, `[@key]` citations in green, inline code in coral, bold a shade darker (light) or brighter (dark) than the text. Dark mode uses a warm off-white instead of grey, for less glare. High-contrast themes keep VS Code's own colours.
+- Larger text: 17px, or the editor font size + 3px, where the theme's size used to lose to the editor's 15px floor. *Larger Text* / *Smaller Text* still scale it.
+- A reading column of about 80 characters instead of the whole window, and slightly more line spacing for Thai.
+- Plain quotes are a neutral card, so they no longer look like a *note* callout.
+
 ## 1.7.0
 
 - **Live Writer opens `.md`, `.markdown`, `.qmd` and `.tex` files by default** on every machine it is installed on, with no setting to make. `liveWriter.defaultEditor` now defaults to `livePreview` and covers all four types; set it to `prompt` to keep the text editor as the default, or `default` to always use it. The extension starts with VS Code so the association is in place before the first file is opened.

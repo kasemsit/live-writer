@@ -1,72 +1,137 @@
 /*
- * Thai + English reading theme for Markdown Live Preview Editor.
- * Typeface: Sarabun (embedded above by build_style.py), for Thai and Latin alike.
- * Colours derive from the active VS Code theme, so it works in light and dark:
- *   --ink    text colour          --accent  theme link colour
- *   --rule   hairlines (ink 14%)  --tint    faint fills (ink 5%)
+ * Thai + English reading theme for Live Writer.
+ * Typeface: Sarabun (embedded above by plus/build-theme.js), for Thai and Latin alike.
+ *
+ * Colours: a palette of its own for light and dark themes (below), so heading
+ * levels, links, citations and code each read as themselves at a glance. The
+ * background stays the VS Code theme's. A high-contrast theme keeps the colours
+ * VS Code gives it (the derived defaults in the first rule).
+ *
+ *   --ink     body text            --soft    secondary text, list markers
+ *   --strong  bold text            --rule    hairlines      --tint  faint fills
+ *   --h1 … --h4  heading colours   --link    wikilinks, URLs
+ *   --cite    [@key] citations     --code    inline code text
+ *   --mark    ==highlight== fill
  */
+
+/* Derived defaults: any theme, including high contrast. */
 body {
-	--ink: var(--vscode-editor-foreground, #24292f);
-	--accent: var(--vscode-textLink-foreground, #2f6feb);
-	--rule: color-mix(in srgb, var(--ink) 14%, transparent);
-	--tint: color-mix(in srgb, var(--ink) 5%, transparent);
+	--ink: var(--vscode-editor-foreground, #2e3138);
 	--soft: color-mix(in srgb, var(--ink) 68%, transparent);
+	--strong: var(--ink);
+	--link: var(--vscode-textLink-foreground, #1a62c7);
+	--cite: var(--link);
+	--code: var(--ink);
+	--h1: var(--link);
+	--h2: var(--link);
+	--h3: var(--ink);
+	--h4: var(--ink);
+	--rule: color-mix(in srgb, var(--ink) 16%, transparent);
+	--tint: color-mix(in srgb, var(--ink) 6%, transparent);
+	--mark: color-mix(in srgb, #ffd43b 45%, transparent);
 
 	font-family: "Sarabun Embedded", "Sarabun", "TH Sarabun New", "Noto Sans Thai",
 		"Leelawadee UI", "Segoe UI", -apple-system, "Thonburi", system-ui, sans-serif;
-	font-size: 16.5px;
-	line-height: 1.8;
+	line-height: 1.85;
 	color: var(--ink);
 	background-color: var(--vscode-editor-background, #ffffff);
 	word-wrap: break-word;
 	font-feature-settings: "kern", "liga";
 	text-rendering: optimizeLegibility;
+	/* A reading column of about 80 characters, not the whole window. */
+	max-width: calc(48em + 2 * clamp(1rem, 3.5vw, 2.5rem));
+}
+
+/* Sarabun runs small for its size, and the editor's floor is 15px: set the text
+   above it, following a larger editor font. Raw selector (four classes) so it
+   outranks the editor's own size rule; Larger/Smaller Text still scale it. */
+.cm-editor .cm-content.cm-content.cm-content {
+	font-size: max(17px, calc(var(--vscode-editor-font-size, 14px) + 3px));
+}
+
+/* Light: ink on white, headings from navy through teal to amber and violet. */
+body.vscode-light {
+	--ink: #2e3138;
+	--soft: #6b7079;
+	--strong: #16181d;
+	--link: #1a62c7;
+	--cite: #1d7a4a;
+	--code: #b4442b;
+	--h1: #1f4a9e;
+	--h2: #0f6e78;
+	--h3: #9a5a0c;
+	--h4: #6b3fbf;
+	--rule: #e3e1dc;
+	--tint: #f4f2ee;
+	--mark: #fff0a0;
+}
+
+/* Dark: warm off-white text (less glare than pure white), the same hues lightened. */
+body.vscode-dark {
+	--ink: #dad7d0;
+	--soft: #a09d96;
+	--strong: #f6f3ec;
+	--link: #74b4ff;
+	--cite: #7fd3a1;
+	--code: #f2a385;
+	--h1: #8fbcff;
+	--h2: #6fd0cc;
+	--h3: #e8b66e;
+	--h4: #c3a6f6;
+	--rule: #3a3a3d;
+	--tint: rgba(255, 255, 255, 0.055);
+	--mark: rgba(250, 204, 21, 0.32);
 }
 
 /* Blank lines already separate blocks in Markdown, so block margins stay small and
    the blank lines themselves are shortened (an empty CodeMirror line is a lone <br>). */
 p { margin: 0; }
-.cm-line:has(> br:only-child) { line-height: 0.75; }
+.cm-line:has(> br:only-child) { line-height: 0.8; }
 
-/* ── Headings: size and space carry the hierarchy; every level shares one hue
-   (the theme's link colour), deepest at the top and softening down the levels,
-   so no single level stands out as the only coloured one. ── */
+/* ── Headings: size, weight and a hue per level ── */
 h1, h2, h3, h4, h5, h6 {
 	font-family: inherit;
 	font-weight: 700;
-	line-height: 1.35;
-	margin: 0.5em 0 0.15em;
-	letter-spacing: -0.005em;
-	color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+	line-height: 1.4;
+	margin: 0.55em 0 0.2em;
+	letter-spacing: -0.003em;
 }
-h1, h2 { color: color-mix(in srgb, var(--accent) 60%, var(--ink)); }
 h1 {
-	font-size: 1.95em;
+	font-size: 1.9em;
+	color: var(--h1);
 	margin-top: 0.2em;
-	padding-bottom: 0.2em;
-	border-bottom: 2px solid var(--rule);
+	padding-bottom: 0.25em;
+	border-bottom: 2px solid color-mix(in srgb, var(--h1) 35%, transparent);
 }
 h2 {
 	font-size: 1.45em;
+	color: var(--h2);
 	padding-bottom: 0.2em;
 	border-bottom: 1px solid var(--rule);
 }
-h3 { font-size: 1.2em; }
-h4 { font-size: 1.05em; }
-h5, h6 { font-size: 1em; color: color-mix(in srgb, var(--accent) 45%, var(--soft)); }
+h3 { font-size: 1.22em; color: var(--h3); }
+h4 { font-size: 1.07em; color: var(--h4); }
+h5, h6 { font-size: 1em; color: var(--soft); }
 
-strong, b { font-weight: 700; }
+strong, b { font-weight: 700; color: var(--strong); }
 em, i { font-style: italic; }
 
-a {
-	color: var(--accent);
+a, .mlp-wikilink {
+	color: var(--link);
 	text-decoration: none;
-	border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--link) 35%, transparent);
 }
-a:hover { border-bottom-color: var(--accent); }
+a:hover, .mlp-wikilink:hover { border-bottom-color: var(--link); }
+
+/* [@key] citations: green, so a source reads differently from a link to a note. */
+.mlp-cite-group { background: color-mix(in srgb, var(--cite) 11%, transparent); }
+.mlp-cite-group, .mlp-cite-group .mlp-cite, .mlp-cite-group a { color: var(--cite); border-bottom: 0; }
+
+.mlp-fn-ref { color: var(--link); }
+.mlp-block-id { color: var(--soft); }
 
 mark {
-	background: color-mix(in srgb, #ffd43b 45%, transparent);
+	background: var(--mark);
 	color: inherit;
 	padding: 0 0.15em;
 	border-radius: 3px;
@@ -75,15 +140,15 @@ mark {
 /* ── Lists ── */
 ul, ol { padding-left: 1.6em; margin: 0; }
 li + li { margin-top: 0.1em; }
-li::marker { color: var(--soft); }
+li::marker, .mlp-bullet, .mlp-list-mark { color: var(--soft); }
 
-/* ── Quotes: a card with an accent edge ── */
+/* ── Quotes: a card with a soft edge ── */
 blockquote {
 	margin: 0.2em 0;
 	padding: 0.6em 1.1em;
-	border-left: 3px solid var(--accent);
+	border-left: 3px solid color-mix(in srgb, var(--soft) 60%, transparent);
 	border-radius: 0 8px 8px 0;
-	background: color-mix(in srgb, var(--accent) 7%, transparent);
+	background: var(--tint);
 	color: var(--ink);
 }
 blockquote > :last-child { margin-bottom: 0; }
@@ -91,9 +156,10 @@ blockquote > :last-child { margin-bottom: 0; }
 /* ── Code ── */
 code, kbd, samp {
 	font-family: var(--vscode-editor-font-family, "Ubuntu Mono", "DejaVu Sans Mono", Consolas, monospace);
-	font-size: 0.87em;
+	font-size: 0.86em;
 }
 code {
+	color: var(--code);
 	background: var(--tint);
 	padding: 0.12em 0.4em;
 	border-radius: 5px;
@@ -106,7 +172,7 @@ pre {
 	line-height: 1.55;
 	overflow-x: auto;
 }
-pre code { background: none; padding: 0; border-radius: 0; font-size: 0.86em; }
+pre code { background: none; padding: 0; border-radius: 0; font-size: 0.86em; color: inherit; }
 kbd {
 	padding: 0.1em 0.45em;
 	border: 1px solid var(--rule);
@@ -115,12 +181,12 @@ kbd {
 	background: var(--tint);
 }
 
-/* ── Tables: hairlines, a tinted header, soft zebra ── */
+/* ── Tables: hairlines, a header tinted with the h1 hue, soft zebra ── */
 table {
 	border-collapse: collapse;
 	margin: 0.3em 0;
-	font-size: 0.95em;
-	line-height: 1.55;
+	font-size: 0.94em;
+	line-height: 1.6;
 }
 table th, table td {
 	border: 1px solid var(--rule);
@@ -128,11 +194,12 @@ table th, table td {
 	vertical-align: top;
 }
 table th {
-	background: color-mix(in srgb, var(--ink) 7%, transparent);
+	background: color-mix(in srgb, var(--h1) 10%, transparent);
+	color: var(--strong);
 	font-weight: 700;
 	text-align: left;
 }
-table tr:nth-child(2n) { background: color-mix(in srgb, var(--ink) 2.5%, transparent); }
+table tr:nth-child(2n) td { background: color-mix(in srgb, var(--ink) 3%, transparent); }
 
 hr {
 	border: 0;
