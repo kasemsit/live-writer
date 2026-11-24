@@ -31,7 +31,8 @@ import {
  * - `::: {.callout-note}` … `:::` is a callout box. Its fences hide; the title
  *   is a heading that opens the callout, or `title="…"`, or the type's name.
  *   `icon=false` and `appearance="simple"|"minimal"` are followed. Any other
- *   fenced div just hides its fences (`.text-end` / `.text-center` align).
+ *   fenced div just hides its fences (`.text-end` / `.text-center` align);
+ *   `::: {.notes}` is marked as speaker notes.
  * - `![caption](img.png){#fig-id width=80%}` is a figure: sized, captioned and
  *   numbered per file, as Quarto numbers a book chapter's figures. The hook is
  *   `quartoImage`, called from livePreviewPlugin's Image case.
@@ -119,6 +120,22 @@ class CalloutIconWidget extends WidgetType {
 
 const hidden = Decoration.replace({});
 
+/** Over the opening fence of `::: {.notes}`: the presenter's notes, which the slides do not show. */
+class NotesLabelWidget extends WidgetType {
+	eq(): boolean {
+		return true;
+	}
+	toDOM(): HTMLElement {
+		const span = document.createElement('span');
+		span.className = 'mlp-qnotes-label';
+		span.textContent = 'Speaker notes';
+		return span;
+	}
+	ignoreEvent(): boolean {
+		return false;
+	}
+}
+
 function decorateDiv(state: EditorState, div: FencedDiv, titleLine: number | null, replaced: Set<number>, out: Range<Decoration>[]): void {
 	const { doc } = state;
 	const open = doc.line(div.open + 1);
@@ -130,7 +147,8 @@ function decorateDiv(state: EditorState, div: FencedDiv, titleLine: number | nul
 
 	if (!type) {
 		const { classes } = div.attrs;
-		const align = classes.includes('text-end') ? 'mlp-qdiv-end' : classes.includes('text-center') ? 'mlp-qdiv-center' : '';
+		const notes = classes.includes('notes');
+		const align = notes ? 'mlp-qnotes' : classes.includes('text-end') ? 'mlp-qdiv-end' : classes.includes('text-center') ? 'mlp-qdiv-center' : '';
 		for (let n = div.open; n <= div.close; n++) {
 			if (replaced.has(n + 1)) continue;
 			const cls =
@@ -139,7 +157,8 @@ function decorateDiv(state: EditorState, div: FencedDiv, titleLine: number | nul
 		}
 		if (!openShown) {
 			const refs = div.attrs.id === 'refs' ? referenceList(state) : null;
-			out.push(refs ? Decoration.replace({ widget: new ReferencesWidget(refs) }).range(open.from, open.to) : hidden.range(open.from, open.to));
+			const widget = refs ? new ReferencesWidget(refs) : notes ? new NotesLabelWidget() : null;
+			out.push(widget ? Decoration.replace({ widget }).range(open.from, open.to) : hidden.range(open.from, open.to));
 		}
 		return;
 	}

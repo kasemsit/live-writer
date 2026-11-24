@@ -1110,3 +1110,62 @@ test.describe('renumber footnotes, edge cases', () => {
 		expect(await docText(page, DOC)).toBe('# T\n\nA[^1].\n\n```\nliteral [^9]\n```\n\n[^1]: Nine.\n');
 	});
 });
+
+test.describe('Quarto presentations', () => {
+	const DECK = [
+		'---',
+		'title: "Machine Learning"',
+		'subtitle: "An introduction"',
+		'format:',
+		'  revealjs:',
+		'    slide-number: c/t',
+		'title-slide-attributes:',
+		'  data-background-color: "#7a1f2b"',
+		'---',
+		'',
+		'## Roadmap',
+		'',
+		'First point.',
+		'',
+		'. . .',
+		'',
+		'Second point.',
+		'',
+		'::: {.notes}',
+		'Say this aloud.',
+		':::',
+		'',
+		'# Part one {background-color="#7a1f2b"}',
+		'',
+		'## Details',
+		'',
+		'Text.',
+		'',
+	].join('\n');
+
+	test('each slide is a numbered card, after the title slide', async ({ page }) => {
+		await mountEditor(page, DECK);
+		await expect(page.locator('.mlp-slide-titlecard .mlp-slide-title')).toHaveText('Machine Learning');
+		await expect(page.locator('.mlp-slide-titlecard')).toHaveClass(/mlp-slide-dark/);
+		await expect(page.locator('.mlp-slide-num')).toHaveText(['1 / 4', '2 / 4', '3 / 4', '4 / 4']);
+		await expect(page.locator('.mlp-slide-layer .mlp-slide-card')).toHaveCount(3);
+		await expect(page.locator('.mlp-slide-layer .mlp-slide-filled')).toHaveCount(1);
+		// Each card starts below its number and ends after its last line.
+		const boxes = await page.locator('.mlp-slide-layer .mlp-slide-card').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => [r.top, r.bottom]));
+		for (let i = 1; i < boxes.length; i++) expect(boxes[i][0]).toBeGreaterThan(boxes[i - 1][1]);
+	});
+
+	test('a pause and speaker notes are marked', async ({ page }) => {
+		await mountEditor(page, DECK);
+		await expect(page.locator('.mlp-slide-pause')).toHaveText('pause');
+		await expect(page.locator('.mlp-qnotes-label')).toHaveText('Speaker notes');
+		await expect(page.locator('.cm-line.mlp-qnotes')).toHaveText('Say this aloud.');
+		await expect(page.locator('.cm-line.mlp-slide-section.mlp-slide-dark')).toHaveCount(1);
+	});
+
+	test('a document that is not a presentation has no cards', async ({ page }) => {
+		await mountEditor(page, '---\nformat: html\n---\n\n## A\n\nText.\n');
+		await expect(page.locator('.mlp-slide-num')).toHaveCount(0);
+		await expect(page.locator('.mlp-slide-layer .mlp-slide-card')).toHaveCount(0);
+	});
+});

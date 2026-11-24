@@ -6,6 +6,7 @@ import { calloutPlugin } from './callouts';
 import { foldingConfig } from './folding';
 import { headingFoldExtension } from './headingFold';
 import { quartoExtension } from './quarto';
+import { slidesExtension } from './slides';
 import { handleQuartoHostMessage } from './quartoProject';
 import { footnotePlugin, insertFootnote } from './footnotes';
 import { blockIdPlugin } from './blockIds';
@@ -40,6 +41,7 @@ export function featureExtensions(post: (message: EditorToHostMessage) => void):
 		headingFoldExtension,
 		calloutPlugin,
 		quartoExtension,
+		slidesExtension,
 		footnotePlugin,
 		blockIdPlugin,
 		commentPlugin,

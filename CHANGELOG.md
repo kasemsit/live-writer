@@ -2,6 +2,11 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.10.0
+
+- **Quarto presentations show as slides.** A `.qmd` whose front matter says `format: revealjs` (or `beamer`, `pptx`) is drawn slide by slide: each slide a card numbered as the deck numbers it (`3 / 88`), the title slide from the front matter (title, subtitle, author, institute, date, and `title-slide-attributes` background), and section slides filled with their `background-color`. Slides split where Quarto splits them: at headings up to `slide-level` (2 unless set) and at horizontal rules, never inside code or fenced divs. On three lecture decks the slide count, order and kind match Quarto's own HTML exactly (88, 50 and 51 slides). The text stays one editable document.
+- `. . .` shows as a *pause* line, and `::: {.notes}` as speaker notes, labelled and set apart.
+
 ## 1.9.2
 
 - **Ctrl+F (Cmd+F) always opens the search box** in a Live Writer tab, also when the focus is not in the text: just after opening a file, or after clicking the Outline or the tab. Before, the key reached Live Writer only from inside the text.
