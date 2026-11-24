@@ -777,3 +777,17 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 	text-transform: uppercase;
 	color: var(--vscode-descriptionForeground, #888);
 }
+
+/* Quarto ::: {.columns} drawn side by side (features/columns.ts). */
+.mlp-qcols {
+	display: flex;
+	gap: 1.6em;
+	align-items: flex-start;
+	/* The same side padding as an editor line (.cm-line), so the text lines up with the paragraphs around it. */
+	padding: 0.3em 2px 0.3em 6px;
+}
+.mlp-qcol { min-width: 0; }
+.mlp-qcol > :first-child { margin-top: 0; }
+.mlp-qcol img { max-width: 100%; height: auto; display: block; margin: 0.3em auto; }
+.mlp-qcol .mlp-lp-li { padding-left: 1.1em; }
+@media (max-width: 520px) { .mlp-qcols { flex-direction: column; } }

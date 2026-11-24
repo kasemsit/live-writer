@@ -2,6 +2,10 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.11.0
+
+- **Quarto columns side by side.** `::: {.columns}` with `::: {.column width="…"}` inside is drawn as columns at their widths, lists, images, maths and all, as on the slide. Like a table, the block switches to its source only through its `</>` button, and back through the button over the source. The fences of divs nested in a column (`.incremental`, `.card` …) and attribute blocks such as `{.photo}` are left out of the drawing.
+
 ## 1.10.0
 
 - **Quarto presentations show as slides.** A `.qmd` whose front matter says `format: revealjs` (or `beamer`, `pptx`) is drawn slide by slide: each slide a card numbered as the deck numbers it (`3 / 88`), the title slide from the front matter (title, subtitle, author, institute, date, and `title-slide-attributes` background), and section slides filled with their `background-color`. Slides split where Quarto splits them: at headings up to `slide-level` (2 unless set) and at horizontal rules, never inside code or fenced divs. On three lecture decks the slide count, order and kind match Quarto's own HTML exactly (88, 50 and 51 slides). The text stays one editable document.

@@ -1169,3 +1169,50 @@ test.describe('Quarto presentations', () => {
 		await expect(page.locator('.mlp-slide-layer .mlp-slide-card')).toHaveCount(0);
 	});
 });
+
+test.describe('Quarto columns', () => {
+	const DOC = [
+		'## Two sides',
+		'',
+		'::: {.columns}',
+		'::: {.column width="60%"}',
+		'**Left**',
+		'',
+		'::: {.incremental}',
+		'- one',
+		'- two',
+		':::',
+		':::',
+		'::: {.column width="40%"}',
+		'Right side with ![pic](a.png){.photo}.',
+		':::',
+		':::',
+		'',
+		'After.',
+	].join('\n');
+
+	test('columns sit side by side, with their own widths', async ({ page }) => {
+		await mountEditor(page, DOC);
+		const cols = page.locator('.mlp-qcols .mlp-qcol');
+		await expect(cols).toHaveCount(2);
+		const [left, right] = await cols.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ x: r.left, y: r.top, w: r.width })));
+		expect(right.x).toBeGreaterThan(left.x + left.w - 1);
+		expect(Math.abs(right.y - left.y)).toBeLessThan(2);
+		expect(left.w).toBeGreaterThan(right.w);
+		await expect(cols.first().locator('.mlp-lp-li')).toHaveText(['•one', '•two']);
+		await expect(cols.first()).not.toContainText(':::');
+		await expect(cols.nth(1)).not.toContainText('{.photo}');
+		await expect(cols.nth(1).locator('img')).toHaveCount(1);
+	});
+
+	test('the </> button shows the source, and the render button draws the columns again', async ({ page }) => {
+		await mountEditor(page, DOC);
+		await page.locator('.mlp-qcols').locator('xpath=..').locator('.mlp-code-mode-btn').click();
+		await expect(page.locator('.mlp-qcols')).toHaveCount(0);
+		// The source is editor lines again: the list's items are lines of their own.
+		await expect(page.locator('.cm-line', { hasText: /two$/ })).toHaveCount(1);
+		await expect(page.locator('.cm-line', { hasText: 'Right side with' })).toHaveCount(1);
+		await page.locator('.mlp-render-mode-btn').click();
+		await expect(page.locator('.mlp-qcols')).toHaveCount(1);
+	});
+});
