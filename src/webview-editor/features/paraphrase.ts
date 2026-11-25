@@ -29,7 +29,7 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 	const label = REWRITE_MODES[mode].label;
 	const head = el('div', 'mlp-lp-title', label);
 	const body = el('div', 'mlp-paraphrase-text', 'Rewriting the passage…');
-	// Who did the rewrite, when it was not the one asked for (liveWriter.plus.rewriteCommands).
+	// A warning the engine printed while succeeding (liveWriter.plus.rewriteCommands).
 	const note = el('div', 'mlp-paraphrase-note');
 	const actions = el('div', 'mlp-zotero-row');
 	card.append(head, body, note, actions);
@@ -66,8 +66,8 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 	};
 
 	const none = { text: '', error: 'No answer in time.', engine: '', note: '' };
-	// A configured command may take up to five minutes, then Claude three more.
-	void request<{ text: string; error: string; engine: string; note: string }>((requestId) => ({ type: 'rewrite', requestId, text: source, mode, engine }), none, 500_000).then((result) => {
+	// A configured command may take up to five minutes.
+	void request<{ text: string; error: string; engine: string; note: string }>((requestId) => ({ type: 'rewrite', requestId, text: source, mode, engine }), none, 320_000).then((result) => {
 		if (!card.isConnected) return;
 		if (result.engine) head.textContent = `${label} with ${result.engine}`;
 		note.textContent = result.note;

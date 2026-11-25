@@ -11,10 +11,10 @@ import { REWRITE_MODES, rewritePrompt, type RewriteMode } from '../../shared/rew
  * the user's settings or hooks, in a temporary folder so no project's
  * CLAUDE.md is read. The webview shows the result to replace or copy.
  *
- * A mode can be given a command of its own instead
- * (`liveWriter.plus.rewriteCommands`): any program that reads the passage on
- * stdin and writes the rewrite on stdout. If it fails, Claude does the rewrite
- * and the card says why.
+ * A mode can also have a command of its own (`liveWriter.plus.rewriteCommands`,
+ * the *Rewrite with Command* submenu): any program that reads the passage on
+ * stdin and writes the rewrite on stdout. If it fails, the card says why; the
+ * passage is never sent to Claude instead.
  */
 
 export interface RewriteResult {
@@ -22,7 +22,7 @@ export interface RewriteResult {
 	error: string;
 	/** Who wrote `text`: 'Claude', or the command's label. */
 	engine: string;
-	/** Why the engine is not the one asked for, when it is not. */
+	/** A warning the engine printed while succeeding, e.g. that the output looks summarised. */
 	note: string;
 }
 
@@ -92,24 +92,19 @@ export function runRewriteCommand(command: string, text: string, mode: RewriteMo
 
 /**
  * The rewrite for `mode`, by Claude (*Rewrite with Claude*) or by the mode's
- * command (*Rewrite with Command*). A command that fails, or is not set,
- * leaves the rewrite to Claude, and the card says why.
+ * command (*Rewrite with Command*). Each engine only ever gets the passages
+ * sent to it: a command that fails, or is not set, is reported, not replaced.
  */
 export async function rewrite(text: string, mode: RewriteMode, useCommand = false): Promise<RewriteResult> {
+	if (!useCommand) return { ...(await paraphrase(text, mode)), engine: 'Claude', note: '' };
+	// The passage was sent to the command on purpose: when it fails, say why and
+	// leave it there. It is never passed on to Claude instead.
 	const label = commandLabel();
-	let note = '';
-	if (useCommand) {
-		const command = commandFor(mode);
-		if (command) {
-			const result = await runRewriteCommand(command, text, mode);
-			if (result.text) return { text: result.text, error: '', engine: label, note: result.warning };
-			note = `${label} failed (${result.error}); Claude rewrote it instead.`;
-		} else {
-			note = `No command is set for this mode (liveWriter.plus.rewriteCommands); Claude rewrote it instead.`;
-		}
-	}
-	const result = await paraphrase(text, mode);
-	return { ...result, engine: 'Claude', note: result.text ? note : '', error: result.text ? '' : [note, result.error].filter(Boolean).join(' ') };
+	const command = commandFor(mode);
+	if (!command) return { text: '', error: `No command is set for this mode (liveWriter.plus.rewriteCommands).`, engine: label, note: '' };
+	const result = await runRewriteCommand(command, text, mode);
+	if (result.text) return { text: result.text, error: '', engine: label, note: result.warning };
+	return { text: '', error: `${label} failed: ${result.error}`, engine: label, note: '' };
 }
 
 /** The `claude` command: on PATH, else where the installer puts it. */

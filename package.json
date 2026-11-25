@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -897,7 +897,7 @@
             }
           },
           "additionalProperties": false,
-          "markdownDescription": "Live Writer: commands of your own for the *Rewrite with Command* submenu (right-click a selection), beside *Rewrite with Claude*. Each runs in a shell from your home folder, gets the selected passage on stdin and `LIVEWRITER_MODE` in its environment, and must print the rewrite on stdout. Modes: `polish` (Paraphrase), `tighten`, `formal`, `toEnglish`, `toThai`; the submenu lists only the modes set here. If a command fails, prints nothing or runs over five minutes, Claude does the rewrite and the card says why. Example: `{ \"polish\": \"python3 ~/bin/rewrite.py --style academic\" }`."
+          "markdownDescription": "Live Writer: commands of your own for the *Rewrite with Command* submenu (right-click a selection), beside *Rewrite with Claude*. Each runs in a shell from your home folder, gets the selected passage on stdin and `LIVEWRITER_MODE` in its environment, and must print the rewrite on stdout. Modes: `polish` (Paraphrase), `tighten`, `formal`, `toEnglish`, `toThai`; the submenu lists only the modes set here. If a command fails, prints nothing or runs over five minutes, the card says why; the passage is never sent to Claude instead. Example: `{ \"polish\": \"python3 ~/bin/rewrite.py --style academic\" }`."
         },
         "liveWriter.plus.rewriteCommandLabel": {
           "type": "string",

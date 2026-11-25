@@ -2,6 +2,10 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.12.1
+
+- **Rewrite with Command no longer falls back to Claude.** When the command fails, prints nothing or runs over five minutes, the card shows its error (e.g. an expired token) and nothing is sent to Claude. A passage goes only to the engine chosen in the menu.
+
 ## 1.12.0
 
 - **Rewrite with Command**, beside *Rewrite with Claude* (right-click a selection): the same modes, done by commands of your own (`liveWriter.plus.rewriteCommands`, one per mode; any program that reads the passage on stdin and prints the rewrite). The submenu appears once a command is set and lists only those modes; `liveWriter.plus.rewriteCommandLabel` names the engine on the card (*Paraphrase with …*). *Rewrite with Claude* always uses Claude.

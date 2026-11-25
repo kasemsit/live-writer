@@ -984,16 +984,25 @@ test('Rewrite with Command: the mode goes to the host asking for the command, an
 	expect((await posted(page)).filter((m) => m.type === 'rewrite').at(-1)).toMatchObject({ mode: 'toThai', engine: 'claude' });
 });
 
-test('Rewrite: the card names the engine that wrote it, and says why when it fell back', async ({ page }) => {
+test('Rewrite: the card names the engine, and shows its failure or its warning', async ({ page }) => {
 	await mountEditor(page, '# T\n\nข้อความเดิม\n\nEnd.');
 	const from = '# T\n\n'.length;
 	await postToWebview(page, { type: 'runCommand', command: 'paraphrase', range: { from, to: from + 'ข้อความเดิม'.length } });
 	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'rewrite')).toBe(true);
 	const req = (await posted(page)).filter((m) => m.type === 'rewrite').at(-1)!;
-	const note = 'Matthew failed (error: token expired or invalid (HTTP 401)); Claude rewrote it instead.';
-	await postToWebview(page, { type: 'rewriteResult', requestId: req.requestId, text: 'ข้อความใหม่', error: '', engine: 'Claude', note });
-	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Paraphrase with Claude');
-	await expect(page.locator('.mlp-paraphrase-note')).toHaveText(note);
+	const error = 'Matthew failed: error: token expired or invalid (HTTP 401)';
+	await postToWebview(page, { type: 'rewriteResult', requestId: req.requestId, text: '', error, engine: 'Matthew', note: '' });
+	const card = page.locator('.mlp-paraphrase-card');
+	await expect(card.locator('.mlp-lp-title')).toHaveText('Paraphrase with Matthew');
+	await expect(card.locator('.mlp-paraphrase-error')).toHaveText(error);
+	await expect(card.locator('.mlp-zotero-btn')).toHaveText(['Close']);
+	await card.locator('.mlp-zotero-btn').click();
+	await postToWebview(page, { type: 'runCommand', command: 'command.polish', range: { from, to: from + 'ข้อความเดิม'.length } });
+	await expect.poll(async () => (await posted(page)).filter((m) => m.type === 'rewrite').length).toBe(2);
+	const again = (await posted(page)).filter((m) => m.type === 'rewrite').at(-1)!;
+	const warning = '[warning: output is only 20% of the input — check it was not summarised]';
+	await postToWebview(page, { type: 'rewriteResult', requestId: again.requestId, text: 'สั้น', error: '', engine: 'Matthew', note: warning });
+	await expect(page.locator('.mlp-paraphrase-note')).toHaveText(warning);
 });
 
 test('the editor tells the host which line the caret is on', async ({ page }) => {

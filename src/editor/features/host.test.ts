@@ -233,10 +233,20 @@ describe('paraphrase', () => {
 		expect(seen[0]).toMatch(/claude$/);
 	});
 
-	it('Rewrite with Command on a mode with no command says so, and Claude does it', async () => {
+	it('Rewrite with Command on a mode with no command says so, and sends nothing to Claude', async () => {
 		commands({ polish: 'rewrite-th' });
-		proc.spawn = () => child('Shorter.', 0);
-		expect(await rewrite('Longer text.', 'tighten', true)).toMatchObject({ text: 'Shorter.', engine: 'Claude', note: expect.stringMatching(/^No command is set for this mode/) });
+		const seen: string[] = [];
+		proc.spawn = (cmd) => {
+			seen.push(cmd);
+			return child('Shorter.', 0);
+		};
+		expect(await rewrite('Longer text.', 'tighten', true)).toEqual({
+			text: '',
+			error: 'No command is set for this mode (liveWriter.plus.rewriteCommands).',
+			engine: 'rewrite command',
+			note: '',
+		});
+		expect(seen).toHaveLength(0);
 	});
 
 	it('the Rewrite with Command submenu shows only when a command is set, with only those modes', async () => {
@@ -252,27 +262,31 @@ describe('paraphrase', () => {
 		});
 	});
 
-	it('when the command fails, Claude rewrites it and the card says why', async () => {
+	it('when the command fails, the card says why, and the passage never goes to Claude', async () => {
 		commands({ toThai: 'rewrite-th' }, 'Matthew');
-		proc.spawn = (cmd) =>
-			cmd === 'rewrite-th' ? child('', 1, '[chunk 1/1]\nerror: token expired or invalid (HTTP 401)\n') : child('แปลแล้ว', 0);
+		const seen: string[] = [];
+		proc.spawn = (cmd) => {
+			seen.push(cmd);
+			return child('', 1, '[chunk 1/1]\nerror: token expired or invalid (HTTP 401)\n');
+		};
 		expect(await rewrite('Text.', 'toThai', true)).toEqual({
-			text: 'แปลแล้ว',
-			error: '',
-			engine: 'Claude',
-			note: 'Matthew failed (error: token expired or invalid (HTTP 401)); Claude rewrote it instead.',
-		});
-	});
-
-	it('a command that prints nothing counts as failed; both failures are reported', async () => {
-		commands({ formal: 'rewrite-th' });
-		proc.spawn = (cmd) => (cmd === 'rewrite-th' ? child('', 0) : child('', 1, 'Not logged in'));
-		expect(await rewrite('Text.', 'formal', true)).toEqual({
 			text: '',
-			error: 'rewrite command failed (it printed nothing); Claude rewrote it instead. Not logged in',
-			engine: 'Claude',
+			error: 'Matthew failed: error: token expired or invalid (HTTP 401)',
+			engine: 'Matthew',
 			note: '',
 		});
+		expect(seen).toEqual(['rewrite-th']);
+	});
+
+	it('a command that prints nothing counts as failed', async () => {
+		commands({ formal: 'rewrite-th' });
+		const seen: string[] = [];
+		proc.spawn = (cmd) => {
+			seen.push(cmd);
+			return child('', 0);
+		};
+		expect(await rewrite('Text.', 'formal', true)).toEqual({ text: '', error: 'rewrite command failed: it printed nothing', engine: 'rewrite command', note: '' });
+		expect(seen).toEqual(['rewrite-th']);
 	});
 });
 
