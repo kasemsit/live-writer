@@ -963,8 +963,37 @@ test('Rewrite with Claude: a mode from the submenu goes to the host, and titles 
 	const from = '# T\n\n'.length;
 	await postToWebview(page, { type: 'runCommand', command: 'rewrite.toEnglish', range: { from, to: from + 'ระบบอ่านค่าจากจอ'.length } });
 	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'rewrite')).toBe(true);
-	expect((await posted(page)).filter((m) => m.type === 'rewrite').at(-1)).toMatchObject({ mode: 'toEnglish', text: 'ระบบอ่านค่าจากจอ' });
+	const req = (await posted(page)).filter((m) => m.type === 'rewrite').at(-1)!;
+	expect(req).toMatchObject({ mode: 'toEnglish', text: 'ระบบอ่านค่าจากจอ' });
+	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Translate to English');
+	await postToWebview(page, { type: 'rewriteResult', requestId: req.requestId, text: 'The system reads the display.', error: '', engine: 'Claude', note: '' });
 	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Translate to English with Claude');
+	await expect(page.locator('.mlp-paraphrase-note')).toBeHidden();
+});
+
+test('Rewrite with Command: the mode goes to the host asking for the command, and Claude stays the default', async ({ page }) => {
+	await mountEditor(page, '# T\n\nข้อความเดิม\n\nEnd.');
+	const from = '# T\n\n'.length;
+	const range = { from, to: from + 'ข้อความเดิม'.length };
+	await postToWebview(page, { type: 'runCommand', command: 'command.toThai', range });
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'rewrite')).toBe(true);
+	expect((await posted(page)).filter((m) => m.type === 'rewrite').at(-1)).toMatchObject({ mode: 'toThai', engine: 'command' });
+	await page.keyboard.press('Escape');
+	await postToWebview(page, { type: 'runCommand', command: 'rewrite.toThai', range });
+	await expect.poll(async () => (await posted(page)).filter((m) => m.type === 'rewrite').length).toBe(2);
+	expect((await posted(page)).filter((m) => m.type === 'rewrite').at(-1)).toMatchObject({ mode: 'toThai', engine: 'claude' });
+});
+
+test('Rewrite: the card names the engine that wrote it, and says why when it fell back', async ({ page }) => {
+	await mountEditor(page, '# T\n\nข้อความเดิม\n\nEnd.');
+	const from = '# T\n\n'.length;
+	await postToWebview(page, { type: 'runCommand', command: 'paraphrase', range: { from, to: from + 'ข้อความเดิม'.length } });
+	await expect.poll(async () => (await posted(page)).some((m) => m.type === 'rewrite')).toBe(true);
+	const req = (await posted(page)).filter((m) => m.type === 'rewrite').at(-1)!;
+	const note = 'Matthew failed (error: token expired or invalid (HTTP 401)); Claude rewrote it instead.';
+	await postToWebview(page, { type: 'rewriteResult', requestId: req.requestId, text: 'ข้อความใหม่', error: '', engine: 'Claude', note });
+	await expect(page.locator('.mlp-paraphrase-card .mlp-lp-title')).toHaveText('Paraphrase with Claude');
+	await expect(page.locator('.mlp-paraphrase-note')).toHaveText(note);
 });
 
 test('the editor tells the host which line the caret is on', async ({ page }) => {

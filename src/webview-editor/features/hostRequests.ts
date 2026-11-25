@@ -97,7 +97,7 @@ function replyOf(message: HostToEditorMessage): { requestId: number; value: unkn
 		case 'zoteroLinksResult':
 			return { requestId: message.requestId, value: message.links };
 		case 'rewriteResult':
-			return { requestId: message.requestId, value: { text: message.text, error: message.error } };
+			return { requestId: message.requestId, value: { text: message.text, error: message.error, engine: message.engine ?? 'Claude', note: message.note ?? '' } };
 		default:
 			return null;
 	}

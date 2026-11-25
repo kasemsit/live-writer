@@ -2,6 +2,12 @@
 
 Each `## <version>` section is used as the GitHub release notes by `plus/release.sh`.
 
+## 1.12.0
+
+- **Rewrite with Command**, beside *Rewrite with Claude* (right-click a selection): the same modes, done by commands of your own (`liveWriter.plus.rewriteCommands`, one per mode; any program that reads the passage on stdin and prints the rewrite). The submenu appears once a command is set and lists only those modes; `liveWriter.plus.rewriteCommandLabel` names the engine on the card (*Paraphrase with …*). *Rewrite with Claude* always uses Claude.
+- If a command fails, prints nothing or runs over five minutes, Claude does the rewrite and the card says why (the command's own error line, e.g. an expired token). A warning the command prints while succeeding is shown on the card too.
+- The card's title names the engine that actually wrote the text.
+
 ## 1.11.0
 
 - **Quarto columns side by side.** `::: {.columns}` with `::: {.column width="…"}` inside is drawn as columns at their widths, lists, images, maths and all, as on the slide. Like a table, the block switches to its source only through its `</>` button, and back through the button over the source. The fences of divs nested in a column (`.incremental`, `.card` …) and attribute blocks such as `{.photo}` are left out of the drawing.

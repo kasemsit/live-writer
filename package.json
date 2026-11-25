@@ -2,7 +2,7 @@
   "name": "live-writer",
   "displayName": "Live Writer",
   "description": "Live Writer: write Markdown, LaTeX and Quarto in their rendered form. Obsidian-style wikilinks, callouts and footnotes; citations from your .bib, one click from the PDF in Zotero; TikZ pictures from your last build; Claude sees the selection and paraphrases it. Mermaid and draw.io drawn inline (formerly md-live-preview-plus).",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "publisher": "kasemsit",
   "license": "MIT",
   "icon": "media/icon-128.png",
@@ -343,6 +343,31 @@
         "command": "liveWriter.plus.find",
         "title": "Find",
         "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteCommand.polish",
+        "title": "Paraphrase",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteCommand.tighten",
+        "title": "Tighten",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteCommand.formal",
+        "title": "More Formal",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteCommand.toEnglish",
+        "title": "Translate to English",
+        "category": "Live Writer"
+      },
+      {
+        "command": "liveWriter.plus.rewriteCommand.toThai",
+        "title": "Translate to Thai",
+        "category": "Live Writer"
       }
     ],
     "menus": {
@@ -517,6 +542,26 @@
         {
           "command": "liveWriter.plus.find",
           "when": "activeCustomEditorId == liveWriter.editor"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.polish",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.tighten",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.formal",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.toEnglish",
+          "when": "false"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.toThai",
+          "when": "false"
         }
       ],
       "webview/context": [
@@ -529,6 +574,11 @@
           "submenu": "liveWriter.rewrite",
           "when": "webviewId == 'liveWriter.editor' && mlpHasSelection",
           "group": "1_plus_claude@2"
+        },
+        {
+          "submenu": "liveWriter.rewriteCommand",
+          "when": "webviewId == 'liveWriter.editor' && mlpHasSelection && liveWriter.hasRewriteCommand",
+          "group": "1_plus_claude@3"
         },
         {
           "command": "liveWriter.plus.copyRichText",
@@ -702,6 +752,33 @@
           "command": "liveWriter.plus.rewriteToThai",
           "group": "2_translate@4"
         }
+      ],
+      "liveWriter.rewriteCommand": [
+        {
+          "command": "liveWriter.plus.rewriteCommand.polish",
+          "when": "liveWriter.rewriteCommand.polish",
+          "group": "1_style@0"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.tighten",
+          "when": "liveWriter.rewriteCommand.tighten",
+          "group": "1_style@1"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.formal",
+          "when": "liveWriter.rewriteCommand.formal",
+          "group": "1_style@2"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.toEnglish",
+          "when": "liveWriter.rewriteCommand.toEnglish",
+          "group": "2_translate@3"
+        },
+        {
+          "command": "liveWriter.plus.rewriteCommand.toThai",
+          "when": "liveWriter.rewriteCommand.toThai",
+          "group": "2_translate@4"
+        }
       ]
     },
     "configuration": {
@@ -798,6 +875,34 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Live Writer: when a Ctrl+click in LaTeX Workshop's PDF viewer opens a `.tex` file that is open in Live Writer, show the line in Live Writer instead of a text editor."
+        },
+        "liveWriter.plus.rewriteCommands": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "polish": {
+              "type": "string"
+            },
+            "tighten": {
+              "type": "string"
+            },
+            "formal": {
+              "type": "string"
+            },
+            "toEnglish": {
+              "type": "string"
+            },
+            "toThai": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "markdownDescription": "Live Writer: commands of your own for the *Rewrite with Command* submenu (right-click a selection), beside *Rewrite with Claude*. Each runs in a shell from your home folder, gets the selected passage on stdin and `LIVEWRITER_MODE` in its environment, and must print the rewrite on stdout. Modes: `polish` (Paraphrase), `tighten`, `formal`, `toEnglish`, `toThai`; the submenu lists only the modes set here. If a command fails, prints nothing or runs over five minutes, Claude does the rewrite and the card says why. Example: `{ \"polish\": \"python3 ~/bin/rewrite.py --style academic\" }`."
+        },
+        "liveWriter.plus.rewriteCommandLabel": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Live Writer: the name the *Rewrite* card gives `liveWriter.plus.rewriteCommands`, e.g. *Paraphrase with Matthew*. Empty shows \"rewrite command\". (VS Code menus have fixed names, so the submenu itself reads *Rewrite with Command*.)"
         }
       }
     },
@@ -849,6 +954,10 @@
       {
         "id": "liveWriter.rewrite",
         "label": "Rewrite with Claude"
+      },
+      {
+        "id": "liveWriter.rewriteCommand",
+        "label": "Rewrite with Command"
       }
     ]
   },

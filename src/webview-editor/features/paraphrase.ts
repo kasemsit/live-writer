@@ -4,8 +4,8 @@ import { sendToHost, request } from './hostRequests';
 import { REWRITE_MODES, type RewriteMode } from '../../shared/rewrite';
 
 /**
- * Paraphrase with Claude (right-click on a selection).
- * The host has Claude Code rewrite the passage (src/editor/features/paraphrase.ts);
+ * Rewrite with Claude (right-click on a selection).
+ * The host has Claude Code, or the mode's own command, rewrite the passage (src/editor/features/paraphrase.ts);
  * a card under the selection shows the result to replace the passage with, or
  * to copy. Replacing is an ordinary edit, undone as one.
  */
@@ -19,17 +19,20 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text = '
 	return node;
 }
 
-export function paraphraseSelection(view: EditorView, range?: { from: number; to: number }, mode: RewriteMode = 'polish'): void {
+export function paraphraseSelection(view: EditorView, range?: { from: number; to: number }, mode: RewriteMode = 'polish', engine: 'claude' | 'command' = 'claude'): void {
 	const { from, to } = range ?? view.state.selection.main;
 	if (from === to) return;
 	open?.close();
 	const source = view.state.sliceDoc(from, to);
 
 	const card = el('div', 'mlp-link-preview mlp-paraphrase-card');
-	const head = el('div', 'mlp-lp-title', `${REWRITE_MODES[mode].label} with Claude`);
-	const body = el('div', 'mlp-paraphrase-text', 'Claude is rewriting the passage…');
+	const label = REWRITE_MODES[mode].label;
+	const head = el('div', 'mlp-lp-title', label);
+	const body = el('div', 'mlp-paraphrase-text', 'Rewriting the passage…');
+	// Who did the rewrite, when it was not the one asked for (liveWriter.plus.rewriteCommands).
+	const note = el('div', 'mlp-paraphrase-note');
 	const actions = el('div', 'mlp-zotero-row');
-	card.append(head, body, actions);
+	card.append(head, body, note, actions);
 	document.body.appendChild(card);
 	const at = view.coordsAtPos(to) ?? view.coordsAtPos(from);
 	if (at) placeCardAt(card, at);
@@ -62,9 +65,12 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 		return b;
 	};
 
-	const none = { text: '', error: 'Claude did not answer in time.' };
-	void request<{ text: string; error: string }>((requestId) => ({ type: 'rewrite', requestId, text: source, mode }), none, 200_000).then((result) => {
+	const none = { text: '', error: 'No answer in time.', engine: '', note: '' };
+	// A configured command may take up to five minutes, then Claude three more.
+	void request<{ text: string; error: string; engine: string; note: string }>((requestId) => ({ type: 'rewrite', requestId, text: source, mode, engine }), none, 500_000).then((result) => {
 		if (!card.isConnected) return;
+		if (result.engine) head.textContent = `${label} with ${result.engine}`;
+		note.textContent = result.note;
 		if (!result.text) {
 			body.textContent = result.error;
 			body.classList.add('mlp-paraphrase-error');
@@ -76,7 +82,7 @@ export function paraphraseSelection(view: EditorView, range?: { from: number; to
 			button('Replace', () => {
 				// The passage was edited while Claude worked: replacing would lose that edit.
 				if (view.state.sliceDoc(from, to) !== source) {
-					body.textContent = 'The passage changed while Claude was writing; copy the paraphrase instead.';
+					body.textContent = 'The passage changed while it was being rewritten; copy the rewrite instead.';
 					return;
 				}
 				view.dispatch({ changes: { from, to, insert: result.text }, selection: { anchor: from, head: from + result.text.length } });

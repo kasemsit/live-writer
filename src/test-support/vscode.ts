@@ -251,6 +251,9 @@ export const workspace = {
 		};
 		return { onDidChange: on, onDidCreate: on, onDidDelete: on, dispose: () => (w.disposed = true) };
 	},
+	onDidChangeConfiguration(): Disposable {
+		return new Disposable();
+	},
 	onDidSaveTextDocument(l: (doc: FakeDocument) => void): Disposable {
 		fake.saveListeners.push(l);
 		return new Disposable(() => (fake.saveListeners = fake.saveListeners.filter((x) => x !== l)));

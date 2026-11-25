@@ -21,7 +21,7 @@ import { zoteroLinks } from './zotero';
 import { readQuartoProject, stopWatchingQuartoProject, watchQuartoProject } from './quartoProject';
 import { migrateSettings } from './migrate';
 import { caywUrl, pickCitation } from './cite';
-import { paraphrase } from './paraphrase';
+import { paraphrase, registerRewriteCommandContext, rewrite } from './paraphrase';
 import { TexSession } from './tex';
 import { showInPdf } from './showInPdf';
 import { buildLatex, buildWithRecipe, viewPdf } from './build';
@@ -141,7 +141,7 @@ describe('Insert Citation from Zotero', () => {
 
 describe('paraphrase', () => {
 	function child(stdout: string, code: number, stderr = '') {
-		const c = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), stdin: { end: vi.fn() }, kill: vi.fn() });
+		const c = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), stdin: { end: vi.fn(), on: vi.fn() }, kill: vi.fn() });
 		setTimeout(() => {
 			if (stdout) c.stdout.emit('data', stdout);
 			if (stderr) c.stderr.emit('data', stderr);
@@ -185,6 +185,94 @@ describe('paraphrase', () => {
 	it('reports a failure instead of inserting nothing', async () => {
 		proc.spawn = () => child('', 1, 'Not logged in');
 		expect(await paraphrase('x')).toEqual({ text: '', error: 'Not logged in' });
+	});
+
+	const commands = (value: unknown, label = '') => {
+		fake.settings.set(`${vscode.ConfigurationTarget.Global}:liveWriter.plus.rewriteCommands`, value);
+		if (label) fake.settings.set(`${vscode.ConfigurationTarget.Global}:liveWriter.plus.rewriteCommandLabel`, label);
+	};
+
+	it('Rewrite with Command runs the mode\'s command in a shell, the passage on stdin', async () => {
+		commands({ polish: 'python3 ~/bin/rewrite.py --style academic' }, 'Matthew');
+		const calls: { cmd: string; opts: { shell?: boolean; env?: Record<string, string> } }[] = [];
+		let stdin = '';
+		proc.spawn = (cmd, opts) => {
+			calls.push({ cmd, opts: opts as never });
+			const c = child('ข้อความใหม่\n', 0);
+			c.stdin.end = vi.fn((t: string) => (stdin = t)) as never;
+			return c;
+		};
+		expect(await rewrite('ข้อความเดิม', 'polish', true)).toEqual({ text: 'ข้อความใหม่', error: '', engine: 'Matthew', note: '' });
+		expect(calls).toHaveLength(1);
+		expect(calls[0].cmd).toBe('python3 ~/bin/rewrite.py --style academic');
+		expect(calls[0].opts.shell).toBe(true);
+		expect(calls[0].opts.env?.LIVEWRITER_MODE).toBe('polish');
+		expect(stdin).toBe('ข้อความเดิม');
+	});
+
+	it('a warning the command prints on stderr reaches the card', async () => {
+		commands({ polish: 'rewrite-th' }, 'Matthew');
+		proc.spawn = () => child('Short.', 0, '[warning: output is only 20% of the input — check it was not summarised]\n[tokens: prompt=1 completion=1]\n');
+		expect(await rewrite('A long passage.', 'polish', true)).toEqual({
+			text: 'Short.',
+			error: '',
+			engine: 'Matthew',
+			note: '[warning: output is only 20% of the input — check it was not summarised]',
+		});
+	});
+
+	it('Rewrite with Claude uses Claude even when the mode has a command', async () => {
+		commands({ polish: 'rewrite-th' });
+		const seen: string[] = [];
+		proc.spawn = (cmd) => {
+			seen.push(cmd);
+			return child('Better.', 0);
+		};
+		expect(await rewrite('Text.', 'polish')).toMatchObject({ text: 'Better.', engine: 'Claude', note: '' });
+		expect(seen).toHaveLength(1);
+		expect(seen[0]).toMatch(/claude$/);
+	});
+
+	it('Rewrite with Command on a mode with no command says so, and Claude does it', async () => {
+		commands({ polish: 'rewrite-th' });
+		proc.spawn = () => child('Shorter.', 0);
+		expect(await rewrite('Longer text.', 'tighten', true)).toMatchObject({ text: 'Shorter.', engine: 'Claude', note: expect.stringMatching(/^No command is set for this mode/) });
+	});
+
+	it('the Rewrite with Command submenu shows only when a command is set, with only those modes', async () => {
+		commands({ polish: 'a', toThai: 'b', tighten: '  ' });
+		registerRewriteCommandContext({ subscriptions: [] } as never);
+		const set = Object.fromEntries(fake.executed.filter((c) => c[0] === 'setContext').map((c) => [c[1], c[2]]));
+		expect(set).toMatchObject({
+			'liveWriter.hasRewriteCommand': true,
+			'liveWriter.rewriteCommand.polish': true,
+			'liveWriter.rewriteCommand.toThai': true,
+			'liveWriter.rewriteCommand.tighten': false,
+			'liveWriter.rewriteCommand.formal': false,
+		});
+	});
+
+	it('when the command fails, Claude rewrites it and the card says why', async () => {
+		commands({ toThai: 'rewrite-th' }, 'Matthew');
+		proc.spawn = (cmd) =>
+			cmd === 'rewrite-th' ? child('', 1, '[chunk 1/1]\nerror: token expired or invalid (HTTP 401)\n') : child('แปลแล้ว', 0);
+		expect(await rewrite('Text.', 'toThai', true)).toEqual({
+			text: 'แปลแล้ว',
+			error: '',
+			engine: 'Claude',
+			note: 'Matthew failed (error: token expired or invalid (HTTP 401)); Claude rewrote it instead.',
+		});
+	});
+
+	it('a command that prints nothing counts as failed; both failures are reported', async () => {
+		commands({ formal: 'rewrite-th' });
+		proc.spawn = (cmd) => (cmd === 'rewrite-th' ? child('', 0) : child('', 1, 'Not logged in'));
+		expect(await rewrite('Text.', 'formal', true)).toEqual({
+			text: '',
+			error: 'rewrite command failed (it printed nothing); Claude rewrote it instead. Not logged in',
+			engine: 'Claude',
+			note: '',
+		});
 	});
 });
 

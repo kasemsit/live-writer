@@ -791,3 +791,7 @@ body.vscode-dark .mlp-track-del { color: rgb(252, 165, 165); }
 .mlp-qcol img { max-width: 100%; height: auto; display: block; margin: 0.3em auto; }
 .mlp-qcol .mlp-lp-li { padding-left: 1.1em; }
 @media (max-width: 520px) { .mlp-qcols { flex-direction: column; } }
+
+/* Which engine rewrote it, when not the one asked for (features/paraphrase.ts). */
+.mlp-paraphrase-note:empty { display: none; }
+.mlp-paraphrase-note { font-size: 0.85em; color: var(--vscode-editorWarning-foreground, #b58900); margin-top: 0.4em; }

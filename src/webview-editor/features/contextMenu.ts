@@ -13,6 +13,7 @@ import { scanFootnotes } from './footnotes';
 import { markdownToHtml, htmlToText } from './richText';
 import { texToPlain } from '../../shared/texScan';
 import { openSearchPanelFocused } from '../searchReveal';
+import type { RewriteMode } from '../../shared/rewrite';
 
 /**
  * The editor side of the right-click menu (the menu itself is VS Code's, see
@@ -376,6 +377,12 @@ export function runMenuCommand(view: EditorView, command: MenuCommand, range?: {
 			return paraphraseSelection(view, range, 'toEnglish');
 		case 'rewrite.toThai':
 			return paraphraseSelection(view, range, 'toThai');
+		case 'command.polish':
+		case 'command.tighten':
+		case 'command.formal':
+		case 'command.toEnglish':
+		case 'command.toThai':
+			return paraphraseSelection(view, range, command.slice('command.'.length) as RewriteMode, 'command');
 		case 'showInPdf':
 			return post({ type: 'hostAction', action: 'showInPdf', line: view.state.doc.lineAt(range?.from ?? contextPos(view)).number });
 		case 'openInZotero': {

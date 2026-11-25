@@ -155,6 +155,11 @@ export type MenuCommand =
 	| 'rewrite.formal'
 	| 'rewrite.toEnglish'
 	| 'rewrite.toThai'
+	| 'command.polish'
+	| 'command.tighten'
+	| 'command.formal'
+	| 'command.toEnglish'
+	| 'command.toThai'
 	| 'copyTex'
 	| 'searchGoogle'
 	| 'searchScholar'
@@ -194,7 +199,7 @@ export type FeatureHostToEditorMessage =
 	| { type: 'texAssetResult'; requestId: number; asset: TexAsset }
 	| { type: 'texPictureResult'; requestId: number; picture: TexPicture }
 	| { type: 'zoteroLinksResult'; requestId: number; links: ZoteroLinks }
-	| { type: 'rewriteResult'; requestId: number; text: string; error: string };
+	| { type: 'rewriteResult'; requestId: number; text: string; error: string; engine?: string; note?: string };
 
 /**
  * What the LaTeX Live Preview needs beyond the file:
@@ -292,4 +297,4 @@ export type FeatureEditorToHostMessage =
 	// The Zotero links for a citation key.
 	| { type: 'zoteroLinks'; requestId: number; key: string }
 	// Paraphrase with Claude: the selected source, rewritten by Claude Code.
-	| { type: 'rewrite'; requestId: number; text: string; mode?: RewriteMode };
+	| { type: 'rewrite'; requestId: number; text: string; mode?: RewriteMode; engine?: 'claude' | 'command' };
